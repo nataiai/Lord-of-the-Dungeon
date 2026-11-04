@@ -13,8 +13,8 @@ public class Loot : MonoBehaviour
         Yoink();
         sr = GetComponentInChildren<SpriteRenderer>();
         if(sr==null)sr = gameObject.AddComponent<SpriteRenderer>();
-        if(GetComponent<Collider2D>()==null)gameObject.AddComponent<BoxCollider2D>();
         UpdateImage();
+        if(GetComponent<Collider2D>()==null)gameObject.AddComponent<BoxCollider2D>().isTrigger = true; // after the sprite, so it fits
     }
     void Yoink(){} // to do: yoink away from origin pos
     void UpdateImage(){if(lootType==LootType.weapon)sr.sprite = weaponLoot.uiWep;}

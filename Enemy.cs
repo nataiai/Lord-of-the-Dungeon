@@ -38,10 +38,10 @@ public class Enemy : Character
         if(Time.time>lifeSpan+born)Died();
         if(isDead)Died();
         if(StuntMech(enemyData.knocbackRecovery))return;
-        movement = FindObjectOfType<Player>().transform.position - transform.position;
+        movement = GameManager.Instance.player.transform.position - transform.position;
         if(movement.magnitude<enemyData.noticeRange)notice=true;
         if(notice)rb.velocity = movement.normalized * enemyData.initSpeed;
-        setAnimFacing(movement);
+        setAnimFacing(movement.normalized);
     }
 
     protected virtual void Died(){
@@ -66,7 +66,7 @@ public class Enemy : Character
     public void receiveKnockback(Vector2 pos,float force)=>receiveKnockback(pos,force,enemyData.knockbackResistance);
 
     public virtual void OnTriggerStay2D(Collider2D other){
-        if(cooldownTimer>Time.time || !other.TryGetComponent(out Player player))return;
+        if(cooldownTimer>Time.time || deathBreathTime!=0 || !other.TryGetComponent(out Player player))return; // no hits while dying
         player.receiveKnockback(transform.position,enemyData.attackKnockback);
         player.recieveDamage(enemyData.combatStat.attackPhysic);
         cooldownTimer = Time.time+enemyData.cooldown;

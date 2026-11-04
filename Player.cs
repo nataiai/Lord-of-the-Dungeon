@@ -35,7 +35,7 @@ public class HoldingWeapons{ // one hand
         hitBox.playerPos = playerPos;
         hitBox.setVelocity(player.looking * weapon.velocity);
     }
-    public void StopAnim(){if(anim!=null)GameObject.Destroy(anim);anim=null;}
+    public void StopAnim(){if(anim!=null)GameObject.Destroy(anim.gameObject);anim=null;}
 }
 
 public class Player : Character
