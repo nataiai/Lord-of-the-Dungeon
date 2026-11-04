@@ -9,7 +9,7 @@ Chat flow: `TwitchChat` → `Chat.addToDB` → `SimpleSummonDB` queue (`spawnSki
 **Weapon fields:** `hitBoxDistance` (spawn offset in front of player), `velocity` (0 = hitbox stays put), `destroyTimer` (0 = gone on first touch), `maxHits` (0 = unlimited).
 
 **Owner's rules**
-- Keep the diff against the first commit small. Change only what's needed.
+- Keep the diff against the first commit small (owner reviews it with git diff). Change only what was asked; no extra "while I'm here" fixes.
 - Keep usings, default `Start`/`Update`, commented-out code, the compact style, and `d_` ("dirty") names.
 - Don't remove unused functions or fields; the owner will use them later.
 - Rename only names that mislead (like `range` was). Keep typos such as `recieveDamage`, `knocback`, `StuntMech`.
