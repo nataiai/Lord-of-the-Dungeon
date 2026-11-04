@@ -9,55 +9,6 @@ public class Direction{
     static public Vector2[] vec2MoveDict = {Vector2.up, Vector2.right, Vector2.down, Vector2.left, };
 }
 
-[System.Serializable]
-public class HoldingWeapons{
-    public Weapon weapon;
-    public float lastUse;
-    public bool isOnCooldown=>lastUse+cooldown>Time.time;
-    public bool isUsable=>weapon!=null&&!isOnCooldown;
-    public float cooldown=>weapon.cooldown;
-    BaseWeapon anim;
-    public void Use(Player player){
-        if(!isUsable)return;
-        else ForceUse(player);
-    }
-    public float getReloadPercent(){ // for ui
-        if(weapon==null)return 1;
-        float o = (Time.time-lastUse)/weapon.cooldown;
-        if(o>1)o=1;
-        return o;
-    }
-    public void ForceUse(Player player){
-        lastUse = Time.time;
-        Vector2 playerPos = player.transform.position;
-        Vector2 looking = player.looking;
-        Vector2 looking4dir = Direction.vec2MoveDict[player.animFacing];
-        Vector2 initPos = weapon.HitBoxPos(playerPos, player.animFacing);
-
-        // BaseWeapon anim = Player.Instantiate(weapon.anim, playerPos, Quaternion.FromToRotation(Vector2.right, looking4dir),player.transform);
-        if(weapon.anim!=null)anim = Player.Instantiate(weapon.anim, playerPos, Quaternion.identity,player.transform);
-        if(weapon.useSound!=null)SoundPlayer.PlaySound(weapon.useSound);
- 
-        AnimationClip clip = player.animFacing<weapon.animations.Length? weapon.animations[player.animFacing]:null;
-        if(weapon.anim!=null && clip!=null)anim.PlayClip(clip, Mathf.Max(1, clip.length / cooldown));
-        else if ((weapon.anim!=null)&&player.animFacing<anim.animations.Length){
-            var tmp = anim.animations[player.animFacing];
-            anim.anim.Play(tmp.name);
-            anim.anim.speed = tmp.length / cooldown;
-            if(anim.anim.speed<1)anim.anim.speed=1;
-        }
-        // HitBox hitBox = Player.Instantiate(weapon.hitBox, initPos, Direction.vec2MoveDict[player.animFacing]);
-        HitBox hitBox = Player.Instantiate(weapon.hitBox, initPos, weapon.velocity!=0?Quaternion.identity:Quaternion.FromToRotation(Vector2.right, looking4dir));
-        hitBox.weapon = weapon;
-        hitBox.setShape(weapon.GetSide(player.animFacing).shape);
-        if(weapon.hitBoxSprite!=null && hitBox.TryGetComponent(out SpriteRenderer sr))sr.sprite = weapon.hitBoxSprite;
-        hitBox.damage = weapon.damage * (weapon.isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
-        hitBox.playerPos = playerPos;
-        hitBox.setVelocity (looking.normalized * weapon.velocity);
-    }
-    public void StopAnim(){if(anim!=null)GameObject.Destroy(anim);anim=null;}
-}
-
 public class Player : Character
 {
     public CombatStat _combatStat;
@@ -101,16 +52,9 @@ public class Player : Character
 
     void Awake() {
     }
-    void OnDrawGizmos(){ // live preview of every side's hitbox (Scene view, or Game view with Gizmos on)
-        foreach(var w in new[]{lWeapon.weapon, rWeapon.weapon}){
-            if(w==null)continue;
-            for(int i=0;i<4;i++){
-                Vector2 pos = w.HitBoxPos(transform.position, i);
-                Vector2[] s = w.GetSide(i).shape;
-                Gizmos.DrawWireSphere(pos, 0.05f);
-                if(s!=null&&s.Length>=3)for(int j=0;j<s.Length;j++)Gizmos.DrawLine(pos+s[j], pos+s[(j+1)%s.Length]);
-            }
-        }
+    void OnDrawGizmos(){ // live preview of hitboxes (Scene view, or Game view with Gizmos on)
+        if(lWeapon.weapon!=null)lWeapon.weapon.DrawGizmos(transform.position);
+        if(rWeapon.weapon!=null)rWeapon.weapon.DrawGizmos(transform.position);
     }
 
     void Start()

@@ -3,58 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider2D))]
-public class HitBox : MonoBehaviour
+public class HitBox : MonoBehaviour // spawned by Weapon.Use, hit rules are in Weapon.OnHit
 {
 
     public Weapon weapon;
     public int damage;
     public Vector2 playerPos;
-    public float startTime;
-    public HashSet<Enemy> hitEnemy;
-    private Rigidbody2D rb;
-    float hitCount;
-    
-    public void setVelocity(Vector2 v){
-        if(v.magnitude==0)return;
-        if (!rb) rb = GetComponent<Rigidbody2D>();
-        rb.velocity = v;
-    }
+    public HashSet<Enemy> hitEnemy = new();
+    [System.NonSerialized] public int hitCount;
 
-    public void setShape(Vector2[] points){
-        if(points==null||points.Length<3)return;
-        foreach(var c in GetComponents<Collider2D>())c.enabled=false;
-        var poly = gameObject.AddComponent<PolygonCollider2D>();
-        poly.isTrigger = true;
-        poly.points = System.Array.ConvertAll(points, p => (Vector2)(Quaternion.Inverse(transform.rotation) * p));
-    }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        startTime = Time.time;
-        hitEnemy = new();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if(weapon.destroyTimer!=0 && Time.time-startTime>weapon.destroyTimer)Destroy(gameObject);
-    }
-
-
-    void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other.TryGetComponent(out Enemy enemy)){
-            if(!hitEnemy.Add(enemy))return;
-            enemy.recieveDamage(damage,weapon.isMagical);
-            enemy.receiveKnockback(playerPos,weapon.knocback);
-            if( weapon.maxHits>0 && weapon.maxHits <= ++hitCount)
-                Destroy(gameObject);
-        }else if(other.TryGetComponent(out Destructable des)&&!weapon.isMagical){
-            des.recieveDamage(damage,weapon.isMagical);
-            Destroy(gameObject);
-        }
-        if(weapon.destroyTimer==0)
-            Destroy(gameObject);
-    }
+    void OnTriggerEnter2D(Collider2D other) => weapon.OnHit(this, other);
 }

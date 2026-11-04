@@ -47,32 +47,12 @@ public class Loot : MonoBehaviour
         }
     }
     void PickWeaponHandle(Player player){
-        HoldingWeapons l = player.lWeapon;
-        HoldingWeapons r = player.rWeapon;
-        if(l.weapon==null||l.weapon.type==WeaponType.CQC){
-            l.weapon = weaponLoot;
-            Destroy(gameObject);
-            GameManager.Instance._Connect();//connect when first pick weapon
-            return;
-        }
-        if(r.weapon==null||r.weapon.type==WeaponType.CQC){
-            r.weapon = weaponLoot;
-            Destroy(gameObject);
-            return;
-        }
-        // if(GameManager.Instance.controller.attackLeft.isPressedOnce()){
-        if(GameManager.Instance.controller.attackLeft.isPressed){
-            (l.weapon,weaponLoot) = (weaponLoot,l.weapon);
-            UpdateImage();
-            Yoink();
-            return;
-        }
-        if(GameManager.Instance.controller.attackRight.isPressed){
-            (r.weapon,weaponLoot) = (weaponLoot,r.weapon);
-            UpdateImage();
-            Yoink();
-            return;
-        }
+        Weapon onGround = weaponLoot.PickUp(player);
+        if(onGround==null){Destroy(gameObject);return;}
+        if(onGround==weaponLoot)return;
+        weaponLoot = onGround;
+        UpdateImage();
+        Yoink();
     }
     void UpdateImage(){
         if(lootType == LootType.weapon)
