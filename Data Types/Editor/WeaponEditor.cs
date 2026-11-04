@@ -17,6 +17,7 @@ public class WeaponEditor : Editor
         {"hitBoxWidth", "hitBoxPrefab"},
         {"hitBoxSprite", "hitBoxPrefab"},
         {"hitBoxLayer", "hitBoxPrefab"},
+        {"effectController", "effectPrefab"},
         {"effectOrder", "effectPrefab"},
     };
     static readonly Dictionary<string, string> tips = new(){
@@ -31,6 +32,7 @@ public class WeaponEditor : Editor
         {"maxHits", "Enemies it can hit before disappearing. 0 = unlimited"},
         {"up", Side}, {"right", Side}, {"down", Side}, {"left", Side},
         {"effectPrefab", "Optional. Empty = made by code. Needs an Animator; plays the clip below if set, else lives for one cooldown"},
+        {"effectController", "Optional Animator Controller. Each clip plays by state name (name the state like the clip). With no clips, its default state plays once. Empty = clips play without a controller"},
         {"animations", "Effect clip per facing: up, right, down, left"},
         {"effectOrder", "Effect draw order relative to the player. 1 = in front, -1 = behind"},
     };

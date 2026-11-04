@@ -30,6 +30,7 @@ public partial class Weapon : ScriptableObject
 
     // Effect
     public Animator effectPrefab;
+    public RuntimeAnimatorController effectController;
     public AnimationClip[] animations;
     public int effectOrder = 1;
 }

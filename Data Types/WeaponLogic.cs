@@ -29,23 +29,30 @@ public partial class Weapon
     Animator SpawnEffect(Player player){
         int facing = player.animFacing;
         AnimationClip clip = facing<animations.Length? animations[facing]:null;
-        if(clip==null && effectPrefab==null)return null;
+        if(clip==null && effectPrefab==null && effectController==null)return null;
         Animator effect;
         if(effectPrefab!=null)effect = Instantiate(effectPrefab, player.transform);
         else{ // code-made: a SpriteRenderer + Animator, the clip animates the sprite
             effect = new GameObject(name+" effect", typeof(SpriteRenderer), typeof(Animator)).GetComponent<Animator>();
             CopySorting(player, effect.GetComponent<SpriteRenderer>(), effectOrder);
             effect.transform.SetParent(player.transform, false);
+            effect.runtimeAnimatorController = effectController;
         }
-        if(clip==null){Destroy(effect.gameObject, cooldown); return effect;}
-        float speed = Mathf.Max(1, clip.length / cooldown);
-        AnimationPlayableUtilities.PlayClip(effect, clip, out PlayableGraph graph).SetSpeed(speed); // drives the effect's Animator, no Animator Controller needed
-        player.StartCoroutine(EndEffect(effect, graph, clip.length / speed * .9f));
+        PlayableGraph graph = default;
+        float delay = 0; // 0 = wait for the controller's state to finish
+        if(clip!=null){
+            float speed = Mathf.Max(1, clip.length / cooldown);
+            delay = clip.length / speed * .9f;
+            if(effect.runtimeAnimatorController!=null){effect.Play(clip.name, 0, 0); effect.speed = speed;} // state named like the clip
+            else AnimationPlayableUtilities.PlayClip(effect, clip, out graph).SetSpeed(speed); // no Animator Controller needed
+        }else if(effect.runtimeAnimatorController==null){Destroy(effect.gameObject, cooldown); return effect;}
+        player.StartCoroutine(EndEffect(effect, graph, delay));
         return effect;
     }
 
     static IEnumerator EndEffect(Animator effect, PlayableGraph graph, float delay){
-        yield return new WaitForSeconds(delay);
+        if(delay>0)yield return new WaitForSeconds(delay);
+        else do yield return null; while(effect!=null && effect.GetCurrentAnimatorStateInfo(0).normalizedTime<.9f);
         if(graph.IsValid())graph.Destroy();
         if(effect!=null)Destroy(effect.gameObject);
     }
