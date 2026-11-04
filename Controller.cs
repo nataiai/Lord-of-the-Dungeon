@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -7,19 +5,10 @@ using UnityEngine.InputSystem;
 public class ControllerButton{
     [SerializeField] bool _isPressed;
     [SerializeField] bool _isSeen;
-    public bool isPressed{
-        get =>_isPressed;
-        set{
-            _isPressed = value;
-            if(!isPressed)_isSeen = false;
-        }
-    }
-    public bool isPressedOnce(){
-        if(isPressed){
-            if (_isSeen)return false;
-            _isSeen = true;
-            return true;
-        }else return false;
+    public bool isPressed{get=>_isPressed;set{_isPressed = value;if(!value)_isSeen = false;}}
+    public bool isPressedOnce(){ // true once per press
+        if(!isPressed || _isSeen)return false;
+        return _isSeen = true;
     }
 }
 
@@ -36,25 +25,18 @@ public class Controller : MonoBehaviour
     public float mouseTimeDeactivation=1f;
     public ControllerButton attackLeft;
     public ControllerButton attackRight;
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
+    void Update(){
         movement = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
         looking = Vector2.zero;
         UpdateInput();
         Cursor.visible = enableMouse;
     }
     void UpdateInput(){
-        var gamepad = Gamepad.current; //https://docs.unity3d.com/Packages/com.unity.inputsystem@1.8/manual/Gamepad.html
+        var gamepad = Gamepad.current;
         var keyboard = Keyboard.current;
         var mouse = Mouse.current;
-        if (gamepad!=null){
+        if(gamepad!=null){ // a connected gamepad replaces keyboard and mouse
             movement = gamepad.leftStick.ReadValue();
             looking = gamepad.rightStick.ReadValue();
             attack = gamepad.buttonWest.isPressed;
@@ -62,39 +44,24 @@ public class Controller : MonoBehaviour
             attackLeft.isPressed = gamepad.leftShoulder.isPressed;
             attackRight.isPressed = gamepad.rightShoulder.isPressed;
             return;
-        } 
-        if (keyboard!=null){
+        }
+        if(keyboard!=null){
             attack = keyboard.kKey.isPressed;
             switchWeapon.isPressed = keyboard.qKey.isPressed;
-        } 
-        if (mouse!=null){
-            Vector2 mousePos = mouse.position.ReadValue();
-            CheckMouseEnable(mousePos);
-            if(enableMouse){
-                Vector3 worldPos = Camera.main.ScreenToWorldPoint(
-                    new Vector3(mousePos.x, mousePos.y, 0f)
-                );
-                looking = (Vector2)  (worldPos - GameManager.Instance.player.transform.position);
-            }
-            attackLeft.isPressed = mouse.leftButton.isPressed;
-            attackRight.isPressed = mouse.rightButton.isPressed;
-        }else enableMouse = false;
+        }
+        if(mouse==null){enableMouse = false;return;}
+        Vector2 mousePos = mouse.position.ReadValue();
+        CheckMouseEnable(mousePos);
+        if(enableMouse)looking = (Vector2)(Camera.main.ScreenToWorldPoint(mousePos) - GameManager.Instance.player.transform.position);
+        attackLeft.isPressed = mouse.leftButton.isPressed;
+        attackRight.isPressed = mouse.rightButton.isPressed;
     }
-    
-    bool CheckMouseEnable(Vector2 mousePos){
+    // mouse aim turns on when the mouse moves far enough, and off after mouseTimeDeactivation seconds without moving
+    void CheckMouseEnable(Vector2 mousePos){
         if((mousePos-mouseLastPos).magnitude > mouseDistanceActivation)enableMouse=true;
         if(enableMouse){
             if((mouseLastPos-mousePos).magnitude>0){mouseLastTime=Time.time;mouseLastPos=mousePos;}
             if(Time.time - mouseLastTime > mouseTimeDeactivation)enableMouse = false;
-        }else{
-            if(Time.time - mouseLastTime > mouseTimeDeactivation){
-                mouseLastTime = Time.time;
-                mouseLastPos = mousePos;
-            }
-        }
-        return enableMouse;
+        }else if(Time.time - mouseLastTime > mouseTimeDeactivation){mouseLastTime = Time.time;mouseLastPos = mousePos;}
     }
 }
-
-// https://docs.unity3d.com/Packages/com.unity.inputsystem@1.8/api/UnityEngine.InputSystem.Controls.ButtonControl.html
-// ButtonControl -> isPressed wasPressedThisFrame wasReleasedThisFrame
