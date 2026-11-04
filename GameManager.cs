@@ -28,7 +28,7 @@ public class GameManager: MonoBehaviour{
     // public Spawner currentSpawner => currentRoom.spawner;
     public DungeonRoom initRoom;
     
-    float tmp;
+    float nextMockSpawn;
     public void _re(){
 
         map.currentRoom.gameObject.SetActive(false);
@@ -75,9 +75,9 @@ public class GameManager: MonoBehaviour{
     void Update(){
         
         if(testWithoutChat && !Input.GetKeyDown(KeyCode.L)){
-            if(tmp<Time.time){
+            if(nextMockSpawn<Time.time){
                 Spawn(mockEnemy);
-                tmp = Time.time+testWithoutChatSpawnCooldown;
+                nextMockSpawn = Time.time+testWithoutChatSpawnCooldown;
             }
         }
 

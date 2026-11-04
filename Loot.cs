@@ -76,7 +76,7 @@ public class Loot : MonoBehaviour
     }
     void UpdateImage(){
         if(lootType == LootType.weapon)
-            sr.sprite = weaponLoot.uiWep;
+            sr.sprite = weaponLoot.icon;
     }
     void PickChatSkillHandle(Player player){
         if(skill!=ChatType.invalid && !GameManager.Instance.availableSkill.Contains(skill))GameManager.Instance.availableSkill.Add(skill);

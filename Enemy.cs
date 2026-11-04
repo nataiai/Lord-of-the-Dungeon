@@ -42,11 +42,11 @@ public class Enemy : Character
         if(hurtTime<Time.time)resetHurtColor();
         if(Time.time>lifeSpan+born)Died();
         if(isDead)Died();
-        if(StuntMech(enemyData.knocbackRecovery))return;
+        if(StuntMech(enemyData.knockbackRecovery))return;
         Player player = FindObjectOfType<Player>();
         movement = player.transform.position - transform.position;
         if(movement.magnitude<enemyData.noticeRange)notice=true;
-        if(notice)rb.velocity = movement.normalized * enemyData.initSpeed;
+        if(notice)rb.velocity = movement.normalized * enemyData.moveSpeed;
         setAnimFacing(movement);
     }
 
@@ -94,7 +94,7 @@ public class Enemy : Character
             if (cooldownTimer>Time.time)return;
             player.receiveKnockback(transform.position,enemyData.attackKnockback);
             player.recieveDamage(enemyData.combatStat.attackPhysic);
-            cooldownTimer = Time.time+enemyData.cooldown;
+            cooldownTimer = Time.time+enemyData.attackCooldown;
         }
     }
 }

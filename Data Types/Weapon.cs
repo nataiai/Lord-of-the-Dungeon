@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [CreateAssetMenu(
     fileName = "WeaponSO",
@@ -15,14 +16,14 @@ public class Weapon : ScriptableObject
     public bool isMagical;
     public int damage;
     public float cooldown;
-    public float knocback;
+    [FormerlySerializedAs("knocback")] public float knockback;
 
-    public float range;
+    [FormerlySerializedAs("range")] public float hitBoxDistance; // how far in front of the player the hitbox spawns
     public HitBox hitBox;
-    public float velocity;
-    public float destroyTimer;
-    public int destroyOnHit;
-    public BaseWeapon anim;
-    public Sprite uiWep;
+    [FormerlySerializedAs("velocity")] public float projectileSpeed; // 0 = hitbox stays in place
+    [FormerlySerializedAs("destroyTimer")] public float hitBoxLifetime; // 0 = destroyed on first touch
+    [FormerlySerializedAs("destroyOnHit")] public int maxHits; // 0 = unlimited
+    [FormerlySerializedAs("anim")] public BaseWeapon animPrefab;
+    [FormerlySerializedAs("uiWep")] public Sprite icon;
 
 }

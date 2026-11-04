@@ -30,7 +30,7 @@ public class HitBox : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(weapon.destroyTimer!=0 && Time.time-startTime>weapon.destroyTimer)Destroy(gameObject);
+        if(weapon.hitBoxLifetime!=0 && Time.time-startTime>weapon.hitBoxLifetime)Destroy(gameObject);
     }
 
 
@@ -39,14 +39,14 @@ public class HitBox : MonoBehaviour
         if (other.TryGetComponent(out Enemy enemy)){
             if(!hitEnemy.Add(enemy))return;
             enemy.recieveDamage(damage,weapon.isMagical);
-            enemy.receiveKnockback(playerPos,weapon.knocback);
-            if( weapon.destroyOnHit>0 && weapon.destroyOnHit <= ++hitCount)
+            enemy.receiveKnockback(playerPos,weapon.knockback);
+            if( weapon.maxHits>0 && weapon.maxHits <= ++hitCount)
                 Destroy(gameObject);
         }else if(other.TryGetComponent(out Destructable des)&&!weapon.isMagical){
             des.recieveDamage(damage,weapon.isMagical);
             Destroy(gameObject);
         }
-        if(weapon.destroyTimer==0)
+        if(weapon.hitBoxLifetime==0)
             Destroy(gameObject);
     }
 }
