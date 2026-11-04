@@ -12,23 +12,24 @@ using UnityEngine.Serialization;
 )]
 public class Weapon : ScriptableObject // everything a weapon is and does: stats, attack, hit rules, pick up
 {
+    [Header("Weapon")]
     public WeaponType type;
-    public AudioClip useSound;
-    public AudioClip hitSound;
+    public Sprite uiWep;
     public bool isMagical;
     public int damage;
     public float cooldown;
     public float knocback;
+    public AudioClip useSound;
+    public AudioClip hitSound;
 
-    [Tooltip("How far in front of the player the hitbox spawns")]
+    [Header("Hitbox (made by code, x = right, y = up)")]
+    [Tooltip("Box length, from the player along the facing direction. 0 = no box")]
+    public float hitBoxLength;
+    [Tooltip("Box width, across the facing direction. 0 = no box")]
+    public float hitBoxWidth;
+    [Tooltip("Push the hitbox forward from the player")]
     [FormerlySerializedAs("range")]
     public float hitBoxDistance;
-    public HitBox hitBox;
-    [Tooltip("Optional sprite for the hitbox (e.g. arrow). Empty = keep the prefab's sprite")]
-    public Sprite hitBoxSprite;
-    [Header("Hitbox per facing direction (x = right, y = up)")]
-    public HitBoxSide up;
-    public HitBoxSide right, down, left;
     [Tooltip("Hitbox flying speed. 0 = stays where it spawns")]
     public float velocity;
     [Tooltip("Seconds before the hitbox disappears. 0 = disappears on first touch")]
@@ -36,51 +37,61 @@ public class Weapon : ScriptableObject // everything a weapon is and does: stats
     [Tooltip("Enemies it can hit before disappearing. 0 = unlimited")]
     [FormerlySerializedAs("destroyOnHit")]
     public int maxHits;
-    [Tooltip("Weapon effect clip per facing: up, right, down, left. Empty = no effect")]
+    [Tooltip("Optional hitbox sprite (e.g. arrow)")]
+    public Sprite hitBoxSprite;
+    [Tooltip("Physics layer of the hitbox (pick one). Not used with a prefab")]
+    public LayerMask hitBoxLayer;
+    [Tooltip("Per facing side: extra offset, and an optional custom shape that replaces the box")]
+    public HitBoxSide up, right, down, left;
+
+    [Header("Effect (made by code)")]
+    [Tooltip("Effect clip per facing: up, right, down, left. Empty = no effect")]
     public AnimationClip[] animations;
     [Tooltip("Effect draw order relative to the player. 1 = in front, -1 = behind")]
     public int effectOrder = 1;
-    public Sprite uiWep;
+
+    [Header("Prefabs (optional, used instead of the code-made objects)")]
+    [Tooltip("Hitbox prefab. Its collider is replaced when a box or shape is set above")]
+    [FormerlySerializedAs("hitBox")]
+    public HitBox hitBoxPrefab;
+    [Tooltip("Effect prefab, spawned on the player. Plays the clip above if set, else lives for one cooldown")]
+    public GameObject effectPrefab;
 
     public HitBoxSide GetSide(int facing) => new[]{up, right, down, left}[facing];
     public Vector2 HitBoxPos(Vector2 playerPos, int facing) =>
         playerPos + new Vector2(0,0.5f) + Direction.vec2MoveDict[facing] * hitBoxDistance + GetSide(facing).offset;
-
-    // Attack: play the effect animation and spawn the hitbox. Returns the effect object (or null)
-    public GameObject Use(Player player){
-        int facing = player.animFacing;
-        Vector2 playerPos = player.transform.position;
-        Vector2 looking4dir = Direction.vec2MoveDict[facing];
-
-        if(useSound!=null)SoundPlayer.PlaySound(useSound);
-        GameObject effect = null;
-        AnimationClip clip = facing<animations.Length? animations[facing]:null;
-        if(clip!=null){ // effect object is built here, no prefab or Animator Controller needed
-            SpriteRenderer playerSr = player.GetComponentInChildren<SpriteRenderer>();
-            effect = new GameObject(name+" effect", typeof(SpriteRenderer), typeof(Animator));
-            effect.transform.SetParent(player.transform, false);
-            SpriteRenderer esr = effect.GetComponent<SpriteRenderer>();
-            if(playerSr!=null){esr.sortingLayerID = playerSr.sortingLayerID; esr.sortingOrder = playerSr.sortingOrder + effectOrder;}
-            float speed = Mathf.Max(1, clip.length / cooldown);
-            AnimationPlayableUtilities.PlayClip(effect.GetComponent<Animator>(), clip, out PlayableGraph graph).SetSpeed(speed);
-            player.StartCoroutine(EndEffect(effect, graph, clip.length / speed * .9f));
-        }
-
-        HitBox hb = Instantiate(hitBox, HitBoxPos(playerPos, facing), velocity!=0?Quaternion.identity:Quaternion.FromToRotation(Vector2.right, looking4dir));
-        hb.weapon = this;
-        hb.damage = damage * (isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
-        hb.playerPos = playerPos;
-        if(hitBoxSprite!=null && hb.TryGetComponent(out SpriteRenderer sr))sr.sprite = hitBoxSprite;
+    // Hitbox outline around HitBoxPos: the side's custom shape, else the length x width box, else null
+    public Vector2[] GetShape(int facing){
         Vector2[] shape = GetSide(facing).shape;
-        if(shape!=null && shape.Length>=3){ // replace the prefab's collider with the custom shape
-            foreach(var c in hb.GetComponents<Collider2D>())c.enabled=false;
-            var poly = hb.gameObject.AddComponent<PolygonCollider2D>();
-            poly.isTrigger = true;
-            poly.points = System.Array.ConvertAll(shape, p => (Vector2)(Quaternion.Inverse(hb.transform.rotation) * p));
+        if(shape!=null && shape.Length>=3)return shape;
+        if(hitBoxLength<=0 || hitBoxWidth<=0)return null;
+        Vector2 f = Direction.vec2MoveDict[facing] * hitBoxLength, w = Vector2.Perpendicular(Direction.vec2MoveDict[facing]) * hitBoxWidth/2;
+        return new[]{w, f+w, f-w, -w};
+    }
+
+    // Attack: play the effect and spawn the hitbox. Returns the effect object (or null)
+    public GameObject Use(Player player){
+        if(useSound!=null)SoundPlayer.PlaySound(useSound);
+        SpawnHitBox(player);
+        return SpawnEffect(player);
+    }
+
+    GameObject SpawnEffect(Player player){
+        int facing = player.animFacing;
+        AnimationClip clip = facing<animations.Length? animations[facing]:null;
+        if(clip==null && effectPrefab==null)return null;
+        GameObject effect;
+        if(effectPrefab!=null)effect = Instantiate(effectPrefab, player.transform);
+        else{
+            effect = new GameObject(name+" effect", typeof(SpriteRenderer));
+            CopySorting(player, effect.GetComponent<SpriteRenderer>(), effectOrder);
+            effect.transform.SetParent(player.transform, false);
         }
-        Vector2 v = player.looking.normalized * velocity;
-        if(v.magnitude!=0)hb.GetComponent<Rigidbody2D>().velocity = v;
-        if(destroyTimer!=0)Destroy(hb.gameObject, destroyTimer);
+        if(clip==null){Destroy(effect, cooldown); return effect;}
+        if(!effect.TryGetComponent(out Animator animator))animator = effect.AddComponent<Animator>();
+        float speed = Mathf.Max(1, clip.length / cooldown);
+        AnimationPlayableUtilities.PlayClip(animator, clip, out PlayableGraph graph).SetSpeed(speed); // no Animator Controller needed
+        player.StartCoroutine(EndEffect(effect, graph, clip.length / speed * .9f));
         return effect;
     }
 
@@ -90,8 +101,48 @@ public class Weapon : ScriptableObject // everything a weapon is and does: stats
         if(effect!=null)Destroy(effect);
     }
 
+    HitBox SpawnHitBox(Player player){
+        int facing = player.animFacing;
+        Vector2 playerPos = player.transform.position;
+        Vector2 pos = HitBoxPos(playerPos, facing);
+        Quaternion rot = velocity!=0?Quaternion.identity:Quaternion.FromToRotation(Vector2.right, Direction.vec2MoveDict[facing]);
+        Vector2[] shape = GetShape(facing);
+        GameObject go;
+        if(hitBoxPrefab!=null){
+            go = Instantiate(hitBoxPrefab, pos, rot).gameObject;
+            if(shape!=null)foreach(var c in go.GetComponents<Collider2D>())c.enabled=false; // replaced by the shape below
+        }else{
+            go = new GameObject(name+" hitbox");
+            go.transform.SetPositionAndRotation(pos, rot);
+            for(int i=0;i<32;i++)if((hitBoxLayer.value & 1<<i)!=0){go.layer = i; break;}
+            go.AddComponent<Rigidbody2D>().gravityScale = 0;
+            if(shape==null)go.AddComponent<BoxCollider2D>().isTrigger = true;
+            if(hitBoxSprite!=null)CopySorting(player, go.AddComponent<SpriteRenderer>(), effectOrder);
+        }
+        if(shape!=null){
+            var poly = go.AddComponent<PolygonCollider2D>();
+            poly.isTrigger = true;
+            poly.points = System.Array.ConvertAll(shape, p => (Vector2)(Quaternion.Inverse(rot) * p)); // shape is in world directions
+        }
+        if(hitBoxSprite!=null && go.TryGetComponent(out SpriteRenderer sr))sr.sprite = hitBoxSprite;
+        if(!go.TryGetComponent(out HitBox hb))hb = go.AddComponent<HitBox>();
+        hb.weapon = this;
+        hb.damage = damage * (isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
+        hb.playerPos = playerPos;
+        Vector2 v = player.looking.normalized * velocity;
+        if(v.magnitude!=0)go.GetComponent<Rigidbody2D>().velocity = v;
+        if(destroyTimer!=0)Destroy(go, destroyTimer);
+        return hb;
+    }
+
+    static void CopySorting(Player player, SpriteRenderer sr, int order){ // draw on the player's layer
+        SpriteRenderer p = player.GetComponentInChildren<SpriteRenderer>();
+        if(p!=null){sr.sortingLayerID = p.sortingLayerID; sr.sortingOrder = p.sortingOrder + order;}
+    }
+
     // Called by the hitbox when it touches something
     public void OnHit(HitBox hb, Collider2D other){
+        if(other.TryGetComponent(out Player _))return; // never hit the player
         if (other.TryGetComponent(out Enemy enemy)){
             if(!hb.hitEnemy.Add(enemy))return;
             enemy.recieveDamage(hb.damage,isMagical);
@@ -131,7 +182,7 @@ public class Weapon : ScriptableObject // everything a weapon is and does: stats
     public void DrawGizmos(Vector2 playerPos){
         for(int i=0;i<4;i++){
             Vector2 pos = HitBoxPos(playerPos, i);
-            Vector2[] s = GetSide(i).shape;
+            Vector2[] s = GetShape(i);
             Gizmos.DrawWireSphere(pos, 0.05f);
             if(s!=null&&s.Length>=3)for(int j=0;j<s.Length;j++)Gizmos.DrawLine(pos+s[j], pos+s[(j+1)%s.Length]);
         }
@@ -143,7 +194,7 @@ public class HitBoxSide
 {
     [Tooltip("Extra hitbox spawn offset")]
     public Vector2 offset;
-    [Tooltip("Optional hitbox shape, 3+ points around the spawn point. Empty = use the prefab's collider")]
+    [Tooltip("Optional custom hitbox shape, 3+ points around the spawn point. Empty = use the length x width box")]
     public Vector2[] shape;
 }
 
