@@ -25,7 +25,7 @@ public class HitBox : MonoBehaviour
         foreach(var c in GetComponents<Collider2D>())c.enabled=false;
         var poly = gameObject.AddComponent<PolygonCollider2D>();
         poly.isTrigger = true;
-        poly.points = points;
+        poly.points = System.Array.ConvertAll(points, p => (Vector2)(Quaternion.Inverse(transform.rotation) * p));
     }
 
     // Start is called before the first frame update
