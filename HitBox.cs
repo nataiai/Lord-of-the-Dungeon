@@ -20,6 +20,14 @@ public class HitBox : MonoBehaviour
         rb.velocity = v;
     }
 
+    public void setShape(Vector2[] points){
+        if(points==null||points.Length<3)return;
+        foreach(var c in GetComponents<Collider2D>())c.enabled=false;
+        var poly = gameObject.AddComponent<PolygonCollider2D>();
+        poly.isTrigger = true;
+        poly.points = points;
+    }
+
     // Start is called before the first frame update
     void Start()
     {

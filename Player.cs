@@ -32,7 +32,8 @@ public class HoldingWeapons{
         Vector2 playerPos = player.transform.position;
         Vector2 looking = player.looking;
         Vector2 looking4dir = Direction.vec2MoveDict[player.animFacing];
-        Vector2 initPos = (Vector2) playerPos + new Vector2(0,0.5f) + looking4dir * weapon.hitBoxDistance;
+        Vector2 initPos = (Vector2) playerPos + new Vector2(0,0.5f) + looking4dir * weapon.hitBoxDistance
+            + looking4dir * weapon.hitBoxOffset.x + Vector2.Perpendicular(looking4dir) * weapon.hitBoxOffset.y;
 
         // BaseWeapon anim = Player.Instantiate(weapon.anim, playerPos, Quaternion.FromToRotation(Vector2.right, looking4dir),player.transform);
         if(weapon.anim!=null)anim = Player.Instantiate(weapon.anim, playerPos, Quaternion.identity,player.transform);
@@ -47,6 +48,7 @@ public class HoldingWeapons{
         // HitBox hitBox = Player.Instantiate(weapon.hitBox, initPos, Direction.vec2MoveDict[player.animFacing]);
         HitBox hitBox = Player.Instantiate(weapon.hitBox, initPos, weapon.velocity!=0?Quaternion.identity:Quaternion.FromToRotation(Vector2.right, looking4dir));
         hitBox.weapon = weapon;
+        hitBox.setShape(weapon.hitBoxShape);
         hitBox.damage = weapon.damage * (weapon.isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
         hitBox.playerPos = playerPos;
         hitBox.setVelocity (looking.normalized * weapon.velocity);

@@ -22,6 +22,10 @@ public class Weapon : ScriptableObject
     [FormerlySerializedAs("range")]
     public float hitBoxDistance;
     public HitBox hitBox;
+    [Tooltip("Extra hitbox spawn offset. x = forward, y = to the left (turns with facing direction)")]
+    public Vector2 hitBoxOffset;
+    [Tooltip("Optional custom hitbox shape (3+ points, local space, x = forward). Empty = use the prefab's collider")]
+    public Vector2[] hitBoxShape;
     [Tooltip("Hitbox flying speed. 0 = stays where it spawns")]
     public float velocity;
     [Tooltip("Seconds before the hitbox disappears. 0 = disappears on first touch")]
