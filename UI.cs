@@ -77,7 +77,7 @@ public class UI : MonoBehaviour
         if(skillsReload.Count>0)skillsReload[0].fillAmount=GameManager.Instance.summondb.spawnSkill.getReloadPercent();
     }
     public void UpdateWeap(){
-        if(player.lWeapon.weapon!=null)wepImages[0].sprite = player.lWeapon.weapon.icon;
-        if(player.rWeapon.weapon!=null)wepImages[1].sprite = player.rWeapon.weapon.icon;
+        if(player.lWeapon.weapon!=null)wepImages[0].sprite = player.lWeapon.weapon.uiWep;
+        if(player.rWeapon.weapon!=null)wepImages[1].sprite = player.rWeapon.weapon.uiWep;
     }
 }

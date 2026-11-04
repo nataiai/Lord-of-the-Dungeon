@@ -21,14 +21,16 @@ public class GameManager: MonoBehaviour{
     public UI uiPrefab;
     public TwitchChat chat;
     public SimpleSummonDB summondb => chat.summondb;
+    public List<Enemy> summonableEnemy => summondb.summonableEnemy;
     public DungeonMap map;
+    public DungeonMap dungeonMap => map;
     public DungeonRoom currentRoom => map.currentRoom;
     public List<ChatType> availableSkill;
     public void UpdateMusic()=>SoundPlayer.instance.UpdateMusic();
     // public Spawner currentSpawner => currentRoom.spawner;
     public DungeonRoom initRoom;
     
-    float nextMockSpawn;
+    float tmp;
     public void _re(){
 
         map.currentRoom.gameObject.SetActive(false);
@@ -75,9 +77,9 @@ public class GameManager: MonoBehaviour{
     void Update(){
         
         if(testWithoutChat && !Input.GetKeyDown(KeyCode.L)){
-            if(nextMockSpawn<Time.time){
+            if(tmp<Time.time){
                 Spawn(mockEnemy);
-                nextMockSpawn = Time.time+testWithoutChatSpawnCooldown;
+                tmp = Time.time+testWithoutChatSpawnCooldown;
             }
         }
 

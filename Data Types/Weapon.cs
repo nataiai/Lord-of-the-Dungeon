@@ -16,14 +16,14 @@ public class Weapon : ScriptableObject
     public bool isMagical;
     public int damage;
     public float cooldown;
-    [FormerlySerializedAs("knocback")] public float knockback;
+    public float knocback;
 
     [FormerlySerializedAs("range")] public float hitBoxDistance; // how far in front of the player the hitbox spawns
     public HitBox hitBox;
-    [FormerlySerializedAs("velocity")] public float projectileSpeed; // 0 = hitbox stays in place
-    [FormerlySerializedAs("destroyTimer")] public float hitBoxLifetime; // 0 = destroyed on first touch
-    [FormerlySerializedAs("destroyOnHit")] public int maxHits; // 0 = unlimited
-    [FormerlySerializedAs("anim")] public BaseWeapon animPrefab;
-    [FormerlySerializedAs("uiWep")] public Sprite icon;
+    public float velocity;
+    public float destroyTimer;
+    [FormerlySerializedAs("destroyOnHit")] public int maxHits; // hits before the hitbox is destroyed, 0 = unlimited
+    public BaseWeapon anim;
+    public Sprite uiWep;
 
 }

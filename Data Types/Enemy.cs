@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 [CreateAssetMenu(
     fileName = "EnemySO",
@@ -11,12 +10,12 @@ using UnityEngine.Serialization;
 public class EnemySO : ScriptableObject
 {
     public string enemyName;
-    [FormerlySerializedAs("initSpeed")] public float moveSpeed;
+    public float initSpeed;
     public int maxHP;
-    [FormerlySerializedAs("cooldown")] public float attackCooldown;
+    public float cooldown;
     public CombatStat combatStat;
     public float knockbackResistance; // 1 = immune to knockback; 0 = get full knockback
-    [FormerlySerializedAs("knocbackRecovery")] public float knockbackRecovery = 4;
+    public float knocbackRecovery = 4;
 
     public float attackKnockback;
     public bool ignoreCollide;

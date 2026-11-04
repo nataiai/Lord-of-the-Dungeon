@@ -6,6 +6,7 @@ using UnityEngine;
 public class Enemy : Character
 {
     public EnemySO enemyData;
+    public float initSpeed=>enemyData.initSpeed;
     public override CombatStat combatStat{get=>enemyData.combatStat;set{}}
     [SerializeField] Animator anim;
     [SerializeField] AnimationClip[] enemyIdle, enemyWalk, enemyAttack;
@@ -42,11 +43,11 @@ public class Enemy : Character
         if(hurtTime<Time.time)resetHurtColor();
         if(Time.time>lifeSpan+born)Died();
         if(isDead)Died();
-        if(StuntMech(enemyData.knockbackRecovery))return;
+        if(StuntMech(enemyData.knocbackRecovery))return;
         Player player = FindObjectOfType<Player>();
         movement = player.transform.position - transform.position;
         if(movement.magnitude<enemyData.noticeRange)notice=true;
-        if(notice)rb.velocity = movement.normalized * enemyData.moveSpeed;
+        if(notice)rb.velocity = movement.normalized * enemyData.initSpeed;
         setAnimFacing(movement);
     }
 
@@ -94,7 +95,7 @@ public class Enemy : Character
             if (cooldownTimer>Time.time)return;
             player.receiveKnockback(transform.position,enemyData.attackKnockback);
             player.recieveDamage(enemyData.combatStat.attackPhysic);
-            cooldownTimer = Time.time+enemyData.attackCooldown;
+            cooldownTimer = Time.time+enemyData.cooldown;
         }
     }
 }

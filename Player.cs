@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.Serialization;
 
 public class Direction{
 
@@ -17,7 +16,7 @@ public class HoldingWeapons{
     public bool isOnCooldown=>lastUse+cooldown>Time.time;
     public bool isUsable=>weapon!=null&&!isOnCooldown;
     public float cooldown=>weapon.cooldown;
-    BaseWeapon animObj;
+    BaseWeapon anim;
     public void Use(Player player){
         if(!isUsable)return;
         else ForceUse(player);
@@ -36,31 +35,31 @@ public class HoldingWeapons{
         Vector2 initPos = (Vector2) playerPos + new Vector2(0,0.5f) + looking4dir * weapon.hitBoxDistance;
 
         // BaseWeapon anim = Player.Instantiate(weapon.anim, playerPos, Quaternion.FromToRotation(Vector2.right, looking4dir),player.transform);
-        if(weapon.animPrefab!=null)animObj = Player.Instantiate(weapon.animPrefab, playerPos, Quaternion.identity,player.transform);
+        if(weapon.anim!=null)anim = Player.Instantiate(weapon.anim, playerPos, Quaternion.identity,player.transform);
         if(weapon.useSound!=null)SoundPlayer.PlaySound(weapon.useSound);
  
-        if ((weapon.animPrefab!=null)&&player.animFacing<animObj.animations.Length){
-            var clip = animObj.animations[player.animFacing];
-            animObj.anim.Play(clip.name);
-            animObj.anim.speed = clip.length / cooldown;
-            if(animObj.anim.speed<1)animObj.anim.speed=1;
+        if ((weapon.anim!=null)&&player.animFacing<anim.animations.Length){
+            var tmp = anim.animations[player.animFacing];
+            anim.anim.Play(tmp.name);
+            anim.anim.speed = tmp.length / cooldown;
+            if(anim.anim.speed<1)anim.anim.speed=1;
         }
         // HitBox hitBox = Player.Instantiate(weapon.hitBox, initPos, Direction.vec2MoveDict[player.animFacing]);
-        HitBox hitBox = Player.Instantiate(weapon.hitBox, initPos, weapon.projectileSpeed!=0?Quaternion.identity:Quaternion.FromToRotation(Vector2.right, looking4dir));
+        HitBox hitBox = Player.Instantiate(weapon.hitBox, initPos, weapon.velocity!=0?Quaternion.identity:Quaternion.FromToRotation(Vector2.right, looking4dir));
         hitBox.weapon = weapon;
         hitBox.damage = weapon.damage * (weapon.isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
         hitBox.playerPos = playerPos;
-        hitBox.setVelocity (looking.normalized * weapon.projectileSpeed);
+        hitBox.setVelocity (looking.normalized * weapon.velocity);
     }
-    public void StopAnim(){if(animObj!=null)GameObject.Destroy(animObj);animObj=null;}
+    public void StopAnim(){if(anim!=null)GameObject.Destroy(anim);anim=null;}
 }
 
 public class Player : Character
 {
     public CombatStat _combatStat;
     public override CombatStat combatStat{get=>_combatStat;set=>_combatStat=value;}
-    [FormerlySerializedAs("_initSpeed")] public float _moveSpeed=1;
-    public float moveSpeed=>_moveSpeed;
+    public float _initSpeed=1;
+    public float initSpeed=>_initSpeed;
     public int _maxHP = 4;
     public int maxHP{get=>_maxHP;set{_maxHP=value;GameManager.Instance.ui.UpdateMaxHP(maxHP);}}
     public bool enableInvincible;
@@ -77,7 +76,7 @@ public class Player : Character
     const int SPEAR = (int)WeaponType.Spear;
     const int CQC = (int)WeaponType.CQC;
     Vector2 lastMove;
-    float animDuration;
+    float cooldown;
     string currentAnim;
     [SerializeField] Animator anim;
     [SerializeField] AnimationClip[] playerIdle, playerWalk, playerIdleWater, playerWalkWater, playerSwinging, playerShooting, playerUseRod, playerSpear;
@@ -87,7 +86,7 @@ public class Player : Character
     [SerializeField] float knockbackResistance;
     Controller controller;
 
-    [FormerlySerializedAs("invincibleCooldownTime")] public float invincibleDuration;
+    public float invincibleCooldownTime;
     float invincibleTime;
     public bool isInvincible => invincibleTime>Time.time;
     public bool forceAnim;
@@ -114,18 +113,18 @@ public class Player : Character
         if(movement.magnitude>0)lastMove = movement;
         if(looking.magnitude==0)looking=lastMove;
         // transform.position += (Vector3) (movement) * initSpeed * Time.deltaTime; // collision problem
-        if(!StuntMech(8))rb.velocity = (movement) * moveSpeed;
+        if(!StuntMech(8))rb.velocity = (movement) * initSpeed;
         // if(controller.attack)Attack(activeWeapon);
         if(lWeapon.isUsable && controller.attackLeft.isPressed){
             forceAnim = true;
             lWeapon.Use(this);
-            animDuration = lWeapon.cooldown;
+            cooldown = lWeapon.cooldown;
             state = (int)lWeapon.weapon.type;
         }
         if(rWeapon.isUsable && controller.attackRight.isPressed){
             forceAnim = true;
             rWeapon.Use(this);
-            animDuration = rWeapon.cooldown;
+            cooldown = rWeapon.cooldown;
             state = (int)rWeapon.weapon.type;
         }
         // if(controller.isSwitchWeapon())SwitchWeapon();
@@ -146,12 +145,12 @@ public class Player : Character
         setAnimFacing(looking);
         switch(state){
             case IDLE:
-                animDuration = 0;
+                cooldown = 0;
                 if(isHealing)ChangeAnimation(playerIdleWater, animFacing);
                 else ChangeAnimation(playerIdle, animFacing);
             break;
             case MOVING:
-                animDuration = 0;
+                cooldown = 0;
                 if(isHealing)ChangeAnimation(playerWalkWater, animFacing);
                 else ChangeAnimation(playerWalk, animFacing);
             break;
@@ -197,7 +196,7 @@ public class Player : Character
 
             currentAnim = toAnim.name;
 
-            if(animDuration!=0)anim.speed = toAnim.length / animDuration;
+            if(cooldown!=0)anim.speed = toAnim.length / cooldown;
             else anim.speed = 1;
             if(anim.speed<1) anim.speed = 1;
         }
@@ -212,7 +211,7 @@ public class Player : Character
         if(enableInvincible && isInvincible)return;
         HP-=dmg;
         
-        invincibleTime = invincibleDuration+Time.time;
+        invincibleTime = invincibleCooldownTime+Time.time;
     }
 
     // public void receiveKnockback(Vector3 pos)=>receiveKnockback(pos,0);
