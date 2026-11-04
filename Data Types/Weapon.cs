@@ -26,18 +26,11 @@ public partial class Weapon : ScriptableObject
     public float velocity;
     public float destroyTimer;
     [FormerlySerializedAs("destroyOnHit")] public int maxHits;
-    public HitBoxSide up, right, down, left;
+    public Vector2 upOffset, rightOffset, downOffset, leftOffset;
 
     // Effect
     public Animator effectPrefab;
     public RuntimeAnimatorController effectController;
     public AnimationClip[] animations;
     public int effectOrder = 1;
-}
-
-[System.Serializable]
-public class HitBoxSide
-{
-    public Vector2 offset;
-    public Vector2[] shape;
 }

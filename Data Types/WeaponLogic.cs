@@ -7,13 +7,11 @@ using UnityEngine.Playables;
 // What a weapon does: attack, hit rules, pick up, gizmo preview. The data is in Weapon.cs
 public partial class Weapon
 {
-    public HitBoxSide GetSide(int facing) => new[]{up, right, down, left}[facing];
+    public Vector2 GetOffset(int facing) => new[]{upOffset, rightOffset, downOffset, leftOffset}[facing];
     public Vector2 HitBoxPos(Vector2 playerPos, int facing) =>
-        playerPos + new Vector2(0,0.5f) + Direction.vec2MoveDict[facing] * hitBoxDistance + GetSide(facing).offset;
-    // Hitbox outline around HitBoxPos: the side's custom shape, else the length x width box (code-made only), else null
-    public Vector2[] GetShape(int facing){
-        Vector2[] shape = GetSide(facing).shape;
-        if(shape!=null && shape.Length>=3)return shape;
+        playerPos + new Vector2(0,0.5f) + Direction.vec2MoveDict[facing] * hitBoxDistance + GetOffset(facing);
+    // Code-made box corners around HitBoxPos (for the gizmo): length along facing, width across. null with a prefab or no size
+    public Vector2[] GetBoxCorners(int facing){
         if(hitBoxPrefab!=null || hitBoxLength<=0 || hitBoxWidth<=0)return null;
         Vector2 f = Direction.vec2MoveDict[facing] * hitBoxLength, w = Vector2.Perpendicular(Direction.vec2MoveDict[facing]) * hitBoxWidth/2;
         return new[]{w, f+w, f-w, -w};
@@ -62,21 +60,20 @@ public partial class Weapon
         Vector2 playerPos = player.transform.position;
         Vector2 pos = HitBoxPos(playerPos, facing);
         Quaternion rot = velocity!=0?Quaternion.identity:Quaternion.FromToRotation(Vector2.right, Direction.vec2MoveDict[facing]);
-        Vector2[] shape = GetShape(facing);
         HitBox hb;
-        if(hitBoxPrefab!=null){
-            hb = Instantiate(hitBoxPrefab, pos, rot);
-            if(shape!=null){
-                foreach(var c in hb.GetComponents<Collider2D>())c.enabled=false; // replaced by the shape
-                SetShape(hb.gameObject.AddComponent<PolygonCollider2D>(), shape, rot);
-            }
-        }else{ // code-made: Rigidbody2D + trigger collider + HitBox
-            hb = new GameObject(name+" hitbox", typeof(Rigidbody2D), shape!=null?typeof(PolygonCollider2D):typeof(BoxCollider2D), typeof(HitBox)).GetComponent<HitBox>();
+        if(hitBoxPrefab!=null)hb = Instantiate(hitBoxPrefab, pos, rot);
+        else{ // code-made: Rigidbody2D + trigger box + HitBox
+            hb = new GameObject(name+" hitbox", typeof(Rigidbody2D), typeof(BoxCollider2D), typeof(HitBox)).GetComponent<HitBox>();
             hb.transform.SetPositionAndRotation(pos, rot);
             for(int i=0;i<32;i++)if((hitBoxLayer.value & 1<<i)!=0){hb.gameObject.layer = i; break;}
             hb.GetComponent<Rigidbody2D>().gravityScale = 0;
-            hb.GetComponent<Collider2D>().isTrigger = true;
-            if(shape!=null)SetShape(hb.GetComponent<PolygonCollider2D>(), shape, rot);
+            BoxCollider2D box = hb.GetComponent<BoxCollider2D>();
+            box.isTrigger = true;
+            if(hitBoxLength>0 && hitBoxWidth>0){ // from the spawn point: length along facing, width across
+                Vector2 dir = Quaternion.Inverse(rot) * Direction.vec2MoveDict[facing]; // facing in the hitbox's own space
+                box.size = new Vector2(Mathf.Abs(dir.x)*hitBoxLength + Mathf.Abs(dir.y)*hitBoxWidth, Mathf.Abs(dir.y)*hitBoxLength + Mathf.Abs(dir.x)*hitBoxWidth);
+                box.offset = dir * hitBoxLength/2;
+            }
             if(hitBoxSprite!=null){var sr = hb.gameObject.AddComponent<SpriteRenderer>(); sr.sprite = hitBoxSprite; CopySorting(player, sr, 1);}
         }
         hb.weapon = this;
@@ -86,11 +83,6 @@ public partial class Weapon
         if(v.magnitude!=0)hb.GetComponent<Rigidbody2D>().velocity = v;
         if(destroyTimer!=0)Destroy(hb.gameObject, destroyTimer);
         return hb;
-    }
-
-    static void SetShape(PolygonCollider2D poly, Vector2[] shape, Quaternion rot){
-        poly.isTrigger = true;
-        poly.points = System.Array.ConvertAll(shape, p => (Vector2)(Quaternion.Inverse(rot) * p)); // shape is in world directions
     }
 
     static void CopySorting(Player player, SpriteRenderer sr, int order){ // draw on the player's layer
@@ -140,7 +132,7 @@ public partial class Weapon
     public void DrawGizmos(Vector2 playerPos){
         for(int i=0;i<4;i++){
             Vector2 pos = HitBoxPos(playerPos, i);
-            Vector2[] s = GetShape(i);
+            Vector2[] s = GetBoxCorners(i);
             Gizmos.DrawWireSphere(pos, 0.05f);
             if(s!=null&&s.Length>=3)for(int j=0;j<s.Length;j++)Gizmos.DrawLine(pos+s[j], pos+s[(j+1)%s.Length]);
         }

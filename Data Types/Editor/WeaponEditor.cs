@@ -22,21 +22,23 @@ public class WeaponEditor : Editor
     };
     static readonly Dictionary<string, string> tips = new(){
         {"hitBoxPrefab", "Optional. Empty = made by code from the settings below"},
-        {"hitBoxLength", "Box length, from the player along the facing direction. 0 = no box"},
-        {"hitBoxWidth", "Box width, across the facing direction. 0 = no box"},
+        {"hitBoxLength", "Box length, from the player along the facing direction. 0 = default 1x1 box"},
+        {"hitBoxWidth", "Box width, across the facing direction. 0 = default 1x1 box"},
         {"hitBoxSprite", "Optional hitbox sprite (e.g. arrow)"},
         {"hitBoxLayer", "Physics layer of the hitbox (pick one)"},
         {"hitBoxDistance", "Push the hitbox forward from the player"},
         {"velocity", "Hitbox flying speed. 0 = stays where it spawns"},
         {"destroyTimer", "Seconds before the hitbox disappears. 0 = disappears on first touch"},
         {"maxHits", "Enemies it can hit before disappearing. 0 = unlimited"},
-        {"up", Side}, {"right", Side}, {"down", Side}, {"left", Side},
+        {"upOffset", "Extra hitbox shift when facing up (x = right, y = up)"},
+        {"rightOffset", "Extra hitbox shift when facing right (x = right, y = up)"},
+        {"downOffset", "Extra hitbox shift when facing down (x = right, y = up)"},
+        {"leftOffset", "Extra hitbox shift when facing left (x = right, y = up)"},
         {"effectPrefab", "Optional. Empty = made by code. Needs an Animator; plays the clip below if set, else lives for one cooldown"},
         {"effectController", "Optional Animator Controller. Each clip plays by state name (name the state like the clip). With no clips, its default state plays once. Empty = clips play without a controller"},
         {"animations", "Effect clip per facing: up, right, down, left"},
         {"effectOrder", "Effect draw order relative to the player. 1 = in front, -1 = behind"},
     };
-    const string Side = "This facing side (x = right, y = up). offset: extra shift. shape: optional 3+ points that replace the box or prefab collider";
 
     public override void OnInspectorGUI(){
         serializedObject.Update();
