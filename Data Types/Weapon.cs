@@ -127,19 +127,6 @@ public class Weapon : ScriptableObject // everything a weapon is and does: stats
         return this;
     }
 
-    // Put this weapon on the ground where 'from' is. The pickup is built here, no Loot prefab needed
-    public Loot Drop(Transform from){
-        var go = new GameObject(name+" loot", typeof(SpriteRenderer));
-        go.transform.SetParent(from.parent, false);
-        go.transform.position = from.position;
-        SpriteRenderer fromSr = from.GetComponentInChildren<SpriteRenderer>();
-        SpriteRenderer sr = go.GetComponent<SpriteRenderer>();
-        if(fromSr!=null){sr.sortingLayerID = fromSr.sortingLayerID; sr.sortingOrder = fromSr.sortingOrder + 1;}
-        Loot loot = go.AddComponent<Loot>();
-        loot.weaponLoot = this;
-        return loot;
-    }
-
     // Live preview of every side's hitbox (Scene view, or Game view with Gizmos on)
     public void DrawGizmos(Vector2 playerPos){
         for(int i=0;i<4;i++){

@@ -8,8 +8,9 @@ public class Chest : Enemy
     [SerializeField] SpriteRenderer myRender;
     
     protected override void Died(){
-        if(loot!=null)loot.Drop(transform);
+        Loot.Drop(transform, loot, skillLoot);
         loot = null;
+        skillLoot = ChatType.invalid;
         myRender.sprite = openSprite;
     }
     public override void recieveDamage(int dmg,bool isMagical){HP=0;}

@@ -11,6 +11,7 @@ public class Enemy : Character
     [SerializeField] Animator anim;
     [SerializeField] AnimationClip[] enemyIdle, enemyWalk, enemyAttack;
     public Weapon loot;
+    public ChatType skillLoot = ChatType.invalid;
     SpriteRenderer sr;
     Collider2D col;
     Color originalSRcolor;
@@ -55,7 +56,7 @@ public class Enemy : Character
         GameManager.Instance._Connect();//connect when first pick weapon
         sr.color = new Color(1,1,1);
         if(deathBreathTime==0){
-            if(loot!=null)loot.Drop(transform);
+            Loot.Drop(transform, loot, skillLoot);
             deathBreathTime = Time.time + .5f;
         }
         if(Time.time < deathBreathTime)return;

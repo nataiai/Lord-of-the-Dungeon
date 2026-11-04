@@ -57,7 +57,7 @@ public abstract class Chat : MonoBehaviour
         string[] words = msg.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
         int len = words.Length;
         ChatType skill = Categorize(msg);
-        // if(!GameManager.Instance.availableSkill.Contains(skill))return; // who care
+        if(!GameManager.Instance.availableSkill.Contains(skill))return; // locked until picked up
         switch(skill){
             case ChatType.summon:
             // string location = len==3?words[2]:"";
