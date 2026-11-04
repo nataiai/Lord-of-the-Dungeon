@@ -22,6 +22,9 @@ public class Weapon : ScriptableObject
     [FormerlySerializedAs("range")]
     public float hitBoxDistance;
     public HitBox hitBox;
+    [Tooltip("Extra hitbox offset per facing direction (x = right, y = up)")]
+    public Vector2 upOffset, rightOffset, downOffset, leftOffset;
+    public Vector2 GetOffset(int facing) => new[]{upOffset, rightOffset, downOffset, leftOffset}[facing];
     [Tooltip("Hitbox flying speed. 0 = stays where it spawns")]
     public float velocity;
     [Tooltip("Seconds before the hitbox disappears. 0 = disappears on first touch")]

@@ -78,6 +78,22 @@ public class Loot : MonoBehaviour
         if(lootType == LootType.weapon)
             sr.sprite = weaponLoot.uiWep;
     }
+    // Drop the Loot prefab and/or a weapon. The weapon pickup is made by code, no prefab needed. null = nothing
+    public static void Drop(Loot prefab, Weapon weapon, Transform from){
+        if(prefab!=null)Instantiate(prefab, from.position, Quaternion.identity).transform.parent = from.parent;
+        if(weapon==null)return;
+        var go = new GameObject(weapon.name+" loot");
+        go.transform.position = from.position;
+        go.transform.parent = from.parent;
+        var sr = go.AddComponent<SpriteRenderer>();
+        sr.sprite = weapon.uiWep;
+        var fromSr = from.GetComponentInChildren<SpriteRenderer>();
+        if(fromSr!=null){sr.sortingLayerID = fromSr.sortingLayerID; sr.sortingOrder = fromSr.sortingOrder + 1;}
+        go.AddComponent<BoxCollider2D>().isTrigger = true; // after the sprite so it fits
+        Loot loot = go.AddComponent<Loot>();
+        loot.lootType = LootType.weapon;
+        loot.weaponLoot = weapon;
+    }
     void PickChatSkillHandle(Player player){
         if(skill!=ChatType.invalid && !GameManager.Instance.availableSkill.Contains(skill))GameManager.Instance.availableSkill.Add(skill);
         Destroy(gameObject);

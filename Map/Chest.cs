@@ -8,8 +8,9 @@ public class Chest : Enemy
     [SerializeField] SpriteRenderer myRender;
     
     protected override void Died(){
-        if(loot!=null)Instantiate(loot, transform.position, Quaternion.identity).transform.parent = transform.parent;
+        Loot.Drop(loot, weaponLoot, transform);
         loot = null;
+        weaponLoot = null;
         myRender.sprite = openSprite;
     }
     public override void recieveDamage(int dmg,bool isMagical){HP=0;}

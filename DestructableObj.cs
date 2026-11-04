@@ -11,11 +11,12 @@ public class Destructable : MonoBehaviour
     [SerializeField] int hitUntillBreak=1;
     [SerializeField] bool destroyAfterDead;
     [SerializeField] Loot loot;
+    [Tooltip("Optional. Weapon to drop, no Loot prefab needed")][SerializeField] Weapon weaponLoot;
     
     void Start(){HP = hitUntillBreak;index=0;}
     void Died(){
         if(destroyAfterDead)Destroy(gameObject);
-        if(loot!=null)Instantiate(loot, transform.position, Quaternion.identity).transform.parent = transform.parent;
+        Loot.Drop(loot, weaponLoot, transform);
         loot = null;
     }
     public virtual void recieveDamage(int dmg,bool isMagical){
