@@ -8,37 +8,49 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.Networking;
 
-// reads Twitch or YouTube chat, no package needed (still named TwitchChat so the scene keeps its link)
+// reads Twitch chat (desktop and WebGL) or YouTube chat (desktop), no package needed (still named TwitchChat so the scene keeps its link)
 public class TwitchChat : Chat
 {
-    public string channel; // Twitch: name or link. YouTube: link or @handle
-    ConcurrentQueue<(string user,string msg)> inbox = new(); // Twitch messages arrive on another thread
+    public string channel; // Twitch: name or link. YouTube (desktop only): link or @handle
+    ConcurrentQueue<string> inbox = new(); // desktop Twitch lines arrive on another thread
     TcpClient tcp;
 
     public void Connect() => Connect(channel);
     public void Connect(string channel){
         if(string.IsNullOrWhiteSpace(channel))return;
         channel = channel.Trim();
-        if(channel.Contains("youtube.com")||channel.Contains("youtu.be")||channel.StartsWith("@"))StartCoroutine(YouTube(channel));
-        else Twitch((Find(channel, @"twitch\.tv/(?:popout/)?(\w+)") ?? channel.TrimStart('#')).ToLowerInvariant());
+        bool youtube = channel.Contains("youtube.com")||channel.Contains("youtu.be")||channel.StartsWith("@");
+        if(!youtube)Twitch((Find(channel, @"twitch\.tv/(?:popout/)?(\w+)") ?? channel.TrimStart('#')).ToLowerInvariant());
+        else if(Application.platform==RuntimePlatform.WebGLPlayer)Debug.LogWarning("YouTube chat works in desktop builds only");
+        else StartCoroutine(YouTube(channel));
     }
-    void Update(){while(inbox.TryDequeue(out var m))addToDB(m.user,m.msg);}
+    void Update(){while(inbox.TryDequeue(out var l))OnIrcLine(l);}
     void OnDestroy()=>tcp?.Close();
     static string Find(string s, string pattern){var m = Regex.Match(s ?? "", pattern); return m.Success?m.Groups[1].Value:null;}
 
-    void Twitch(string ch){ // anonymous, read-only IRC login
+#if UNITY_WEBGL && !UNITY_EDITOR
+    [System.Runtime.InteropServices.DllImport("__Internal")] static extern void TwitchConnect(string nick, string channel, string unityObject); // TwitchChat.jslib
+#endif
+    void Twitch(string ch){ // anonymous, read-only login; every chat line goes to OnIrcLine
         string nick = "justinfan"+Random.Range(1000,99999);
+#if UNITY_WEBGL && !UNITY_EDITOR
+        TwitchConnect(nick, ch, name); // browsers have no sockets or threads, so a WebSocket in JavaScript
+#else
         new Thread(()=>{try{
             tcp = new TcpClient("irc.chat.twitch.tv", 6667);
             var r = new StreamReader(tcp.GetStream());
             var w = new StreamWriter(tcp.GetStream()){AutoFlush=true, NewLine="\r\n"};
             w.WriteLine("NICK "+nick); w.WriteLine("JOIN #"+ch);
-            for(string l; (l = r.ReadLine())!=null;){ // ":user!user@user.tmi.twitch.tv PRIVMSG #channel :message"
+            for(string l; (l = r.ReadLine())!=null;){
                 if(l.StartsWith("PING"))w.WriteLine("PONG"+l.Substring(4));
-                int i = l.IndexOf(" PRIVMSG #");
-                if(i>0)inbox.Enqueue((l.Substring(1,l.IndexOf('!')-1), l.Substring(l.IndexOf(" :",i)+2)));
+                else inbox.Enqueue(l);
             }
         }catch(System.Exception e){Debug.LogWarning("Twitch chat: "+e.Message);}}){IsBackground=true}.Start();
+#endif
+    }
+    void OnIrcLine(string l){ // ":user!user@user.tmi.twitch.tv PRIVMSG #channel :message"
+        int i = l.IndexOf(" PRIVMSG #");
+        if(i>0)addToDB(l.Substring(1,l.IndexOf('!')-1), l.Substring(l.IndexOf(" :",i)+2));
     }
 
     IEnumerator YouTube(string link){ // the API YouTube's own chat page uses, no key needed
