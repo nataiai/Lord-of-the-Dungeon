@@ -141,11 +141,11 @@ public class Player : Character
     // }
     // void SwitchWeapon() => activeWeapon = activeWeapon == weapon1 ? weapon2 : weapon1;
 
-    // protected override int _setAnimFacing(Vector2 looking){ // when player look other way
-    //     int newAnimFacing = base._setAnimFacing(looking);
-    //     if(newAnimFacing!=animFacing){lWeapon.StopAnim();rWeapon.StopAnim();}
-    //     return newAnimFacing;
-    // }
+    protected override int _setAnimFacing(Vector2 looking){ // when player look other way
+        int newAnimFacing = base._setAnimFacing(looking);
+        if(newAnimFacing!=animFacing){lWeapon.StopAnim();rWeapon.StopAnim();}
+        return newAnimFacing;
+    }
 
     void ChangeAnimation(AnimationClip toAnim)
     {
