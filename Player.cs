@@ -38,7 +38,9 @@ public class HoldingWeapons{
         if(weapon.anim!=null)anim = Player.Instantiate(weapon.anim, playerPos, Quaternion.identity,player.transform);
         if(weapon.useSound!=null)SoundPlayer.PlaySound(weapon.useSound);
  
-        if ((weapon.anim!=null)&&player.animFacing<anim.animations.Length){
+        AnimationClip clip = player.animFacing<weapon.animations.Length? weapon.animations[player.animFacing]:null;
+        if(weapon.anim!=null && clip!=null)anim.PlayClip(clip, Mathf.Max(1, clip.length / cooldown));
+        else if ((weapon.anim!=null)&&player.animFacing<anim.animations.Length){
             var tmp = anim.animations[player.animFacing];
             anim.anim.Play(tmp.name);
             anim.anim.speed = tmp.length / cooldown;
@@ -48,6 +50,7 @@ public class HoldingWeapons{
         HitBox hitBox = Player.Instantiate(weapon.hitBox, initPos, weapon.velocity!=0?Quaternion.identity:Quaternion.FromToRotation(Vector2.right, looking4dir));
         hitBox.weapon = weapon;
         hitBox.setShape(weapon.GetSide(player.animFacing).shape);
+        if(weapon.hitBoxSprite!=null && hitBox.TryGetComponent(out SpriteRenderer sr))sr.sprite = weapon.hitBoxSprite;
         hitBox.damage = weapon.damage * (weapon.isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
         hitBox.playerPos = playerPos;
         hitBox.setVelocity (looking.normalized * weapon.velocity);

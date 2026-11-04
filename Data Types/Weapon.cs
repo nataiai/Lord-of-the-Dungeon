@@ -22,6 +22,8 @@ public class Weapon : ScriptableObject
     [FormerlySerializedAs("range")]
     public float hitBoxDistance;
     public HitBox hitBox;
+    [Tooltip("Optional sprite for the hitbox (e.g. arrow). Empty = keep the prefab's sprite")]
+    public Sprite hitBoxSprite;
     [Header("Hitbox per facing direction (x = right, y = up)")]
     public HitBoxSide up;
     public HitBoxSide right, down, left;
@@ -36,6 +38,8 @@ public class Weapon : ScriptableObject
     [FormerlySerializedAs("destroyOnHit")]
     public int maxHits;
     public BaseWeapon anim;
+    [Tooltip("Weapon effect clip per facing: up, right, down, left. Empty = use the anim prefab's own clips")]
+    public AnimationClip[] animations;
     public Sprite uiWep;
 
 }
