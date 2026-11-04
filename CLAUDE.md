@@ -15,4 +15,5 @@ Chat flow: `TwitchChat` → `Chat.addToDB` → `SimpleSummonDB` queue (`spawnSki
 - Rename only names that mislead (like `range` was). Keep typos such as `recieveDamage`, `knocback`, `StuntMech`.
 - Renaming a serialized field (public or `[SerializeField]`) needs `[FormerlySerializedAs("oldName")]`, or inspector/asset values are lost.
 - Don't rename files or classes; Unity links scripts by file.
+- Put attributes (`[Tooltip]`, `[FormerlySerializedAs]`) on their own lines above the field, so field names stay visible.
 - Bow/Boomerang are not implemented. Leave them.
