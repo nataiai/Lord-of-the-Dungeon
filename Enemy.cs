@@ -49,6 +49,7 @@ public class Enemy : Character
         sr.color = Color.white;
         if(deathBreathTime==0){
             Loot.Drop(loot, weaponLoot, transform);
+            if(isDead)GameManager.Instance.summondb.Unlock(enemyData); // killed, not timed out: chat may summon this type now
             deathBreathTime = Time.time + .5f;
         }
         if(Time.time >= deathBreathTime)Destroy(gameObject);
