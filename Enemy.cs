@@ -10,8 +10,8 @@ public class Enemy : Character
     public override CombatStat combatStat{get=>enemyData.combatStat;set{}}
     [SerializeField] Animator anim;
     [SerializeField] AnimationClip[] enemyIdle, enemyWalk, enemyAttack;
-    public Weapon loot;
-    public ChatType skillLoot = ChatType.invalid;
+    [Tooltip("Optional. Empty = no weapon drop")] public Weapon loot;
+    [Tooltip("Optional. invalid = no chat skill drop")] public ChatType skillLoot = ChatType.invalid;
     SpriteRenderer sr;
     Collider2D col;
     Color originalSRcolor;

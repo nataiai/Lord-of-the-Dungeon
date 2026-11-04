@@ -10,15 +10,14 @@ public class Destructable : MonoBehaviour
     [SerializeField] SpriteRenderer myRender;
     [SerializeField] int hitUntillBreak=1;
     [SerializeField] bool destroyAfterDead;
-    [SerializeField] Weapon loot;
-    [SerializeField] ChatType skillLoot = ChatType.invalid;
+    [Tooltip("Optional. Empty = no weapon drop")][SerializeField] Weapon loot;
+    [Tooltip("Optional. invalid = no chat skill drop")][SerializeField] ChatType skillLoot = ChatType.invalid;
     
     void Start(){HP = hitUntillBreak;index=0;}
     void Died(){
         if(destroyAfterDead)Destroy(gameObject);
         Loot.Drop(transform, loot, skillLoot);
         loot = null;
-        skillLoot = ChatType.invalid;
     }
     public virtual void recieveDamage(int dmg,bool isMagical){
         if(isMagical)return;

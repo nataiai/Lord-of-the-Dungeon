@@ -20,6 +20,8 @@ public class ChatMsg{
 public abstract class Chat : MonoBehaviour
 {
     public SimpleSummonDB summondb;
+    [Tooltip("Chat skill pickup sprite, in ChatType order: summon, teleport, vote, work")]
+    public Sprite[] chatSkillIcons;
     // Start is called before the first frame update
     void Start()
     {

@@ -41,7 +41,7 @@ public class Loot : MonoBehaviour // a pickup on the ground: made by Loot.Drop, 
     void UpdateImage(){
         if(lootType==LootType.weapon && weaponLoot!=null)sr.sprite = weaponLoot.uiWep;
         if(lootType!=LootType.chatSkill)return;
-        Sprite[] icons = GameManager.Instance.chatSkillIcons;
+        Sprite[] icons = GameManager.Instance.chat.chatSkillIcons;
         if((int)skill<icons.Length && icons[(int)skill]!=null)sr.sprite = icons[(int)skill];
     }
     void PickChatSkillHandle(Player player){
@@ -50,6 +50,7 @@ public class Loot : MonoBehaviour // a pickup on the ground: made by Loot.Drop, 
     }
 
     // Put a weapon and/or chat skill pickup on the ground where 'from' is. Built here, no Loot prefab needed
+    // null weapon / invalid skill = nothing dropped, so unassigned loot is fine
     public static void Drop(Transform from, Weapon weapon, ChatType skill, Vector2 offset = default){
         if(weapon!=null)Create(from, LootType.weapon, offset).weaponLoot = weapon;
         if(skill!=ChatType.invalid)Create(from, LootType.chatSkill, offset).skill = skill;

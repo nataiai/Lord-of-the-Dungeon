@@ -26,8 +26,6 @@ public class GameManager: MonoBehaviour{
     public DungeonMap dungeonMap => map;
     public DungeonRoom currentRoom => map.currentRoom;
     public List<ChatType> availableSkill;
-    [Tooltip("Chat skill pickup sprite, in ChatType order: summon, teleport, vote, work")]
-    public Sprite[] chatSkillIcons;
     SoundPlayer soundPlayer;
     public void UpdateMusic()=>soundPlayer.UpdateMusic();
     // public Spawner currentSpawner => currentRoom.spawner;
