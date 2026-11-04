@@ -26,6 +26,8 @@ public class Weapon : ScriptableObject
     public HitBoxSide up;
     public HitBoxSide right, down, left;
     public HitBoxSide GetSide(int facing) => new[]{up, right, down, left}[facing];
+    public Vector2 HitBoxPos(Vector2 playerPos, int facing) =>
+        playerPos + new Vector2(0,0.5f) + Direction.vec2MoveDict[facing] * hitBoxDistance + GetSide(facing).offset;
     [Tooltip("Hitbox flying speed. 0 = stays where it spawns")]
     public float velocity;
     [Tooltip("Seconds before the hitbox disappears. 0 = disappears on first touch")]

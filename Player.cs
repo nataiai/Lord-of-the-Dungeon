@@ -32,8 +32,7 @@ public class HoldingWeapons{
         Vector2 playerPos = player.transform.position;
         Vector2 looking = player.looking;
         Vector2 looking4dir = Direction.vec2MoveDict[player.animFacing];
-        Vector2 initPos = (Vector2) playerPos + new Vector2(0,0.5f) + looking4dir * weapon.hitBoxDistance
-            + weapon.GetSide(player.animFacing).offset;
+        Vector2 initPos = weapon.HitBoxPos(playerPos, player.animFacing);
 
         // BaseWeapon anim = Player.Instantiate(weapon.anim, playerPos, Quaternion.FromToRotation(Vector2.right, looking4dir),player.transform);
         if(weapon.anim!=null)anim = Player.Instantiate(weapon.anim, playerPos, Quaternion.identity,player.transform);
@@ -99,6 +98,18 @@ public class Player : Character
 
     void Awake() {
     }
+    void OnDrawGizmos(){ // live preview of every side's hitbox (Scene view, or Game view with Gizmos on)
+        foreach(var w in new[]{lWeapon.weapon, rWeapon.weapon}){
+            if(w==null)continue;
+            for(int i=0;i<4;i++){
+                Vector2 pos = w.HitBoxPos(transform.position, i);
+                Vector2[] s = w.GetSide(i).shape;
+                Gizmos.DrawWireSphere(pos, 0.05f);
+                if(s!=null&&s.Length>=3)for(int j=0;j<s.Length;j++)Gizmos.DrawLine(pos+s[j], pos+s[(j+1)%s.Length]);
+            }
+        }
+    }
+
     void Start()
     {
         HP = maxHP;
