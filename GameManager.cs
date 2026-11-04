@@ -5,7 +5,6 @@ using System.Collections.Generic;
 
 public class GameManager: MonoBehaviour{
 
-    public string channelName;
     public bool testWithoutChat;
     public float testWithoutChatSpawnCooldown = 5f;
     public float spawnRangeFromPlayer=3;
@@ -73,8 +72,7 @@ public class GameManager: MonoBehaviour{
     public void _Connect(){
         if(_connectOnce)return;
         _connectOnce = true;
-        channelName = Data.cn;
-        chat.channel = channelName;
+        chat.channel = Data.cn;
         if(!testWithoutChat)chat.Connect();
     }
 

@@ -31,14 +31,10 @@ public class EventAllEnemiesDefeated : MonoBehaviour
         foreach(var e in allEnemies){
             if(e!=null && e.isActiveAndEnabled)return false;
         }
-        if (true){ // this include newly spawned enemies too
-            var instances = GameObject.FindObjectsOfType<Enemy>();
-            allEnemies = new List<Enemy>(instances);
-            if(allEnemies.Count>0)return false;}
-        return true;
-        // if (allEnemies.Count == 0)
-        //     return true;
-        // else return false;
+        // this include newly spawned enemies too
+        var instances = GameObject.FindObjectsOfType<Enemy>();
+        allEnemies = new List<Enemy>(instances);
+        return allEnemies.Count == 0;
     }
 
 }

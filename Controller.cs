@@ -84,7 +84,7 @@ public class Controller : MonoBehaviour
     bool CheckMouseEnable(Vector2 mousePos){
         if((mousePos-mouseLastPos).magnitude > mouseDistanceActivation)enableMouse=true;
         if(enableMouse){
-            if((mouseLastPos-mousePos).magnitude>0)mouseLastTime=Time.time;
+            if((mouseLastPos-mousePos).magnitude>0){mouseLastTime=Time.time;mouseLastPos=mousePos;}
             if(Time.time - mouseLastTime > mouseTimeDeactivation)enableMouse = false;
         }else{
             if(Time.time - mouseLastTime > mouseTimeDeactivation){
