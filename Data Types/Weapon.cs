@@ -22,11 +22,18 @@ public class Weapon : ScriptableObject // everything a weapon is and does: stats
     public AudioClip useSound;
     public AudioClip hitSound;
 
-    [Header("Hitbox (made by code, x = right, y = up)")]
+    [Header("Hitbox")]
+    [Tooltip("Optional. Empty = made by code from the settings below")]
+    [FormerlySerializedAs("hitBox")]
+    public HitBox hitBoxPrefab;
     [Tooltip("Box length, from the player along the facing direction. 0 = no box")]
-    public float hitBoxLength;
+    [HideIfSet("hitBoxPrefab")] public float hitBoxLength;
     [Tooltip("Box width, across the facing direction. 0 = no box")]
-    public float hitBoxWidth;
+    [HideIfSet("hitBoxPrefab")] public float hitBoxWidth;
+    [Tooltip("Optional hitbox sprite (e.g. arrow)")]
+    [HideIfSet("hitBoxPrefab")] public Sprite hitBoxSprite;
+    [Tooltip("Physics layer of the hitbox (pick one)")]
+    [HideIfSet("hitBoxPrefab")] public LayerMask hitBoxLayer;
     [Tooltip("Push the hitbox forward from the player")]
     [FormerlySerializedAs("range")]
     public float hitBoxDistance;
@@ -37,34 +44,25 @@ public class Weapon : ScriptableObject // everything a weapon is and does: stats
     [Tooltip("Enemies it can hit before disappearing. 0 = unlimited")]
     [FormerlySerializedAs("destroyOnHit")]
     public int maxHits;
-    [Tooltip("Optional hitbox sprite (e.g. arrow)")]
-    public Sprite hitBoxSprite;
-    [Tooltip("Physics layer of the hitbox (pick one). Not used with a prefab")]
-    public LayerMask hitBoxLayer;
-    [Tooltip("Per facing side: extra offset, and an optional custom shape that replaces the box")]
+    [Tooltip("Per facing side (x = right, y = up): extra offset, and an optional custom shape that replaces the box or prefab collider")]
     public HitBoxSide up, right, down, left;
 
-    [Header("Effect (made by code)")]
-    [Tooltip("Effect clip per facing: up, right, down, left. Empty = no effect")]
+    [Header("Effect")]
+    [Tooltip("Optional. Empty = made by code. Spawned on the player; plays the clip below if set, else lives for one cooldown")]
+    public GameObject effectPrefab;
+    [Tooltip("Effect clip per facing: up, right, down, left")]
     public AnimationClip[] animations;
     [Tooltip("Effect draw order relative to the player. 1 = in front, -1 = behind")]
-    public int effectOrder = 1;
-
-    [Header("Prefabs (optional, used instead of the code-made objects)")]
-    [Tooltip("Hitbox prefab. Its collider is replaced when a box or shape is set above")]
-    [FormerlySerializedAs("hitBox")]
-    public HitBox hitBoxPrefab;
-    [Tooltip("Effect prefab, spawned on the player. Plays the clip above if set, else lives for one cooldown")]
-    public GameObject effectPrefab;
+    [HideIfSet("effectPrefab")] public int effectOrder = 1;
 
     public HitBoxSide GetSide(int facing) => new[]{up, right, down, left}[facing];
     public Vector2 HitBoxPos(Vector2 playerPos, int facing) =>
         playerPos + new Vector2(0,0.5f) + Direction.vec2MoveDict[facing] * hitBoxDistance + GetSide(facing).offset;
-    // Hitbox outline around HitBoxPos: the side's custom shape, else the length x width box, else null
+    // Hitbox outline around HitBoxPos: the side's custom shape, else the length x width box (code-made only), else null
     public Vector2[] GetShape(int facing){
         Vector2[] shape = GetSide(facing).shape;
         if(shape!=null && shape.Length>=3)return shape;
-        if(hitBoxLength<=0 || hitBoxWidth<=0)return null;
+        if(hitBoxPrefab!=null || hitBoxLength<=0 || hitBoxWidth<=0)return null;
         Vector2 f = Direction.vec2MoveDict[facing] * hitBoxLength, w = Vector2.Perpendicular(Direction.vec2MoveDict[facing]) * hitBoxWidth/2;
         return new[]{w, f+w, f-w, -w};
     }
@@ -117,14 +115,13 @@ public class Weapon : ScriptableObject // everything a weapon is and does: stats
             for(int i=0;i<32;i++)if((hitBoxLayer.value & 1<<i)!=0){go.layer = i; break;}
             go.AddComponent<Rigidbody2D>().gravityScale = 0;
             if(shape==null)go.AddComponent<BoxCollider2D>().isTrigger = true;
-            if(hitBoxSprite!=null)CopySorting(player, go.AddComponent<SpriteRenderer>(), effectOrder);
+            if(hitBoxSprite!=null){var sr = go.AddComponent<SpriteRenderer>(); sr.sprite = hitBoxSprite; CopySorting(player, sr, 1);}
         }
         if(shape!=null){
             var poly = go.AddComponent<PolygonCollider2D>();
             poly.isTrigger = true;
             poly.points = System.Array.ConvertAll(shape, p => (Vector2)(Quaternion.Inverse(rot) * p)); // shape is in world directions
         }
-        if(hitBoxSprite!=null && go.TryGetComponent(out SpriteRenderer sr))sr.sprite = hitBoxSprite;
         if(!go.TryGetComponent(out HitBox hb))hb = go.AddComponent<HitBox>();
         hb.weapon = this;
         hb.damage = damage * (isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
@@ -189,12 +186,31 @@ public class Weapon : ScriptableObject // everything a weapon is and does: stats
     }
 }
 
+public class HideIfSetAttribute : PropertyAttribute // Inspector: hide this field while another field is assigned
+{
+    public string field;
+    public HideIfSetAttribute(string field){this.field = field;}
+}
+#if UNITY_EDITOR
+[UnityEditor.CustomPropertyDrawer(typeof(HideIfSetAttribute))]
+class HideIfSetDrawer : UnityEditor.PropertyDrawer
+{
+    bool Hidden(UnityEditor.SerializedProperty p) =>
+        p.serializedObject.FindProperty(((HideIfSetAttribute)attribute).field)?.objectReferenceValue != null;
+    public override float GetPropertyHeight(UnityEditor.SerializedProperty p, GUIContent label) =>
+        Hidden(p) ? -UnityEditor.EditorGUIUtility.standardVerticalSpacing : UnityEditor.EditorGUI.GetPropertyHeight(p, label, true);
+    public override void OnGUI(Rect r, UnityEditor.SerializedProperty p, GUIContent label){
+        if(!Hidden(p))UnityEditor.EditorGUI.PropertyField(r, p, label, true);
+    }
+}
+#endif
+
 [System.Serializable]
 public class HitBoxSide
 {
     [Tooltip("Extra hitbox spawn offset")]
     public Vector2 offset;
-    [Tooltip("Optional custom hitbox shape, 3+ points around the spawn point. Empty = use the length x width box")]
+    [Tooltip("Optional custom hitbox shape, 3+ points around the spawn point. Empty = use the box (or the prefab's collider)")]
     public Vector2[] shape;
 }
 
