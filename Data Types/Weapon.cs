@@ -18,11 +18,11 @@ public class Weapon : ScriptableObject
     public float cooldown;
     public float knocback;
 
-    [FormerlySerializedAs("range")] public float hitBoxDistance; // how far in front of the player the hitbox spawns
+    [FormerlySerializedAs("range"), Tooltip("How far in front of the player the hitbox spawns")] public float hitBoxDistance;
     public HitBox hitBox;
-    public float velocity;
-    public float destroyTimer;
-    [FormerlySerializedAs("destroyOnHit")] public int maxHits; // hits before the hitbox is destroyed, 0 = unlimited
+    [Tooltip("Hitbox flying speed. 0 = stays where it spawns")] public float velocity;
+    [Tooltip("Seconds before the hitbox disappears. 0 = disappears on first touch")] public float destroyTimer;
+    [FormerlySerializedAs("destroyOnHit"), Tooltip("Enemies it can hit before disappearing. 0 = unlimited")] public int maxHits;
     public BaseWeapon anim;
     public Sprite uiWep;
 
