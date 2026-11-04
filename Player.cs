@@ -32,7 +32,7 @@ public class HoldingWeapons{
         Vector2 playerPos = player.transform.position;
         Vector2 looking = player.looking;
         Vector2 looking4dir = Direction.vec2MoveDict[player.animFacing];
-        Vector2 initPos = (Vector2) playerPos + new Vector2(0,0.5f) + looking4dir * weapon.hitBoxDistance;
+        Vector2 initPos = (Vector2) playerPos + new Vector2(0,0.5f) + looking4dir * weapon.hitBoxDistance + weapon.GetOffset(player.animFacing);
 
         // BaseWeapon anim = Player.Instantiate(weapon.anim, playerPos, Quaternion.FromToRotation(Vector2.right, looking4dir),player.transform);
         if(weapon.anim!=null)anim = Player.Instantiate(weapon.anim, playerPos, Quaternion.identity,player.transform);
