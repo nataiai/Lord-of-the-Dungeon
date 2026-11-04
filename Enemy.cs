@@ -49,10 +49,21 @@ public class Enemy : Character
         sr.color = Color.white;
         if(deathBreathTime==0){
             Loot.Drop(loot, weaponLoot, transform);
-            if(isDead)GameManager.Instance.summondb.Unlock(enemyData); // killed, not timed out: chat may summon this type now
+            if(isDead){ // killed, not timed out: chat may summon this type now
+                GameManager.Instance.summondb.Unlock(enemyData);
+                AddSummonTemplate(); // fills summonableEnemy from kills; comment out to fill it by hand
+            }
             deathBreathTime = Time.time + .5f;
         }
         if(Time.time >= deathBreathTime)Destroy(gameObject);
+    }
+    void AddSummonTemplate(){ // a hidden copy of this enemy becomes what chat summons, if its type has none yet
+        var db = GameManager.Instance.summondb;
+        if(db.getEnemy(enemyData.enemyName)!=null)return;
+        sr.color = originalSRcolor; // not the death white or hurt red
+        var t = Instantiate(this); t.gameObject.SetActive(false); t.name = enemyData.enemyName+" (summon template)";
+        t.loot = null; t.weaponLoot = null; // summons drop nothing, so unique loot is not copied
+        db.summonableEnemy.Add(t);
     }
     public virtual void recieveDamage(int dmg,bool isMagical){
         GameManager.Instance.ui.ShowText("\""+enemyData.enemyName.ToLowerInvariant()+"\""); // teaches chat the summon name

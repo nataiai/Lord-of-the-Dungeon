@@ -11,6 +11,8 @@ public class DungeonRoom : MonoBehaviour
     public void Spawn(Enemy enemy, Vector2 oriPos,float range){
         var enemies = transform.Find("Enemies"); // spawned enemies live under the room, so they pause with it
         if(!enemies){enemies = new GameObject("Enemies").transform; enemies.SetParent(transform);}
-        spawner.Spawn(enemy,oriPos,range).transform.parent = enemies;
+        var e = spawner.Spawn(enemy,oriPos,range);
+        e.transform.parent = enemies;
+        e.gameObject.SetActive(true); // copies of hidden summon templates start inactive
     }
 }
