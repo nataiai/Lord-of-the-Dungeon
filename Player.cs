@@ -62,6 +62,7 @@ public class Player : Character
         HP = maxHP;
         controller = GameManager.Instance.controller;
         invincibleTime = Time.time;
+        if(!GameManager.Instance.availableSkill.Contains(ChatType.summon))Loot.Drop(transform, null, ChatType.summon, Vector2.left); // first skill, left of player
     }
 
     void Update()

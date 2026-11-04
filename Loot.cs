@@ -50,14 +50,14 @@ public class Loot : MonoBehaviour // a pickup on the ground: made by Loot.Drop, 
     }
 
     // Put a weapon and/or chat skill pickup on the ground where 'from' is. Built here, no Loot prefab needed
-    public static void Drop(Transform from, Weapon weapon, ChatType skill){
-        if(weapon!=null)Create(from, LootType.weapon).weaponLoot = weapon;
-        if(skill!=ChatType.invalid)Create(from, LootType.chatSkill).skill = skill;
+    public static void Drop(Transform from, Weapon weapon, ChatType skill, Vector2 offset = default){
+        if(weapon!=null)Create(from, LootType.weapon, offset).weaponLoot = weapon;
+        if(skill!=ChatType.invalid)Create(from, LootType.chatSkill, offset).skill = skill;
     }
-    static Loot Create(Transform from, LootType type){
+    static Loot Create(Transform from, LootType type, Vector2 offset){
         var go = new GameObject(type+" loot", typeof(SpriteRenderer));
         go.transform.SetParent(from.parent, false);
-        go.transform.position = from.position;
+        go.transform.position = from.position + (Vector3)offset;
         SpriteRenderer fromSr = from.GetComponentInChildren<SpriteRenderer>();
         SpriteRenderer sr = go.GetComponent<SpriteRenderer>();
         if(fromSr!=null){sr.sortingLayerID = fromSr.sortingLayerID; sr.sortingOrder = fromSr.sortingOrder + 1;}
