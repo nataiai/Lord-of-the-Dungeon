@@ -1,88 +1,208 @@
 using System.Collections;
-using System.Collections.Concurrent;
-using System.IO;
-using System.Net.Sockets;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
+using Lexone.UnityTwitchChat;
 
-// reads Twitch chat (desktop and WebGL) or YouTube chat (desktop), no package needed (still named TwitchChat so the scene keeps its link)
+
 public class TwitchChat : Chat
 {
-    public string channel; // Twitch: name or link. YouTube (desktop only): link or @handle
-    ConcurrentQueue<string> inbox = new(); // desktop Twitch lines arrive on another thread
-    TcpClient tcp;
+    // public List<Chatter> chatters;
+    // public List<ChatMsg> chatMsgs;
+    public Chatter sampleTwitchChatter;
+    public string channel;
+    public IRC irc;
 
+    public void Start(){
+        irc = IRC.Instance;
+        // irc.Connect();
+        // chatters = new List<Chatter>();
+    }
+    
     public void Connect() => Connect(channel);
     public void Connect(string channel){
-        if(string.IsNullOrWhiteSpace(channel))return;
-        channel = channel.Trim();
-        bool youtube = channel.Contains("youtube.com")||channel.Contains("youtu.be")||channel.StartsWith("@");
-        if(!youtube)Twitch((Find(channel, @"twitch\.tv/(?:popout/)?(\w+)") ?? channel.TrimStart('#')).ToLowerInvariant());
-        else if(Application.platform==RuntimePlatform.WebGLPlayer)Debug.LogWarning("YouTube chat works in desktop builds only");
-        else StartCoroutine(YouTube(channel));
-    }
-    void Update(){while(inbox.TryDequeue(out var l))OnIrcLine(l);}
-    void OnDestroy()=>tcp?.Close();
-    static string Find(string s, string pattern){var m = Regex.Match(s ?? "", pattern); return m.Success?m.Groups[1].Value:null;}
-
-#if UNITY_WEBGL && !UNITY_EDITOR
-    [System.Runtime.InteropServices.DllImport("__Internal")] static extern void TwitchConnect(string nick, string channel, string unityObject); // TwitchChat.jslib
-#endif
-    void Twitch(string ch){ // anonymous, read-only login; every chat line goes to OnIrcLine
-        string nick = "justinfan"+Random.Range(1000,99999);
-#if UNITY_WEBGL && !UNITY_EDITOR
-        TwitchConnect(nick, ch, name); // browsers have no sockets or threads, so a WebSocket in JavaScript
-#else
-        new Thread(()=>{try{
-            tcp = new TcpClient("irc.chat.twitch.tv", 6667);
-            var r = new StreamReader(tcp.GetStream());
-            var w = new StreamWriter(tcp.GetStream()){AutoFlush=true, NewLine="\r\n"};
-            w.WriteLine("NICK "+nick); w.WriteLine("JOIN #"+ch);
-            for(string l; (l = r.ReadLine())!=null;){
-                if(l.StartsWith("PING"))w.WriteLine("PONG"+l.Substring(4));
-                else inbox.Enqueue(l);
-            }
-        }catch(System.Exception e){Debug.LogWarning("Twitch chat: "+e.Message);}}){IsBackground=true}.Start();
-#endif
-    }
-    void OnIrcLine(string l){ // ":user!user@user.tmi.twitch.tv PRIVMSG #channel :message"
-        int i = l.IndexOf(" PRIVMSG #");
-        if(i>0)addToDB(l.Substring(1,l.IndexOf('!')-1), l.Substring(l.IndexOf(" :",i)+2));
+        irc.JoinChannel(channel);
+        irc.OnChatMessage += OnChatMessage;
     }
 
-    IEnumerator YouTube(string link){ // the API YouTube's own chat page uses, no key needed
-        string id = Find(link, @"(?:v=|youtu\.be/|/live/)([\w-]{11})");
-        if(id==null){ // a channel: find its live stream
-            using var page = Web("https://www.youtube.com/"+Find(link, @"(@[\w.-]+|(?:channel|c|user)/[\w-]+)")+"/live");
-            yield return page.SendWebRequest();
-            id = Find(page.downloadHandler.text, @"rel=""canonical"" href=""[^""]*v=([\w-]{11})");
-        }
-        using var chatPage = Web("https://www.youtube.com/live_chat?v="+id);
-        yield return chatPage.SendWebRequest();
-        string html = chatPage.downloadHandler.text, cont = Find(html, @"""continuation"":""([^""]+)""");
-        string body = "{\"context\":{\"client\":{\"clientName\":\"WEB\",\"clientVersion\":\""+(Find(html, @"""INNERTUBE_CLIENT_VERSION"":""([^""]+)""") ?? "2.20240101")+"\"}},\"continuation\":\"";
-        if(cont==null)Debug.LogWarning("YouTube chat not found (is the stream live?): "+link);
-        while(cont!=null){
-            using var req = Web("https://www.youtube.com/youtubei/v1/live_chat/get_live_chat?prettyPrint=false", body+cont+"\"}");
-            yield return req.SendWebRequest();
-            string json = req.downloadHandler.text;
-            foreach(Match m in Regex.Matches(json, @"liveChatTextMessageRenderer"":\{""message"":\{""runs"":\[(.*?)\]\},""authorName"":\{""simpleText"":""((?:[^""\\]|\\.)*)""")){
-                string text = "";
-                foreach(Match t in Regex.Matches(m.Groups[1].Value, @"""text"":""((?:[^""\\]|\\.)*)"""))text += Regex.Unescape(t.Groups[1].Value);
-                addToDB(Regex.Unescape(m.Groups[2].Value), text);
-            }
-            cont = Find(json, @"""continuation"":""([^""]+)""") ?? cont;
-            yield return new WaitForSeconds(2);
-        }
+    private void OnChatMessage(Chatter chatter)
+    {
+        // chatters.Add(chatter);
+        // if(chatters.Count>100)chatters.Clear();
+        addToDB(chatter);
     }
-    static UnityWebRequest Web(string url, string json=null){
-        var r = json==null?UnityWebRequest.Get(url):new UnityWebRequest(url, "POST", new DownloadHandlerBuffer(), new UploadHandlerRaw(Encoding.UTF8.GetBytes(json)));
-        r.SetRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
-        r.SetRequestHeader("Cookie", "SOCS=CAI"); // skip the EU cookie-consent page
-        if(json!=null)r.SetRequestHeader("Content-Type", "application/json");
-        return r;
+
+    private void addToDB(Chatter chatter){
+        var name = chatter.tags.displayName;
+        var msg = chatter.message;
+        addToDB(name,msg);
     }
 }
+
+
+// public class TwitchChat : Chat
+// {
+
+//     [SerializeField] public string address = "irc.chat.twitch.tv";
+//     [SerializeField] public int port = 6667;
+//     string username;
+//     TcpClient tcpClient;
+//     int connectionFailCount;
+
+//     void Connect(){
+
+
+//         connectionFailCount = 0;
+
+//         StartCoroutine(StartConnection());
+//         IEnumerator StartConnection()
+//         {
+            
+//             try
+//             {
+//                 tcpClient = new TcpClient(address, port);
+//                 // SendCommand("PASS oauth:" + oauth.ToLower(), true);
+//                 username = "justinfan" + UnityEngine.Random.Range(1000000, 9999999);
+//                 SendCommand("NICK " + username.ToLower(), true);
+//                 SendCommand("CAP REQ :twitch.tv/tags twitch.tv/commands", true);
+//             }
+//             catch
+//             {
+//                 tcpClient = null;
+//                 connectionFailCount+=1;
+//             }
+//             if (connectionFailCount >= 2)
+//             {
+//                 int delay = 1 << (connectionFailCount - 2); // -> 0s, 1s, 2s, 4s, 8s, 16s, ...
+//                 if (showIRCDebug)
+//                     Debug.Log($"{Tags.alert} Reconnecting in {delay} seconds");
+
+//                 yield return new WaitForSecondsRealtime(delay);
+//             }
+
+//         }
+        
+//     }
+//     private IEnumerator NonBlockingDisconnect()
+//     {
+//         yield return StartCoroutine(connection.End());
+//         connection = null;
+//         if (showIRCDebug) Debug.Log($"{Tags.alert} Disconnected from Twitch IRC");
+//     }
+
+//     public void JoinChannel(string channel)
+//     {
+//         if (channel == "")Debug.LogError("Failed joining channel. Channel name is empty");
+//         else connection.SendCommand("JOIN #" + channel.ToLower(), true);
+//     }
+// }
+
+// // https://github.com/lexonegit/Unity-Twitch-Chat/blob/main/Unity-Twitch-Chat/Assets/Package/Runtime/IRCMessages.cs
+// // https://github.com/lexonegit/Unity-Twitch-Chat/blob/main/Unity-Twitch-Chat/Assets/Package/Runtime/IRC.cs
+// // https://github.com/lexonegit/Unity-Twitch-Chat/blob/main/Unity-Twitch-Chat/Assets/Package/Runtime/Chatter.cs
+
+
+// [System.Serializable]
+// public class Chatter
+// {
+//     public Chatter(string login, string channel, string message, IRCTags tags)
+//     {
+//         this.login = login;
+//         this.channel = channel;
+//         this.message = message;
+//         this.tags = tags;
+//     }
+
+//     public string login, channel, message;
+//     public IRCTags tags = null;
+
+//     /// <summary>
+//     /// <para>Returns the RGBA color of the chatter's name (tags.colorHex)</para>
+//     /// <param name="normalize">Should the name color be normalized, if needed?</param>
+//     /// </summary>
+//     public Color GetNameColor(bool normalize = true)
+//     {
+//         if (ColorUtility.TryParseHtmlString(tags.colorHex, out Color color))
+//         {
+//             if (normalize)
+//                 return ChatColors.NormalizeColor(color);
+//             else
+//                 return color;
+//         }
+//         else
+//             return Color.white; // Parsing failed somehow, return default white
+//     }
+
+//     /// <summary>
+//     /// <para>Returns true if displayName is "font-safe" 
+//     /// meaning that it only contains characters: a-z, A-Z, 0-9, _</para>
+//     /// <para>Useful because most fonts do not support unusual characters</para>
+//     /// </summary>
+//     public bool IsDisplayNameFontSafe()
+//     {
+//         return ParseHelper.CheckNameRegex(tags.displayName);
+//     }
+
+//     /// <summary>
+//     /// <para>Returns true if the chatter's message contains a given emote (by emote ID)</para>
+//     /// <para>You can find emote IDs by using the Twitch API, or 3rd party sites</para>
+//     /// </summary>
+//     public bool ContainsEmote(string emoteId) => tags.ContainsEmote(emoteId);
+
+//     /// <summary>
+//     /// Returns true if the chatter has a given badge.
+//     /// </summary>
+//     public bool HasBadge(string badgeName) => tags.HasBadge(badgeName);
+// }
+// [System.Serializable]
+// public struct ChatterEmote
+// {
+//     [System.Serializable]
+//     public struct Index
+//     {
+//         public int startIndex, endIndex;
+//     }
+
+//     public string id;
+//     public Index[] indexes;
+// }
+
+// [System.Serializable]
+// public struct ChatterBadge
+// {
+//     public string id;
+//     public string version;
+// }
+
+// [System.Serializable]
+// public class IRCTags
+// {
+//     public string colorHex = string.Empty;
+//     public string displayName = string.Empty;
+//     public string channelId = string.Empty;
+//     public string userId = string.Empty;
+
+//     public ChatterBadge[] badges = new ChatterBadge[0];
+//     public ChatterEmote[] emotes = new ChatterEmote[0];
+
+//     public bool ContainsEmote(string emoteId)
+//     {
+//         foreach (ChatterEmote e in emotes)
+//         {
+//             if (e.id == emoteId)
+//                 return true;
+//         }
+
+//         return false;
+//     }
+
+//     public bool HasBadge(string badge)
+//     {
+//         foreach (ChatterBadge b in badges)
+//         {
+//             if (b.id == badge)
+//                 return true;
+//         }
+
+//         return false;
+//     }
+// }

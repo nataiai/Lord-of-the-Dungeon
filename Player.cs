@@ -1,4 +1,7 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Direction{
     static public string[] strMoveDict = {"up", "right", "down", "left", };
@@ -107,15 +110,36 @@ public class Player : Character
         if(!forceAnim && attackState && anim.GetCurrentAnimatorStateInfo(0).normalizedTime<.9f)return; // let the attack finish
         attackState = false;
         setAnimFacing(looking);
-        if(state==IDLE||state==MOVING){
-            cooldown = 0;
-            if(state==IDLE)ChangeAnimation(isHealing?playerIdleWater:playerIdle, animFacing);
-            else ChangeAnimation(isHealing?playerWalkWater:playerWalk, animFacing);
-        }else{
-            var clips = state switch{SWING=>playerSwinging, USEROD=>playerUseRod, SPEAR or CQC=>playerSpear, _=>null}; // Bow, Boomerang: none yet
-            if(clips!=null){attackState = true; ChangeAnimation(clips, animFacing); forceAnim = false;}
+        switch(state){
+            case IDLE:
+                cooldown = 0;
+                if(isHealing)ChangeAnimation(playerIdleWater, animFacing);
+                else ChangeAnimation(playerIdle, animFacing);
+            break;
+            case MOVING:
+                cooldown = 0;
+                if(isHealing)ChangeAnimation(playerWalkWater, animFacing);
+                else ChangeAnimation(playerWalk, animFacing);
+            break;
+            case SWING:
+                attackState = true;
+                ChangeAnimation(playerSwinging, animFacing);
+                forceAnim = false;
+            break;
+            case USEROD:
+                attackState = true;
+                ChangeAnimation(playerUseRod, animFacing);
+                forceAnim = false;
+            break;
+            case CQC:
+            case SPEAR:
+                attackState = true;
+                ChangeAnimation(playerSpear, animFacing);
+                forceAnim = false;
+            break;
         }
-        state = isMoving?MOVING:IDLE;
+        if (!isMoving)state = IDLE;
+        else state = MOVING;
     }
     void ChangeAnimation(AnimationClip[] toAnim, int index){if(index<toAnim.Length)ChangeAnimation(toAnim[index]);}
     void ChangeAnimation(AnimationClip toAnim){

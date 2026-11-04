@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum LootType{weapon,chatSkill,None}
@@ -19,11 +21,13 @@ public class Loot : MonoBehaviour
     void Yoink(){} // to do: yoink away from origin pos
     void UpdateImage(){if(lootType==LootType.weapon)sr.sprite = weaponLoot.uiWep;}
 
-    void OnTriggerEnter2D(Collider2D other){
-        if(!other.TryGetComponent(out Player player))return;
-        if(lootType==LootType.weapon)PickWeaponHandle(player);
-        if(lootType==LootType.chatSkill)PickChatSkillHandle(player);
-        GameManager.Instance.ui.UpdateWeap();
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.TryGetComponent(out Player player)){
+            if(lootType==LootType.weapon)PickWeaponHandle(player);
+            if(lootType==LootType.chatSkill)PickChatSkillHandle(player);
+            GameManager.Instance.ui.UpdateWeap();
+        }
     }
     void PickWeaponHandle(Player player){
         if(TryFill(player.lWeapon)){GameManager.Instance._Connect();return;} // the first weapon joins chat

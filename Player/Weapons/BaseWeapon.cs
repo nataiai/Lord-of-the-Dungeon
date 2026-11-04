@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class BaseWeapon : MonoBehaviour // a weapon's effect: plays animations[facing], then removes itself

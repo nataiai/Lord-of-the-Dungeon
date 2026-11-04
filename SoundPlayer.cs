@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class SoundPlayer : MonoBehaviour
@@ -19,7 +21,8 @@ public class SoundPlayer : MonoBehaviour
         print("Play:"+clip.name);
     }
     AudioClip getClip(RoomType roomType){
-        int i = System.Array.IndexOf(roomTypeList, roomType);
-        return i>=0 && i<roomMusicList.Length ? roomMusicList[i] : null;
+        for(int i=0;i<roomMusicList.Length;i++){
+            if(roomType==roomTypeList[i])return roomMusicList[i];
+        }return null;
     }
 }

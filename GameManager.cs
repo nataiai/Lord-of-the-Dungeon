@@ -47,7 +47,6 @@ public class GameManager: MonoBehaviour{
     }
     void Update(){
         if(testWithoutChat && !Input.GetKeyDown(KeyCode.L) && tmp<Time.time){Spawn(mockEnemy);tmp = Time.time+testWithoutChatSpawnCooldown;}
-        if(Input.GetKeyDown(KeyCode.Semicolon))SceneManager.LoadScene("DungeonRoom");
         var summon = summondb.GetToSpawn();
         if(!testWithoutChat && summon!=null)Spawn(summon);
     }
