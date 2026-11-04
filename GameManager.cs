@@ -99,10 +99,9 @@ public class GameManager: MonoBehaviour{
     }
 
     public void TeleportSkill(int x, int y){
-        if(true){ // TODO: check cooldown 
-            Vector2 pos = new Vector2(x,y);
-            if(map._findRoom(pos)==map.currentRoom&&Physics2D.OverlapPoint(pos)==null)player.transform.position = pos;
-        }
+        // TODO: check cooldown
+        Vector2 pos = new Vector2(x,y);
+        if(map._findRoom(pos)==map.currentRoom&&Physics2D.OverlapPoint(pos)==null)player.transform.position = pos;
     }
 
 }

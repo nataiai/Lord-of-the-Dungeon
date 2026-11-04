@@ -203,7 +203,7 @@ public class Player : Character
     }
 
     void ChangeAnimation(AnimationClip[] toAnim, int index){
-        if(animFacing<toAnim.Length)ChangeAnimation(toAnim[index]);
+        if(index<toAnim.Length)ChangeAnimation(toAnim[index]);
     }
 
 
