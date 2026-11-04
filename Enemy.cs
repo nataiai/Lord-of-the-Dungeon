@@ -6,7 +6,6 @@ using UnityEngine;
 public class Enemy : Character
 {
     public EnemySO enemyData;
-    public float initSpeed=>enemyData.initSpeed;
     public override CombatStat combatStat{get=>enemyData.combatStat;set{}}
     [SerializeField] Animator anim;
     [SerializeField] AnimationClip[] enemyIdle, enemyWalk, enemyAttack;

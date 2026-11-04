@@ -37,8 +37,8 @@ public abstract class Chat : MonoBehaviour
         int w0len = words[0].Length;
         switch(words[0][0]){
             case 's': //s(ummon) enemy (north)
-            if(len<=3 && w0len<=6 && words[0] == "summon"[..w0len])return ChatType.summon;
-            if(len<=3 && w0len<=5 && words[0] == "spawn"[..w0len])return ChatType.summon;
+            if(len>=2 && len<=3 && w0len<=6 && words[0] == "summon"[..w0len])return ChatType.summon;
+            if(len>=2 && len<=3 && w0len<=5 && words[0] == "spawn"[..w0len])return ChatType.summon;
             break;
             case 't': //t(eleport) x y
             if(len==3 && w0len<=8 && words[0] == "teleport"[..w0len])return ChatType.teleport;

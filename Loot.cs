@@ -79,7 +79,7 @@ public class Loot : MonoBehaviour
             sr.sprite = weaponLoot.uiWep;
     }
     void PickChatSkillHandle(Player player){
-        if(skill!=ChatType.invalid && GameManager.Instance.availableSkill.Contains(skill))GameManager.Instance.availableSkill.Add(skill);
+        if(skill!=ChatType.invalid && !GameManager.Instance.availableSkill.Contains(skill))GameManager.Instance.availableSkill.Add(skill);
         Destroy(gameObject);
     }
 }

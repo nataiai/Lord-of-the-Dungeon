@@ -5,7 +5,6 @@ using System.Collections.Generic;
 
 public class GameManager: MonoBehaviour{
 
-    public string channelName;
     public bool testWithoutChat;
     public float testWithoutChatSpawnCooldown = 5f;
     public float spawnRangeFromPlayer=3;
@@ -22,13 +21,10 @@ public class GameManager: MonoBehaviour{
     public UI uiPrefab;
     public TwitchChat chat;
     public SimpleSummonDB summondb => chat.summondb;
-    public List<Enemy> summonableEnemy => summondb.summonableEnemy;
     public DungeonMap map;
-    public DungeonMap dungeonMap => map;
     public DungeonRoom currentRoom => map.currentRoom;
     public List<ChatType> availableSkill;
-    SoundPlayer soundPlayer;
-    public void UpdateMusic()=>soundPlayer.UpdateMusic();
+    public void UpdateMusic()=>SoundPlayer.instance.UpdateMusic();
     // public Spawner currentSpawner => currentRoom.spawner;
     public DungeonRoom initRoom;
     
@@ -67,14 +63,12 @@ public class GameManager: MonoBehaviour{
     void Start(){
         ui.UpdateMaxHP(player.maxHP);
         ui.UpdateHP(player.HP);
-        soundPlayer = FindFirstObjectByType<SoundPlayer>();
     }
     bool _connectOnce=false;
     public void _Connect(){
         if(_connectOnce)return;
         _connectOnce = true;
-        channelName = Data.cn;
-        chat.channel = channelName;
+        chat.channel = Data.cn;
         if(!testWithoutChat)chat.Connect();
     }
 
