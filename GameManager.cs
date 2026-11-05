@@ -56,7 +56,7 @@ public class GameManager: MonoBehaviour{
         if(_connectOnce)return;
         _connectOnce = true;
         chat.channel = Data.cn;
-        if(!testWithoutChat && !ClaudeChat.TryConnect(Data.cn))chat.Connect(); // Claude/ClaudeChat.cs; Lexone (chat.Connect) is the backup
+        if(!testWithoutChat && !UnifiedChat.TryConnect(Data.cn))chat.Connect(); // AI/UnifiedChat.cs; Lexone (chat.Connect) is the backup
     }
     public void _re(){ // back to the first room
         map.currentRoom.gameObject.SetActive(false);

@@ -8,11 +8,11 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.Networking;
 
-// Claude's chat reader: Twitch (desktop and WebGL) and YouTube (desktop), no package needed.
+// One chat reader for Twitch (desktop and WebGL) and YouTube (desktop), no package needed.
 // Messages go to GameManager.Instance.chat.addToDB, the same place the Lexone TwitchChat sends them.
 // Backup: set use = false to go back to Lexone, or delete this folder and
-// "&& !ClaudeChat.TryConnect(Data.cn)" in GameManager._Connect.
-public class ClaudeChat : MonoBehaviour
+// "&& !UnifiedChat.TryConnect(Data.cn)" in GameManager._Connect.
+public class UnifiedChat : MonoBehaviour
 {
     public static bool use = true;
     ConcurrentQueue<string> inbox = new(); // desktop Twitch lines arrive on another thread
@@ -21,7 +21,7 @@ public class ClaudeChat : MonoBehaviour
     public static bool TryConnect(string channel){ // Twitch: name or link. YouTube (desktop only): link or @handle
         if(!use || string.IsNullOrWhiteSpace(channel))return false;
         channel = channel.Trim();
-        var c = new GameObject("ClaudeChat").AddComponent<ClaudeChat>();
+        var c = new GameObject("UnifiedChat").AddComponent<UnifiedChat>();
         bool youtube = channel.Contains("youtube.com")||channel.Contains("youtu.be")||channel.StartsWith("@");
         if(!youtube)c.Twitch((Find(channel, @"twitch\.tv/(?:popout/)?(\w+)") ?? channel.TrimStart('#')).ToLowerInvariant());
         else if(Application.platform==RuntimePlatform.WebGLPlayer)Debug.LogWarning("YouTube chat works in desktop builds only");
@@ -34,12 +34,12 @@ public class ClaudeChat : MonoBehaviour
     static string Find(string s, string pattern){var m = Regex.Match(s ?? "", pattern); return m.Success?m.Groups[1].Value:null;}
 
 #if UNITY_WEBGL && !UNITY_EDITOR
-    [System.Runtime.InteropServices.DllImport("__Internal")] static extern void ClaudeTwitchConnect(string nick, string channel, string unityObject); // ClaudeChat.jslib
+    [System.Runtime.InteropServices.DllImport("__Internal")] static extern void UnifiedChatTwitch(string nick, string channel, string unityObject); // UnifiedChat.jslib
 #endif
     void Twitch(string ch){ // anonymous, read-only login; every chat line goes to OnIrcLine
         string nick = "justinfan"+Random.Range(1000,99999);
 #if UNITY_WEBGL && !UNITY_EDITOR
-        ClaudeTwitchConnect(nick, ch, name); // browsers have no sockets or threads, so a WebSocket in JavaScript
+        UnifiedChatTwitch(nick, ch, name); // browsers have no sockets or threads, so a WebSocket in JavaScript
 #else
         new Thread(()=>{try{
             tcp = new TcpClient("irc.chat.twitch.tv", 6667);
