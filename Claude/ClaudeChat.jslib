@@ -1,6 +1,6 @@
-// WebGL only: Twitch chat over a WebSocket, because browsers have no sockets or threads (called by TwitchChat.cs)
+// WebGL only: Twitch chat over a WebSocket, because browsers have no sockets or threads (called by ClaudeChat.cs)
 mergeInto(LibraryManager.library, {
-  TwitchConnect: function (nick, channel, unityObject) {
+  ClaudeTwitchConnect: function (nick, channel, unityObject) {
     nick = UTF8ToString(nick); channel = UTF8ToString(channel); unityObject = UTF8ToString(unityObject);
     var ws = new WebSocket("wss://irc-ws.chat.twitch.tv:443");
     ws.onopen = function () { ws.send("NICK " + nick); ws.send("JOIN #" + channel); };
