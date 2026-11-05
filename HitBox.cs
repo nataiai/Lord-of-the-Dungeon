@@ -26,7 +26,6 @@ public class HitBox : MonoBehaviour
             if(!hitEnemy.Add(enemy))return; // each enemy once
             enemy.recieveDamage(damage,weapon.isMagical);
             enemy.receiveKnockback(playerPos,weapon.knocback);
-            if(weapon.buff!=null)Instantiate(weapon.buff, enemy.transform); // weapon -> hitbox -> hit char
             if(weapon.maxHits>0 && weapon.maxHits<=++hitCount)Destroy(gameObject);
         }else if(!weapon.isMagical && other.TryGetComponent(out Destructable des)){
             des.recieveDamage(damage,weapon.isMagical);

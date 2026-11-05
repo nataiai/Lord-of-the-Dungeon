@@ -30,5 +30,4 @@ public class Weapon : ScriptableObject
     public int maxHits;
     public BaseWeapon anim;
     public Sprite uiWep;
-    public BuffEffect buff; // optional: a BuffEffect prefab put on each character this weapon hits
 }

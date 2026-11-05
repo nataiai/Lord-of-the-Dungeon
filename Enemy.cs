@@ -65,7 +65,6 @@ public class Enemy : Character
         sr.color = originalSRcolor; // not the death white or hurt red
         var t = Instantiate(this); t.gameObject.SetActive(false); t.name = enemyData.enemyName+" (summon template)";
         t.loot = null; t.weaponLoot = null; // summons drop nothing, so unique loot is not copied
-        foreach(var b in t.GetComponentsInChildren<BuffEffect>(true))if(b.gameObject!=t.gameObject)Destroy(b.gameObject); // summons don't arrive burning
         db.summonableEnemy.Add(t);
     }
     public virtual void recieveDamage(int dmg,bool isMagical){
