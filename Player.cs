@@ -49,7 +49,7 @@ public class Player : Character
     public float _initSpeed=1;
     public float initSpeed=>_initSpeed;
     public int _maxHP = 4;
-    public int maxHP{get=>_maxHP;set{_maxHP=value;GameManager.Instance.ui.UpdateMaxHP(maxHP);}}
+    public override int maxHP{get=>_maxHP;set{_maxHP=value;GameManager.Instance.ui.UpdateMaxHP(maxHP);}}
     public bool enableInvincible;
     public float speedBoost;
     public int state; // IDLE, MOVING, or the WeaponType number while attacking
@@ -149,7 +149,7 @@ public class Player : Character
         anim.speed = cooldown!=0?Mathf.Max(toAnim.length / cooldown, 1):1; // an attack fits its cooldown
     }
 
-    public override void recieveDamage(int dmg, bool isMagical){
+    public override void recieveDamage(int dmg, bool isMagical=false){
         base.recieveDamage(dmg,isMagical);
         if(enableInvincible && isInvincible)return;
         HP-=dmg;

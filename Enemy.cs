@@ -7,6 +7,7 @@ public class Enemy : Character
     public EnemySO enemyData;
     public float initSpeed=>enemyData.initSpeed;
     public override CombatStat combatStat{get=>enemyData.combatStat;set{}}
+    public override int maxHP{get=>enemyData.maxHP;set{}}
     [SerializeField] Animator anim;
     [SerializeField] AnimationClip[] enemyIdle, enemyWalk, enemyAttack;
     public Loot loot;
@@ -67,7 +68,7 @@ public class Enemy : Character
         t.loot = null; t.weaponLoot = null; // summons drop nothing, so unique loot is not copied
         db.summonableEnemy.Add(t);
     }
-    public virtual void recieveDamage(int dmg,bool isMagical){
+    public override void recieveDamage(int dmg,bool isMagical){
         base.recieveDamage(dmg,isMagical);
         GameManager.Instance.ui.ShowText("\""+enemyData.enemyName.ToLowerInvariant()+"\""); // teaches chat the summon name
         if(isDead)return;
