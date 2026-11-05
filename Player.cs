@@ -34,6 +34,7 @@ public class HoldingWeapons{ // one hand
         if(weapon.useSound!=null)SoundPlayer.PlaySound(weapon.useSound);
         HitBox hitBox = Player.Instantiate(weapon.hitBox, initPos, weapon.velocity!=0?Quaternion.identity:Quaternion.FromToRotation(Vector2.right, looking4dir));
         hitBox.weapon = weapon;
+        if(weapon.buff!=null)weapon.buff.CopyTo(hitBox.gameObject); // weapon -> hitbox
         hitBox.damage = weapon.damage * (weapon.isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
         hitBox.playerPos = playerPos;
         hitBox.setVelocity(player.looking * weapon.velocity);

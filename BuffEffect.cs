@@ -7,7 +7,7 @@ public enum BuffType{burn,heal,freeze,stun,none}
 // weapons -> copy to hitbox
 // hitbox -> copy to hit char
 // character -> apply change by type
-// for now: put this on a weapon's hitbox prefab; it copies itself onto each enemy that hitbox hits
+// for now: a prefab with this goes in Weapon.buff (or put it on a hitbox prefab); the hitbox copies it onto each enemy it hits
 [System.Serializable]
 // [CreateAssetMenu(fileName = "BuffSO", menuName = "Buff")]
 public class BuffEffect : MonoBehaviour
@@ -24,13 +24,17 @@ public class BuffEffect : MonoBehaviour
         tick = Time.time+1;
     }
 
+    // weapon -> hitbox, hitbox -> hit char: the same buff, restarted if it is already there
+    public void CopyTo(GameObject go){
+        foreach(var b in go.GetComponents<BuffEffect>())if(b.type==type){b.end=Time.time+duration;return;}
+        var c = go.AddComponent<BuffEffect>();
+        c.type=type; c.duration=duration; c.power=power; c.end=Time.time+duration;
+    }
+
     // on a hitbox: copy to the hit enemy (the player too, later)
     void OnTriggerEnter2D(Collider2D other)
     {
-        if(!TryGetComponent(out HitBox _) || !other.TryGetComponent(out Enemy e))return;
-        foreach(var b in e.GetComponents<BuffEffect>())if(b.type==type){b.end=Time.time+duration;return;} // already has it: restart it
-        var c = e.gameObject.AddComponent<BuffEffect>();
-        c.type=type; c.duration=duration; c.power=power; c.end=Time.time+duration;
+        if(TryGetComponent(out HitBox _) && other.TryGetComponent(out Enemy e))CopyTo(e.gameObject);
     }
 
     // on a character: apply until end. LateUpdate runs after the character moved itself, so freeze wins
