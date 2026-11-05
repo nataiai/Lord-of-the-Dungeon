@@ -76,7 +76,6 @@ public class Player : Character
     public bool forceAnim;
 
     public override int HP{get=>_HP;set{_HP=value;GameManager.Instance.ui.UpdateHP(HP);}}
-    public void Heal(int heal=1){HP+=heal;if(HP>maxHP)HP=maxHP;}
 
     void Start(){
         HP = maxHP;
@@ -150,7 +149,8 @@ public class Player : Character
         anim.speed = cooldown!=0?Mathf.Max(toAnim.length / cooldown, 1):1; // an attack fits its cooldown
     }
 
-    public void recieveDamage(int dmg){
+    public override void recieveDamage(int dmg, bool isMagical){
+        base.recieveDamage(dmg,isMagical);
         if(enableInvincible && isInvincible)return;
         HP-=dmg;
         invincibleTime = invincibleCooldownTime+Time.time;

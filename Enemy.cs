@@ -68,6 +68,7 @@ public class Enemy : Character
         db.summonableEnemy.Add(t);
     }
     public virtual void recieveDamage(int dmg,bool isMagical){
+        base.recieveDamage(dmg,isMagical);
         GameManager.Instance.ui.ShowText("\""+enemyData.enemyName.ToLowerInvariant()+"\""); // teaches chat the summon name
         if(isDead)return;
         SoundPlayer.PlaySound(SoundPlayer.instance.sd_enemy_hit);

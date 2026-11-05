@@ -49,7 +49,7 @@ public class BuffEffect : MonoBehaviour
         if(type==BuffType.freeze||type==BuffType.stun)cha.rb.velocity = Vector2.zero; // can't move
         if(tick>Time.time)return;
         tick = Time.time+1;
-        if(type==BuffType.burn)cha.HP-=power;
-        if(type==BuffType.heal)cha.HP+=power;
+        if(type==BuffType.burn)cha.Heal(power);
+        if(type==BuffType.heal)cha.recieveDamage(power);
     }
 }

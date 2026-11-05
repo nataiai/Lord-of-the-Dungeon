@@ -44,4 +44,10 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
         rb.velocity = force * dir.normalized * (1-resistance);
         stunTime = Time.time + 1;
     }
+
+    public virtual void Heal(int heal=1){HP+=heal;if(HP>maxHP)HP=maxHP;}
+
+    public virtual void recieveDamage(int dmg,bool isMagical){
+    }
+
 }
