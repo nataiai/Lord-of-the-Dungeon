@@ -52,11 +52,12 @@ public class GameManager: MonoBehaviour{
     }
     void Spawn(Enemy enemy)=>currentRoom.Spawn(enemy,playerPos,spawnRangeFromPlayer);
 
-    public void _Connect(){ // join Twitch chat, once
+    public void _Connect(){ // join chat (Twitch or YouTube), once
         if(_connectOnce)return;
         _connectOnce = true;
         chat.channel = Data.cn;
-        if(!testWithoutChat)chat.Connect();
+        // if(!testWithoutChat && !UnifiedChat.TryConnect(Data.cn))chat.Connect(); // AI/UnifiedChat.cs; Lexone (chat.Connect) is the backup
+        if(!testWithoutChat)chat.Connect(); // AI/UnifiedChat.cs; Lexone (chat.Connect) is the backup
     }
     public void _re(){ // back to the first room
         map.currentRoom.gameObject.SetActive(false);
