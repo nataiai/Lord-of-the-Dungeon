@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using Lexone.UnityTwitchChat;
 
-public class TwitchChatMsg : ChatMsg{
-    Color color;
-}
 
 public class TwitchChat : Chat
 {

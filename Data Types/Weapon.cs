@@ -1,13 +1,9 @@
-// [System.Serializable]
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-[CreateAssetMenu(
-    fileName = "WeaponSO",
-    menuName = "Weapon"
-)]
+[CreateAssetMenu(fileName = "WeaponSO", menuName = "Weapon")]
 public class Weapon : ScriptableObject
 {
     public WeaponType type;
@@ -34,5 +30,4 @@ public class Weapon : ScriptableObject
     public int maxHits;
     public BaseWeapon anim;
     public Sprite uiWep;
-
 }

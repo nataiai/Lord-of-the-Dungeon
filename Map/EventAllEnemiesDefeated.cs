@@ -1,20 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
 public class EventAllEnemiesDefeated : MonoBehaviour
 {
     public UnityEvent onAllEnemiesDefeated;
-    List<Enemy> allEnemies;
+    Enemy alive; // checked first, so the scene is searched again only when it is gone
 
-    private void Start()
-    {
-        var instances = GameObject.FindObjectsOfType<Enemy>();
-        allEnemies = new List<Enemy>(instances);
-        // print(allEnemies.Count); it bug (partly) because I yeet the first unique enemy that diead instead of destroying it
-        // for spawning skill
-    }
 
     void Update()
     {
@@ -28,13 +19,9 @@ public class EventAllEnemiesDefeated : MonoBehaviour
 
     bool IsConditionTrue()
     {
-        foreach(var e in allEnemies){
-            if(e!=null && e.isActiveAndEnabled)return false;
-        }
-        // this include newly spawned enemies too
-        var instances = GameObject.FindObjectsOfType<Enemy>();
-        allEnemies = new List<Enemy>(instances);
-        return allEnemies.Count == 0;
+        if(alive!=null && alive.isActiveAndEnabled)return false;
+        alive = FindAnyObjectByType<Enemy>(); // also finds newly summoned enemies
+        if(alive!=null)return false;
+        return true;
     }
-
 }
