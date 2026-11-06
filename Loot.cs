@@ -39,6 +39,7 @@ public class Loot : MonoBehaviour
     bool TryFill(HoldingWeapons hand){ // an empty hand, or bare hands (CQC)
         if(hand.weapon!=null && hand.weapon.type!=WeaponType.CQC)return false;
         hand.weapon = weaponLoot;
+        SoundPlayer.PlaySound(SoundPlayer.instance.sd_pickup_wep);
         Destroy(gameObject);
         return true;
     }

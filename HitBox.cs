@@ -24,6 +24,7 @@ public class HitBox : MonoBehaviour
     void OnTriggerEnter2D(Collider2D other){
         if(other.TryGetComponent(out Enemy enemy)){
             if(!hitEnemy.Add(enemy))return; // each enemy once
+            SoundPlayer.PlaySound(weapon.hitSound);
             enemy.recieveDamage(damage,weapon.isMagical);
             enemy.receiveKnockback(playerPos,weapon.knocback);
             if(weapon.maxHits>0 && weapon.maxHits<=++hitCount)Destroy(gameObject);

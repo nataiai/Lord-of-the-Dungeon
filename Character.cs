@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 [System.Serializable]
 public class CombatStat{
     public int attackPhysic = 1;
@@ -8,10 +9,11 @@ public class CombatStat{
     public int defensePhysic = 1;
     public int defenseMagic = 1;
 }
-// public string[] MoveDict = {"up", "right", "down", "left", };
+
 public abstract class Character : MonoBehaviour // remove abstract and fix combat stat if bug
 {
     public abstract CombatStat combatStat{get;set;}
+    public abstract int maxHP{get;set;}
     public Vector2 movement;
     Vector2 _looking;
     public Vector2 looking{get => _looking;set => _looking = value.normalized;}
@@ -23,10 +25,8 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
     public bool isLooking => looking.magnitude > 0;
     public Rigidbody2D rb;
     float stunTime;
-    
-    protected void setAnimFacing(Vector2 looking){
-        animFacing = _setAnimFacing(looking);
-    }
+
+    protected void setAnimFacing(Vector2 v)=>animFacing = _setAnimFacing(v);
     protected virtual int _setAnimFacing(Vector2 looking){
         if(looking.x>0.7071f)return 1;
         if(looking.x<-0.7071f)return 3;
@@ -34,33 +34,22 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
         if(looking.y<0)return 2;
         return 2;
     }
-    protected void setAnimFacingLegacy(Vector2 movement){
-        if(movement.x!=0){
-            if(movement.x>0)animFacing=1;
-            else animFacing=3;
-        }else if(movement.y!=0){
-            if(movement.y>0)animFacing=0;
-            else animFacing=2;
-        }
+    public void froze(){stunTime=Time.time+1;}
+    protected bool StuntMech(float recover){ // true while stunned: slows down, ignores own movement
+        if(stunTime<=Time.time)return false;
+        rb.velocity*=Mathf.Exp(-recover*Time.deltaTime);
+        if(rb.velocity.magnitude<0.5f)stunTime=0;
+        return true;
     }
-    
-
-    protected bool StuntMech(float recover){
-        if(stunTime>Time.time){
-            rb.velocity*=Mathf.Exp(-recover*Time.deltaTime);
-            if(rb.velocity.magnitude<0.5f)stunTime=0;
-            return true;
-        }return false;
-    }
-
     public void receiveKnockback(Vector2 pos,float force,float resistance){
-        Vector2 ePos = (Vector2) transform.position;
-        float rotationRange = 10;
-        Vector2 dir = Quaternion.Euler(0, 0, Random.Range(-rotationRange, rotationRange)) * (ePos-pos) ;
-        dir = dir.normalized;
-        rb.velocity = force * dir *(1 - resistance);
+        Vector2 dir = Quaternion.Euler(0,0,Random.Range(-10f,10f)) * ((Vector2)transform.position-pos); // away from pos, +-10 degrees
+        rb.velocity = force * dir.normalized * (1-resistance);
         stunTime = Time.time + 1;
     }
-    
+
+    public virtual void Heal(int heal=1){HP+=heal;if(HP>maxHP)HP=maxHP;}
+
+    public virtual void recieveDamage(int dmg,bool isMagical=false){
+    }
 
 }

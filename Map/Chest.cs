@@ -6,6 +6,7 @@ public class Chest : Enemy
 {
     [SerializeField] Sprite openSprite, closedSprite;
     [SerializeField] SpriteRenderer myRender;
+    [SerializeField] AudioClip sd_open_chest;
 
     protected override void Died(){ // opens; a chest is never destroyed
         Loot.Drop(loot, weaponLoot, transform);
