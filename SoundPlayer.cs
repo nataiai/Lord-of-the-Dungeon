@@ -6,7 +6,7 @@ public class SoundPlayer : MonoBehaviour
 {
     public AudioSource musicSource, soundSource;
     public static SoundPlayer instance;
-    public AudioClip sd_enemy_hit;
+    public AudioClip sd_enemy_hit, sd_pickup_wep, sd_door_open;
     public RoomType[] roomTypeList; // roomMusicList[i] plays in rooms of type roomTypeList[i]
     public AudioClip[] roomMusicList;
 

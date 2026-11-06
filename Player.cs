@@ -71,7 +71,7 @@ public class Player : Character
     [SerializeField] float knockbackResistance;
     Controller controller;
     public float invincibleCooldownTime;
-    float invincibleTime;
+    public float invincibleTime;
     public bool isInvincible => invincibleTime>Time.time;
     public bool forceAnim;
 

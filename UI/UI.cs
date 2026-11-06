@@ -80,6 +80,7 @@ public class UI : MonoBehaviour
             return;
         }
         player.froze();
+        player.invincibleTime = Time.time+1;
         player.lWeapon.lastUse = player.rWeapon.lastUse = Time.time; // clicking through dialogue doesn't attack
         dialogueTextbox.SetActive(true);
         dialogueTextLabel.SetText(dialogueTextToShow[0]);

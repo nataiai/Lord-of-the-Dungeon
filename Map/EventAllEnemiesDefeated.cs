@@ -13,6 +13,7 @@ public class EventAllEnemiesDefeated : MonoBehaviour
         {
             onAllEnemiesDefeated?.Invoke();
             print("ALL ENEMIES DEFEATED!");
+            SoundPlayer.PlaySound(SoundPlayer.instance.sd_door_open);
             Destroy(gameObject);
         }
     }
