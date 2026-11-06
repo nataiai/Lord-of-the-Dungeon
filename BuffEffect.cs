@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-public enum BuffType{burn,heal,freeze,stun,none}
+public enum BuffType{burn,heal,slow,stun,none}
 
 // if on ... do ...
 // weapons -> copy to hitbox
@@ -41,7 +41,7 @@ public class BuffEffect : MonoBehaviour
         if(TryGetComponent(out HitBox _) && other.TryGetComponent(out Enemy e))buff.CopyTo(e.gameObject);
     }
 
-    // on a character: apply until end. LateUpdate runs after the character moved itself, so freeze wins
+    // on a character: apply until end. LateUpdate runs after the character moved itself, so slow wins
     void LateUpdate()
     {
         if(cha==null)return;
@@ -50,7 +50,7 @@ public class BuffEffect : MonoBehaviour
     }
 
     public virtual void Apply(Character cha){
-        if(buff.type==BuffType.freeze||buff.type==BuffType.stun)cha.rb.velocity *= .9f; // slower; each stacked copy slows it again
+        if(buff.type==BuffType.slow||buff.type==BuffType.stun)cha.rb.velocity *= .9f; // slower; each stacked copy slows it again
         if(tick>Time.time)return;
         tick = Time.time+1;
         if(buff.type==BuffType.burn)cha.recieveDamage(buff.power);
