@@ -50,7 +50,7 @@ public class BuffEffect : MonoBehaviour
     }
 
     public virtual void Apply(Character cha){
-        if(buff.type==BuffType.freeze||buff.type==BuffType.stun)cha.froze(); // can't move; knockback still slows down
+        if(buff.type==BuffType.freeze||buff.type==BuffType.stun)cha.rb.velocity *= .9f; // slower; each stacked copy slows it again
         if(tick>Time.time)return;
         tick = Time.time+1;
         if(buff.type==BuffType.burn)cha.recieveDamage(buff.power);
