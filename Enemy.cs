@@ -13,6 +13,7 @@ public class Enemy : Character
     public Loot loot;
     [Tooltip("Optional. Weapon to drop, no Loot prefab needed")]
     public Weapon weaponLoot;
+    public bool spriteFacesLeft; // the sprite is drawn facing left (default: right); it flips to face where it walks
     SpriteRenderer sr;
     Collider2D col;
     Color originalSRcolor;
@@ -44,6 +45,7 @@ public class Enemy : Character
         movement = GameManager.Instance.player.transform.position - transform.position;
         if(movement.magnitude<enemyData.noticeRange)notice=true;
         if(notice)rb.velocity = movement.normalized * enemyData.initSpeed;
+        if(Mathf.Abs(rb.velocity.x)>.1f)sr.flipX = (rb.velocity.x<0)!=spriteFacesLeft;
         setAnimFacing(movement.normalized);
     }
 
@@ -77,6 +79,7 @@ public class Enemy : Character
         HP -= Mathf.Max(dmg,1);
     }
     protected virtual void HurtColor(){hurtTime = Time.time+0.1f; sr.color = Color.red;}
+    void LateUpdate(){if(hurtTime>Time.time)sr.color = Color.red;} // after the Animator and the death white, so the flash always shows
 
     public void receiveKnockback(Vector2 pos,float force)=>receiveKnockback(pos,force,enemyData.knockbackResistance);
 
