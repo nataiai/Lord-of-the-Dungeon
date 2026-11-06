@@ -19,6 +19,8 @@ public class UI : MonoBehaviour
     public GameObject dialogueTextbox;
     TMP_Text dialogueTextLabel;
     string[] dialogueTextToShow;
+    public float dialogueSpeed = 30; // typewriter: letters per second
+    float dialogueStart;
     TMP_Text enemyNameTextLabel;
     Coroutine d_hide;
     Image leftFill, rightFill;
@@ -69,6 +71,7 @@ public class UI : MonoBehaviour
     }
     public void Dialogue(string[] text){
         dialogueTextToShow=text;
+        dialogueStart=Time.time;
         GameManager.Instance.controller.attackLeft.isPressedOnce("dialogue");
     }
     void UpdateDialogue(){
@@ -80,7 +83,11 @@ public class UI : MonoBehaviour
         player.lWeapon.lastUse = player.rWeapon.lastUse = Time.time; // clicking through dialogue doesn't attack
         dialogueTextbox.SetActive(true);
         dialogueTextLabel.SetText(dialogueTextToShow[0]);
+        int shown = (int)((Time.time-dialogueStart)*dialogueSpeed); // typewriter
+        dialogueTextLabel.maxVisibleCharacters = shown;
         if(GameManager.Instance.controller.attackLeft.isPressedOnce("dialogue")){
+            if(shown<dialogueTextToShow[0].Length){dialogueStart-=9999;return;} // still typing: show the whole line
+            dialogueStart=Time.time;
             if(dialogueTextToShow.Length==1)dialogueTextToShow=null;
             else dialogueTextToShow = dialogueTextToShow[1..];
         }
