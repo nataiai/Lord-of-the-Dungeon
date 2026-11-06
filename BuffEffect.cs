@@ -17,10 +17,10 @@ public class BuffEffect : MonoBehaviour
         public float duration=1f;
         public int power = 1; // burn, heal: HP per second
         public bool isStackable;
-        // weapon -> hitbox, hitbox -> hit char: the same buff, restarted if it is already there
+        // weapon -> hitbox, hitbox -> hit char: the same buff, restarted if it is already there (added again if isStackable)
         public void CopyTo(GameObject go){
             if(type==BuffType.none)return;
-            foreach(var b in go.GetComponents<BuffEffect>())if(b.buff.type==type){b.end=Time.time+duration;return;}
+            if(!isStackable)foreach(var b in go.GetComponents<BuffEffect>())if(b.buff.type==type){b.end=Time.time+duration;return;}
             var c = go.AddComponent<BuffEffect>();
             c.buff=this; c.end=Time.time+duration;
         }
@@ -50,7 +50,7 @@ public class BuffEffect : MonoBehaviour
     }
 
     public virtual void Apply(Character cha){
-        if(buff.type==BuffType.freeze||buff.type==BuffType.stun)cha.rb.velocity *= .9; // can't move
+        if(buff.type==BuffType.freeze||buff.type==BuffType.stun)cha.froze(); // can't move; knockback still slows down
         if(tick>Time.time)return;
         tick = Time.time+1;
         if(buff.type==BuffType.burn)cha.recieveDamage(buff.power);

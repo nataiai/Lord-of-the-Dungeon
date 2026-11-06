@@ -14,6 +14,7 @@ public class UI : MonoBehaviour
     public List<Image> skills = new();
     public List<Image> skillsReload = new();
     public Image[] wepImages; //get by correct index
+    [UnityEngine.Serialization.FormerlySerializedAs("d_textBox")]
     public GameObject enemyNameTextbox; 
     public GameObject dialogueTextbox;
     TMP_Text dialogueTextLabel;
@@ -76,6 +77,7 @@ public class UI : MonoBehaviour
             return;
         }
         player.froze();
+        player.lWeapon.lastUse = player.rWeapon.lastUse = Time.time; // clicking through dialogue doesn't attack
         dialogueTextbox.SetActive(true);
         dialogueTextLabel.SetText(dialogueTextToShow[0]);
         if(GameManager.Instance.controller.attackLeft.isPressedOnce("dialogue")){
