@@ -16,6 +16,7 @@ public class BuffEffect : MonoBehaviour
         public BuffType type = BuffType.none; // none = no effect
         public float duration=1f;
         public int power = 1; // burn, heal: HP per second
+        public bool isStackable;
         // weapon -> hitbox, hitbox -> hit char: the same buff, restarted if it is already there
         public void CopyTo(GameObject go){
             if(type==BuffType.none)return;
@@ -49,7 +50,7 @@ public class BuffEffect : MonoBehaviour
     }
 
     public virtual void Apply(Character cha){
-        if(buff.type==BuffType.freeze||buff.type==BuffType.stun)cha.rb.velocity = Vector2.zero; // can't move
+        if(buff.type==BuffType.freeze||buff.type==BuffType.stun)cha.rb.velocity *= .9; // can't move
         if(tick>Time.time)return;
         tick = Time.time+1;
         if(buff.type==BuffType.burn)cha.recieveDamage(buff.power);
