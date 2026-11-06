@@ -30,5 +30,5 @@ public class Weapon : ScriptableObject
     public int maxHits;
     public BaseWeapon anim;
     public Sprite uiWep;
-    public BuffEffect buff; // optional: a prefab with BuffEffect, copied to each hitbox (BuffEffect.cs)
+    public BuffEffect.Buff buff; // Buff section: type none = no effect; copied to each hitbox (BuffEffect.cs)
 }

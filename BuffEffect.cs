@@ -7,16 +7,26 @@ public enum BuffType{burn,heal,freeze,stun,none}
 // weapons -> copy to hitbox
 // hitbox -> copy to hit char
 // character -> apply change by type
-// for now: a prefab with this goes in Weapon.buff (or put it on a hitbox prefab); the hitbox copies it onto each enemy it hits
-[System.Serializable]
+// for now: set it in the Buff section of a Weapon; the hitbox copies it onto each enemy it hits
 // [CreateAssetMenu(fileName = "BuffSO", menuName = "Buff")]
 public class BuffEffect : MonoBehaviour
 {
-    public float duration=1f;
-    public BuffType type = BuffType.none;
-    public int power = 1; // burn, heal: HP per second
+    [System.Serializable]
+    public class Buff{ // the Buff section of a Weapon
+        public BuffType type = BuffType.none; // none = no effect
+        public float duration=1f;
+        public int power = 1; // burn, heal: HP per second
+        // weapon -> hitbox, hitbox -> hit char: the same buff, restarted if it is already there
+        public void CopyTo(GameObject go){
+            if(type==BuffType.none)return;
+            foreach(var b in go.GetComponents<BuffEffect>())if(b.buff.type==type){b.end=Time.time+duration;return;}
+            var c = go.AddComponent<BuffEffect>();
+            c.buff=this; c.end=Time.time+duration;
+        }
+    }
+    public Buff buff;
     Character cha;
-    float end, tick; // end is set only when copied onto a character, so other copies (summon templates) expire at once
+    float end, tick; // end is set only when copied, so other copies (summon templates) expire at once
     // Start is called before the first frame update
     void Start()
     {
@@ -24,17 +34,10 @@ public class BuffEffect : MonoBehaviour
         tick = Time.time+1;
     }
 
-    // weapon -> hitbox, hitbox -> hit char: the same buff, restarted if it is already there
-    public void CopyTo(GameObject go){
-        foreach(var b in go.GetComponents<BuffEffect>())if(b.type==type){b.end=Time.time+duration;return;}
-        var c = go.AddComponent<BuffEffect>();
-        c.type=type; c.duration=duration; c.power=power; c.end=Time.time+duration;
-    }
-
     // on a hitbox: copy to the hit enemy (the player too, later)
     void OnTriggerEnter2D(Collider2D other)
     {
-        if(TryGetComponent(out HitBox _) && other.TryGetComponent(out Enemy e))CopyTo(e.gameObject);
+        if(TryGetComponent(out HitBox _) && other.TryGetComponent(out Enemy e))buff.CopyTo(e.gameObject);
     }
 
     // on a character: apply until end. LateUpdate runs after the character moved itself, so freeze wins
@@ -46,10 +49,10 @@ public class BuffEffect : MonoBehaviour
     }
 
     public virtual void Apply(Character cha){
-        if(type==BuffType.freeze||type==BuffType.stun)cha.rb.velocity = Vector2.zero; // can't move
+        if(buff.type==BuffType.freeze||buff.type==BuffType.stun)cha.rb.velocity = Vector2.zero; // can't move
         if(tick>Time.time)return;
         tick = Time.time+1;
-        if(type==BuffType.burn)cha.recieveDamage(power);
-        if(type==BuffType.heal)cha.Heal(power);
+        if(buff.type==BuffType.burn)cha.recieveDamage(buff.power);
+        if(buff.type==BuffType.heal)cha.Heal(buff.power);
     }
 }
