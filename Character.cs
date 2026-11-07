@@ -10,6 +10,8 @@ public class CombatStat{
     public int defenseMagic = 1;
 }
 
+public enum Team{Player,Enemy,Neutral} // hitboxes and touch damage only hurt other teams
+
 public abstract class Character : MonoBehaviour // remove abstract and fix combat stat if bug
 {
     public abstract CombatStat combatStat{get;set;}
@@ -25,6 +27,8 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
     public bool isLooking => looking.magnitude > 0;
     public Rigidbody2D rb;
     float stunTime;
+    public virtual Team team => Team.Neutral;
+    public bool IsEnemyOf(Character c) => c!=null && c.team!=team;
 
     protected void setAnimFacing(Vector2 v)=>animFacing = _setAnimFacing(v);
     protected virtual int _setAnimFacing(Vector2 looking){
@@ -41,6 +45,7 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
         if(rb.velocity.magnitude<0.5f)stunTime=0;
         return true;
     }
+    public virtual void receiveKnockback(Vector2 pos,float force)=>receiveKnockback(pos,force,0);
     public void receiveKnockback(Vector2 pos,float force,float resistance){
         Vector2 dir = Quaternion.Euler(0,0,Random.Range(-10f,10f)) * ((Vector2)transform.position-pos); // away from pos, +-10 degrees
         rb.velocity = force * dir.normalized * (1-resistance);

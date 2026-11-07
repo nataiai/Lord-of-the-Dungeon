@@ -50,7 +50,10 @@ public class GameManager: MonoBehaviour{
         var summon = summondb.GetToSpawn();
         if(!testWithoutChat && summon!=null)Spawn(summon);
     }
-    void Spawn(Enemy enemy)=>currentRoom.Spawn(enemy,playerPos,spawnRangeFromPlayer);
+    void Spawn(Enemy enemy){ // near a random player (co-op), or the main one
+        var near = Player.all.Count>0 ? Player.all[Random.Range(0,Player.all.Count)] : player;
+        currentRoom.Spawn(enemy,near.transform.position,spawnRangeFromPlayer);
+    }
 
     public void _Connect(){ // join chat (Twitch or YouTube), once
         if(_connectOnce)return;

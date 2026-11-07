@@ -6,6 +6,7 @@ public class Enemy : Character
 {
     public EnemySO enemyData;
     public float initSpeed=>enemyData.initSpeed;
+    public override Team team=>Team.Enemy;
     public override CombatStat combatStat{get=>enemyData.combatStat;set{}}
     public override int maxHP{get=>enemyData.maxHP;set{}}
     [SerializeField] Animator anim;
@@ -41,7 +42,9 @@ public class Enemy : Character
         if(Time.time>lifeSpan+born)Died();
         if(isDead)Died();
         if(StuntMech(enemyData.knocbackRecovery))return;
-        movement = GameManager.Instance.player.transform.position - transform.position;
+        var target = Player.Nearest(transform.position); // chases the nearest player
+        if(target==null)return;
+        movement = target.transform.position - transform.position;
         if(movement.magnitude<enemyData.noticeRange)notice=true;
         if(notice)rb.velocity = movement.normalized * enemyData.initSpeed;
         setAnimFacing(movement.normalized);
@@ -78,12 +81,12 @@ public class Enemy : Character
     }
     protected virtual void HurtColor(){hurtTime = Time.time+0.1f; sr.color = Color.red;}
 
-    public void receiveKnockback(Vector2 pos,float force)=>receiveKnockback(pos,force,enemyData.knockbackResistance);
+    public override void receiveKnockback(Vector2 pos,float force)=>receiveKnockback(pos,force,enemyData.knockbackResistance);
 
     public virtual void OnTriggerStay2D(Collider2D other){
-        if(cooldownTimer>Time.time || deathBreathTime!=0 || !other.TryGetComponent(out Player player))return; // no hits while dying
-        player.receiveKnockback(transform.position,enemyData.attackKnockback);
-        player.recieveDamage(enemyData.combatStat.attackPhysic);
+        if(cooldownTimer>Time.time || deathBreathTime!=0 || !other.TryGetComponent(out Character victim) || !IsEnemyOf(victim))return; // no hits while dying
+        victim.receiveKnockback(transform.position,enemyData.attackKnockback);
+        victim.recieveDamage(enemyData.combatStat.attackPhysic);
         cooldownTimer = Time.time+enemyData.cooldown;
     }
 }

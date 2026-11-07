@@ -16,15 +16,15 @@ public class HoldingWeapons{ // one hand
     public bool isUsable=>weapon!=null&&!isOnCooldown;
     public float cooldown=>weapon.cooldown;
     BaseWeapon anim;
-    public void Use(Player player){if(isUsable)ForceUse(player);}
+    public void Use(Character user){if(isUsable)ForceUse(user);} // any Character can hold weapons
     public float getReloadPercent()=>weapon==null?1:Mathf.Min((Time.time-lastUse)/weapon.cooldown,1); // for ui
-    public void ForceUse(Player player){
+    public void ForceUse(Character player){
         lastUse = Time.time;
         Vector2 playerPos = player.transform.position;
         Vector2 looking4dir = Direction.vec2MoveDict[player.animFacing];
         Vector2 initPos = playerPos + new Vector2(0,0.5f) + looking4dir * weapon.hitBoxDistance + weapon.GetOffset(player.animFacing);
         if(weapon.anim!=null){
-            anim = Player.Instantiate(weapon.anim, playerPos, Quaternion.identity,player.transform);
+            anim = Object.Instantiate(weapon.anim, playerPos, Quaternion.identity,player.transform);
             if(player.animFacing<anim.animations.Length){
                 var clip = anim.animations[player.animFacing];
                 anim.anim.Play(clip.name);
@@ -32,8 +32,9 @@ public class HoldingWeapons{ // one hand
             }
         }
         if(weapon.useSound!=null)SoundPlayer.PlaySound(weapon.useSound);
-        HitBox hitBox = Player.Instantiate(weapon.hitBox, initPos, weapon.velocity!=0?Quaternion.identity:Quaternion.FromToRotation(Vector2.right, looking4dir));
+        HitBox hitBox = Object.Instantiate(weapon.hitBox, initPos, weapon.velocity!=0?Quaternion.identity:Quaternion.FromToRotation(Vector2.right, looking4dir));
         hitBox.weapon = weapon;
+        hitBox.owner = player;
         if(weapon.buff!=null)weapon.buff.CopyTo(hitBox.gameObject); // weapon -> hitbox
         hitBox.damage = weapon.damage * (weapon.isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
         hitBox.playerPos = playerPos;
@@ -44,10 +45,12 @@ public class HoldingWeapons{ // one hand
 
 public class Player : Character
 {
+    public static List<Player> all = new(); // every active player (co-op, clones); GameManager.player is the main one for camera and UI
     public CombatStat _combatStat;
     public override CombatStat combatStat{get=>_combatStat;set=>_combatStat=value;}
     public float _initSpeed=1;
     public float initSpeed=>_initSpeed;
+    public override Team team=>Team.Player;
     public int _maxHP = 4;
     public override int maxHP{get=>_maxHP;set{_maxHP=value;GameManager.Instance.ui.UpdateMaxHP(maxHP);}}
     public bool enableInvincible;
@@ -69,7 +72,8 @@ public class Player : Character
     public HoldingWeapons lWeapon,rWeapon;
     [SerializeField] Armor activeArmor;
     [SerializeField] float knockbackResistance;
-    Controller controller;
+    [Tooltip("Optional. Empty = GameManager's controller")]
+    public Controller controller;
     public float invincibleCooldownTime;
     public float invincibleTime;
     public bool isInvincible => invincibleTime>Time.time;
@@ -77,9 +81,17 @@ public class Player : Character
 
     public override int HP{get=>_HP;set{_HP=value;GameManager.Instance.ui.UpdateHP(HP);}}
 
+    void OnEnable()=>all.Add(this);
+    void OnDisable()=>all.Remove(this);
+    public static Player Nearest(Vector2 pos){ // null if there is none
+        Player best = null;
+        foreach(var p in all)if(best==null || ((Vector2)p.transform.position-pos).sqrMagnitude < ((Vector2)best.transform.position-pos).sqrMagnitude)best = p;
+        return best;
+    }
     void Start(){
         HP = maxHP;
-        controller = GameManager.Instance.controller;
+        if(controller==null)controller = GameManager.Instance.controller;
+        if(controller.aimFrom==null)controller.aimFrom = transform;
         invincibleTime = Time.time;
     }
     void Update(){
@@ -102,7 +114,7 @@ public class Player : Character
     }
     void Died(){
         HP = maxHP; //test
-        transform.position = new Vector2(0,0);
+        foreach(var p in all)p.transform.position = new Vector2(0,0); // everyone, since the room goes back to the first one
         GameManager.Instance._re();
     }
 
@@ -155,7 +167,7 @@ public class Player : Character
         HP-=dmg;
         invincibleTime = invincibleCooldownTime+Time.time;
     }
-    public void receiveKnockback(Vector2 pos,float force){
+    public override void receiveKnockback(Vector2 pos,float force){
         if(enableInvincible && isInvincible)return;
         receiveKnockback(pos,force,knockbackResistance);
     }

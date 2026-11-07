@@ -28,9 +28,11 @@ public class DungeonMap : MonoBehaviour // only currentRoom is active
             triggerMap[a] = mr;
         }
     }
-    public void roomTriggerExit(RoomTrigger trigger){ // switch when leaving a door trigger toward its partner
+    public void roomTriggerExit(RoomTrigger trigger,Player player){ // switch when leaving a door trigger toward its partner
         Vector2 toPartner = triggerMap[trigger].transform.position - trigger.transform.position;
-        if(Vector2.Dot(toPartner,GameManager.Instance.player.rb.velocity)>0)switchRoom(trigger);
+        if(Vector2.Dot(toPartner,player.rb.velocity)<=0)return;
+        switchRoom(trigger);
+        foreach(var p in Player.all)if(p!=player)p.transform.position = player.transform.position; // the others come along
     }
     public void switchRoom(RoomTrigger trigger){
         currentRoom = triggerMap[trigger].transform.parent.GetComponent<DungeonRoom>();

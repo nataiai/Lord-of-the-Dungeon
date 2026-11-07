@@ -79,9 +79,11 @@ public class UI : MonoBehaviour
             dialogueTextbox.SetActive(false);
             return;
         }
-        player.froze();
-        player.invincibleTime = Time.time+1;
-        player.lWeapon.lastUse = player.rWeapon.lastUse = Time.time; // clicking through dialogue doesn't attack
+        foreach(var p in Player.all){
+            p.froze();
+            p.invincibleTime = Time.time+1;
+            p.lWeapon.lastUse = p.rWeapon.lastUse = Time.time; // clicking through dialogue doesn't attack
+        }
         dialogueTextbox.SetActive(true);
         dialogueTextLabel.SetText(dialogueTextToShow[0]);
         int shown = (int)((Time.time-dialogueStart)*dialogueSpeed); // typewriter

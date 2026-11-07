@@ -7,7 +7,7 @@ public class RoomTrigger : MonoBehaviour // a door trigger, a direct child of it
 {
     void OnTriggerExit2D(Collider2D other){
         if (other.TryGetComponent(out Player player)){
-            GameManager.Instance.map.roomTriggerExit(this);
+            GameManager.Instance.map.roomTriggerExit(this,player);
         }
     }
 }

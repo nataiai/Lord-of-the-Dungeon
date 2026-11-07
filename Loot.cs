@@ -32,7 +32,7 @@ public class Loot : MonoBehaviour
     void PickWeaponHandle(Player player){
         if(TryFill(player.lWeapon)){GameManager.Instance._Connect();return;} // the first weapon joins chat
         if(TryFill(player.rWeapon))return;
-        var c = GameManager.Instance.controller; // both hands full: hold that hand's button while stepping on it to swap
+        var c = player.controller; // both hands full: hold that hand's button while stepping on it to swap
         if(c.attackLeft.isPressed)Swap(player.lWeapon);
         else if(c.attackRight.isPressed)Swap(player.rWeapon);
     }

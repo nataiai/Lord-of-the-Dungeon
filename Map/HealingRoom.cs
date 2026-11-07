@@ -14,13 +14,14 @@ public class HealingRoom : MonoBehaviour
     void OnTriggerEnter2D(Collider2D other){if(other.TryGetComponent(out Player player)){stayTime=0;player.isHealing=true;}}
     void OnTriggerExit2D(Collider2D other){if(other.TryGetComponent(out Player player))player.isHealing=false;}
     void Update(){
-        var player=GameManager.Instance.player;
-        if(!player.isHealing)return;
+        if(!Player.all.Exists(p=>p.isHealing))return;
         stayTime+=Time.deltaTime;
         if(stayTime*HPHealPerSecond<=1)return;
         stayTime=0;
-        player.Heal();
         SoundPlayer.PlaySound(heal_sound);
-        Destroy(Instantiate(healingEffect,player.transform.position,Quaternion.identity,player.transform),animLengthSec);
+        foreach(var player in Player.all)if(player.isHealing){ // every player standing in the water
+            player.Heal();
+            Destroy(Instantiate(healingEffect,player.transform.position,Quaternion.identity,player.transform),animLengthSec);
+        }
     }
 }
