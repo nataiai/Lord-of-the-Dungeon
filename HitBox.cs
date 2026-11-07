@@ -14,7 +14,7 @@ public class HitBox : MonoBehaviour
     private Rigidbody2D rb;
     int hitCount;
 
-    public bool CanHit(Character c) => owner==null ? c!=null : owner.IsEnemyOf(c);
+    public bool CanHit(Character c) => (owner==null ? c!=null : owner.IsEnemyOf(c)) && (weapon.homing || !c.isAirborne); // in the air: only homing hits
     public void setVelocity(Vector2 v){
         if(v.magnitude==0)return;
         if(!rb)rb = GetComponent<Rigidbody2D>();
@@ -27,6 +27,8 @@ public class HitBox : MonoBehaviour
     void Update(){if(weapon.destroyTimer!=0 && Time.time-startTime>weapon.destroyTimer)Destroy(gameObject);}
 
     void OnTriggerEnter2D(Collider2D other){
+        if(other.TryGetComponent(out GroundHazard _))return; // flies over holes and spikes
+        if(other.TryGetComponent(out Character c) && c.isAirborne && !weapon.homing)return; // passes under it, not used up
         if(other.TryGetComponent(out Character enemy) && CanHit(enemy)){
             if(!hitEnemy.Add(enemy))return; // each enemy once
             SoundPlayer.PlaySound(weapon.hitSound);

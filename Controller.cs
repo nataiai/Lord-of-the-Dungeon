@@ -33,6 +33,7 @@ public class Controller : MonoBehaviour
     public float mouseTimeDeactivation=1f;
     public ControllerButton attackLeft;
     public ControllerButton attackRight;
+    public ControllerButton jump = new(); // Space / gamepad X (west)
     [Tooltip("Mouse aims from here. Empty = the first player using this controller")]
     public Transform aimFrom;
 
@@ -53,9 +54,10 @@ public class Controller : MonoBehaviour
             // switchWeapon.isPressed = gamepad.buttonNorth.isPressed;
             attackLeft.isPressed = gamepad.leftShoulder.isPressed||gamepad.buttonSouth.isPressed;
             attackRight.isPressed = gamepad.rightShoulder.isPressed||gamepad.buttonEast.isPressed;
+            jump.isPressed = gamepad.buttonWest.isPressed;
             return;
         }
-        if(device==ControlDevice.Gamepad){attackLeft.isPressed = attackRight.isPressed = false;return;} // its gamepad is unplugged
+        if(device==ControlDevice.Gamepad){attackLeft.isPressed = attackRight.isPressed = jump.isPressed = false;return;} // its gamepad is unplugged
         if(keyboard!=null){
             bool l=keyboard.leftArrowKey.isPressed, r=keyboard.rightArrowKey.isPressed, d=keyboard.downArrowKey.isPressed, u=keyboard.upArrowKey.isPressed;
             if(arrowAim){looking = new Vector2(Axis(l,r),Axis(d,u)); l=r=d=u=false;} // arrows aim, so they don't move
@@ -65,6 +67,7 @@ public class Controller : MonoBehaviour
             switchWeapon.isPressed = keyboard.qKey.isPressed;
             attackLeft.isPressed = keyboard.oKey.isPressed;
             attackRight.isPressed = keyboard.pKey.isPressed;
+            jump.isPressed = keyboard.spaceKey.isPressed;
         }
         if(mouse==null||arrowAim){enableMouse = false;return;}
         Vector2 mousePos = mouse.position.ReadValue();

@@ -103,6 +103,7 @@ public class Player : Character
         if(!StuntMech(8))rb.velocity = movement * initSpeed;
         TryAttack(lWeapon, controller.attackLeft);
         TryAttack(rWeapon, controller.attackRight);
+        if(controller.jump.isPressedOnce("jump"))Jump();
         UpdateAnim();
     }
     void TryAttack(HoldingWeapons hand, ControllerButton button){

@@ -27,9 +27,39 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
     public bool isLooking => looking.magnitude > 0;
     public Rigidbody2D rb;
     float stunTime;
-    Collider2D _body;
-    public Vector2 center{get{if(!_body)_body = GetComponent<Collider2D>(); return _body?(Vector2)_body.bounds.center:(Vector2)transform.position;}} // middle of the body; the transform is at the feet
+    Collider2D _col;
+    public Collider2D bodyCollider{get{if(!_col)_col = GetComponent<Collider2D>(); return _col;}}
+    public Vector2 center => bodyCollider?(Vector2)bodyCollider.bounds.center:(Vector2)transform.position; // middle of the body; the transform is at the feet
     public virtual Team team => Team.Neutral;
+
+    // ---------- Jump / float: in the air, holes, spikes, ground effects (stun, slow) and non-homing hitboxes miss ----------
+    [Tooltip("Always in the air (ghost, bat)")]
+    public bool isFloating;
+    public float jumpTime = 0.5f;   // seconds in the air per jump
+    public float jumpHeight = 0.4f; // how high `body` is lifted; looks only
+    [Tooltip("Optional. The sprite child lifted while jumping. Empty = no lift")]
+    public Transform body;
+    float jumpStart = -999;
+    Vector3 bodyRest;
+    bool lifted, wasAirborne;
+    public bool isJumping => Time.time < jumpStart+jumpTime;
+    public bool isAirborne => isFloating || isJumping;
+    public bool Jump(){ // false if already in the air
+        if(isAirborne)return false;
+        jumpStart = Time.time;
+        return true;
+    }
+    protected virtual void LateUpdate(){
+        if(isAirborne!=wasAirborne){ // took off or landed: pass over holes only while in the air
+            wasAirborne = isAirborne;
+            if(bodyCollider)GroundHazard.SetAirborne(bodyCollider, wasAirborne);
+        }
+        if(body==null || body==transform)return; // lifts `body` along an arc while jumping
+        if(!lifted){bodyRest = body.localPosition;}
+        lifted = isJumping;
+        float t = (Time.time-jumpStart)/jumpTime;
+        body.localPosition = bodyRest + Vector3.up * (lifted ? jumpHeight*4*t*(1-t) : 0);
+    }
     public bool IsEnemyOf(Character c) => c!=null && c.team!=team;
 
     protected void setAnimFacing(Vector2 v)=>animFacing = _setAnimFacing(v);

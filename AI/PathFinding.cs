@@ -17,8 +17,11 @@ public static class PathFinding
     const int maxCells = 4000;            // BFS limit, for huge rooms
     static readonly Vector2Int[] dirs = {Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left,
                                          new(1,1), new(1,-1), new(-1,-1), new(-1,1)};
-    static readonly Dictionary<Vector2Int,Dictionary<Vector2Int,int>> fields = new(); // target cell -> steps to it from each cell
-    static readonly Dictionary<Vector2Int,bool> walls = new();
+    static readonly Dictionary<Vector2Int,Dictionary<Vector2Int,int>>[] fieldsFor = {new(), new()}; // [walker, flyer]: target cell -> steps to it from each cell
+    static readonly Dictionary<Vector2Int,bool>[] wallsFor = {new(), new()};
+    static bool flying; // set by Direction: flyers pass over holes
+    static Dictionary<Vector2Int,Dictionary<Vector2Int,int>> fields => fieldsFor[flying?1:0];
+    static Dictionary<Vector2Int,bool> walls => wallsFor[flying?1:0];
     static readonly Collider2D[] hits = new Collider2D[8];
     static readonly RaycastHit2D[] castHits = new RaycastHit2D[8];
     static readonly ContactFilter2D solid = new ContactFilter2D(); // default: triggers are ignored
@@ -32,10 +35,11 @@ public static class PathFinding
     public static Vector2 ToPos(Vector2Int c)=>(Vector2)c*cell;
 
     // the way to walk from `from` to reach `to`, inside bounds (normalized; straight line if there is no path)
-    public static Vector2 Direction(Vector2 from, Vector2 to, Bounds bounds){
+    public static Vector2 Direction(Vector2 from, Vector2 to, Bounds bounds, bool flyer=false){
+        flying = flyer;
         if(!use)return (to-from).normalized; // off: straight, like before pathfinding
-        if(Time.time>wallsAt+wallRefresh || (dirtyFrame>=0 && Time.frameCount>=dirtyFrame)){walls.Clear(); fields.Clear(); wallsAt=Time.time; dirtyFrame=-1;}
-        if(Time.time>builtAt+refresh){fields.Clear(); builtAt=Time.time;}
+        if(Time.time>wallsAt+wallRefresh || (dirtyFrame>=0 && Time.frameCount>=dirtyFrame)){foreach(var w in wallsFor)w.Clear(); foreach(var f in fieldsFor)f.Clear(); wallsAt=Time.time; dirtyFrame=-1;}
+        if(Time.time>builtAt+refresh){foreach(var f in fieldsFor)f.Clear(); builtAt=Time.time;}
         if(IsClear(from,to))return (to-from).normalized; // nothing in the way: straight there
         var t = ToCell(to);
         if(!fields.TryGetValue(t,out var dist))fields[t] = dist = Build(t,bounds);
@@ -90,7 +94,10 @@ public static class PathFinding
         for(int i=0;i<n;i++)if(IsWall(hits[i]))return true;
         return false;
     }
-    static bool IsWall(Collider2D col){var ch = col.GetComponentInParent<Character>(); return ch==null || ch is Chest;}
+    static bool IsWall(Collider2D col){
+        if(flying && col.GetComponent<GroundHazard>())return false; // flyers pass over holes
+        var ch = col.GetComponentInParent<Character>(); return ch==null || ch is Chest;
+    }
 
     public static void DrawGizmos(){ // Scene view: blocked cells in red
         Gizmos.color = new Color(1,0,0,.35f);

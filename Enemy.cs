@@ -51,7 +51,7 @@ public class Enemy : Character
         movement = target - center; // body to body, not feet to feet
         if(movement.magnitude<enemyData.noticeRange)notice=true;
         if(notice){
-            way = enemyData.ignoreCollide ? movement.normalized : PathFinding.Direction(center,target,GameManager.Instance.currentRoom.bounds); // ghosts go through walls
+            way = enemyData.ignoreCollide ? movement.normalized : PathFinding.Direction(center,target,GameManager.Instance.currentRoom.bounds,isFloating); // ghosts go straight; flyers path over holes
             rb.velocity = Vector2.ClampMagnitude(way + PathFinding.Separation(col, spacing, LayerMask.GetMask("Enemy")), 1) * enemyData.initSpeed; // AI/PathFinding.cs
         }
         setAnimFacing(movement.normalized);

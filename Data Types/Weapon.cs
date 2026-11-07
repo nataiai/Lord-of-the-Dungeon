@@ -25,6 +25,8 @@ public class Weapon : ScriptableObject
     public float velocity;
     [Tooltip("Seconds before the hitbox disappears. 0 = disappears on first touch (if it doesn't fly: right away, touching or not)")]
     public float destroyTimer;
+    [Tooltip("Also hits characters in the air (jumping/floating). Off = flies under them")]
+    public bool homing;
     [Tooltip("Enemies it can hit before disappearing. 0 = unlimited")]
     [FormerlySerializedAs("destroyOnHit")]
     public int maxHits;
