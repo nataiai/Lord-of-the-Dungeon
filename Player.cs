@@ -11,6 +11,8 @@ public class Direction{
 [System.Serializable]
 public class HoldingWeapons{ // one hand
     public Weapon weapon;
+    [Tooltip("If the weapon is a key: which Locks it opens. Empty = the weapon's keyId")]
+    public string keyId; // a key's own id: one key weapon, many different keys
     public float lastUse;
     public bool isOnCooldown=>lastUse+cooldown>Time.time;
     public bool isUsable=>weapon!=null&&!isOnCooldown;
@@ -36,6 +38,7 @@ public class HoldingWeapons{ // one hand
         hitBox.weapon = weapon;
         hitBox.owner = player;
         hitBox.hand = this;
+        hitBox.keyId = keyId;
         if(weapon.buff!=null)weapon.buff.CopyTo(hitBox.gameObject); // weapon -> hitbox
         hitBox.damage = weapon.damage * (weapon.isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
         hitBox.playerPos = playerPos;
@@ -105,6 +108,7 @@ public class Player : Character
         if(hand.weapon==null || hand.weapon==fist || hand.weapon.type==WeaponType.CQC || !button.isPressedOnce("throw"))return; // fist can't be thrown
         Loot.Throw(hand.weapon, this, hand, isLooking ? looking : Direction.vec2MoveDict[animFacing]);
         hand.weapon = fist; // an empty hand is a fist
+        hand.keyId = "";
         hand.lastUse = Time.time; // no swing straight after
         GameManager.Instance.ui.UpdateWeap();
     }

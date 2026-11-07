@@ -9,7 +9,7 @@ public class Chest : Enemy
     [SerializeField] AudioClip sd_open_chest;
 
     protected override void Died(){ // opens; a chest is never destroyed
-        Loot.Drop(loot, weaponLoot, transform);
+        Loot.Drop(loot, weaponLoot, transform, true, weaponLootKeyId);
         loot = null; weaponLoot = null;
         myRender.sprite = openSprite;
     }

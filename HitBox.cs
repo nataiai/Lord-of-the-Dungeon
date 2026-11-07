@@ -12,8 +12,10 @@ public class HitBox : MonoBehaviour
     public float startTime;
     public HashSet<Character> hitEnemy = new();
     [System.NonSerialized] public HoldingWeapons hand; // the hand that swung it: a key used up on a lock leaves this hand
+    [System.NonSerialized] public string keyId;     // the key's own id (empty = weapon.keyId)
     [System.NonSerialized] public Loot thrownLoot;     // on a thrown weapon (Loot.Throw): the Loot moves it, and ending it stops the throw
     bool isThrow => thrownLoot!=null;
+    string key => string.IsNullOrEmpty(keyId) ? weapon.keyId : keyId;
     private Rigidbody2D rb;
     int hitCount;
     static readonly Collider2D[] touching = new Collider2D[8];
@@ -40,7 +42,7 @@ public class HitBox : MonoBehaviour
 
     // what a swing, shot or thrown weapon does to `other`. Loot also calls it for the solid things a throw runs into
     public void Touch(Collider2D other){
-        if(weapon.isKey && other.TryGetComponent(out Lock lk) && lk.Fits(weapon))Unlock(lk); // then a chest still gets the hit, which opens it
+        if(weapon.isKey && other.TryGetComponent(out Lock lk) && lk.Fits(weapon,key))Unlock(lk); // then a chest still gets the hit, which opens it
         if(other.TryGetComponent(out Character enemy) && CanHit(enemy)){
             if(!hitEnemy.Add(enemy))return; // each enemy once
             SoundPlayer.PlaySound(weapon.hitSound);
@@ -59,12 +61,12 @@ public class HitBox : MonoBehaviour
     }
     void OpenLocksTouching(){
         int n = GetComponent<Collider2D>().OverlapCollider(new ContactFilter2D().NoFilter(), touching);
-        for(int i=0;i<n;i++)if(touching[i].TryGetComponent(out Lock lk) && lk.Fits(weapon))Unlock(lk);
+        for(int i=0;i<n;i++)if(touching[i].TryGetComponent(out Lock lk) && lk.Fits(weapon,key))Unlock(lk);
     }
     void Unlock(Lock lk){
         lk.Unlock();
         if(!lk.consumeKey)return;
         if(isThrow){thrownLoot.ConsumeKey(); return;} // the thrown key is gone
-        if(hand!=null && hand.weapon==weapon){hand.weapon = GameManager.Instance.fist; GameManager.Instance.ui.UpdateWeap();} // the swung key leaves the hand
+        if(hand!=null && hand.weapon==weapon){hand.weapon = GameManager.Instance.fist; hand.keyId = ""; GameManager.Instance.ui.UpdateWeap();} // the swung key leaves the hand
     }
 }

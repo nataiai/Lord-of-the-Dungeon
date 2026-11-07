@@ -9,6 +9,8 @@ public class Loot : MonoBehaviour
     public LootType lootType = LootType.None;
     public ChatType skill = ChatType.invalid;
     public Weapon weaponLoot;
+    [Tooltip("If the weapon is a key: which Locks it opens. Empty = the weapon's keyId")]
+    public string keyId;
     public InstantItem instantItem;
     public Animator anim;
 
@@ -29,8 +31,6 @@ public class Loot : MonoBehaviour
     bool returning, consumed; // returning: a loyal weapon flying back. consumed: a key used up on a lock
     public bool isThrown => hitBox!=null && hitBox.enabled;
     Rigidbody2D rb;
-    static readonly RaycastHit2D[] hits = new RaycastHit2D[16];
-    static readonly ContactFilter2D solid = new ContactFilter2D(); // default: triggers are ignored
 
     void Start(){
         sr = GetComponentInChildren<SpriteRenderer>();
@@ -59,13 +59,14 @@ public class Loot : MonoBehaviour
         if(GameManager.Instance.currentRoom!=null)loot.transform.parent = GameManager.Instance.currentRoom.transform; // pauses with its room
         var hb = loot.gameObject.AddComponent<HitBox>(); // the throw's hitbox, switched off when it lands
         hb.weapon = weapon; hb.owner = by; hb.thrownLoot = loot; hb.playerPos = by.center;
+        loot.keyId = hb.keyId = hand!=null ? hand.keyId : "";
         hb.damage = weapon.throwDamage * (weapon.isMagical ? by.combatStat.attackMagic : by.combatStat.attackPhysic);
         if(weapon.buff!=null)weapon.buff.CopyTo(loot.gameObject); // burn, stun...: like a swing
         loot.hitBox = hb; loot.thrower = by; loot.thrownFrom = hand;
         loot.radius = Mathf.Max(weapon.throwSize,0.05f);
         loot.velocity = dir.normalized*weapon.throwInitSpeed;
         loot.deceleration = weapon.throwDeceleration; loot.bounciness = weapon.bounciness; loot.bounce = weapon.isBounce;
-        loot.transform.rotation = Quaternion.Euler(0,0,loot.PointAngle(loot.velocity));
+        loot.transform.rotation = Quaternion.Euler(0,0,Slide.PointAngle(loot.velocity, weapon.spriteAngle));
         if(weapon.useSound!=null)SoundPlayer.PlaySound(weapon.useSound);
         return loot;
     }
@@ -83,60 +84,31 @@ public class Loot : MonoBehaviour
 
     void FixedUpdate(){
         if(rb==null || consumed)return;
-        float dt = Time.fixedDeltaTime;
-        if(returning){FlyBack(dt); return;}
-        if(velocity==Vector2.zero)return;
-        Vector2 pos = rb.position, move = velocity*dt;
-        bool blocked = false;
-        int n = Physics2D.CircleCast(pos, radius, move.normalized, solid, hits, move.magnitude);
-        for(int i=0;i<n && !blocked;i++){
-            var col = hits[i].collider;
-            var ch = col.GetComponentInParent<Character>();
-            if(ch!=null && !(ch is Chest)){ // characters don't block; a throw hurts them on the way
-                if(isThrown){hitBox.Touch(col); if(!isThrown && !returning){pos = hits[i].centroid; blocked = true;}} // its last hit: it drops right there
-                continue;
-            }
-            if(isThrown)hitBox.Touch(col); // a lock, a crate, a chest...
-            if(consumed)return;
-            pos = hits[i].centroid;
-            blocked = true;
-            if(bounce)velocity = Vector2.Reflect(velocity, hits[i].normal)*bounciness;
-            else if(isThrown){StopThrow(); if(!returning)velocity = Vector2.zero;} // sticks where it hits
-            else velocity = Vector2.zero;
-        }
+        if(returning){FlyBack(); return;}
+        Slide.Step(rb, ref velocity, radius, deceleration, bounciness, bounce, isThrown ? ThrowTouch : null); // AI/Slide.cs
         if(consumed)return;
-        if(!blocked)pos += move;
-        rb.MovePosition(pos);
-        velocity = Vector2.MoveTowards(velocity, Vector2.zero, deceleration*dt);
-        if(velocity==Vector2.zero && isThrown)StopThrow(); // out of speed
-        Spin(dt);
+        if(velocity==Vector2.zero && isThrown)StopThrow(); // stopped (a wall, out of speed): loot here, or loyal: flies back
+        Spin();
     }
-    void FlyBack(float dt){ // loyal: back to the thrower through walls, speeding up to its throw speed
+    bool ThrowTouch(Collider2D col){ // the throw touches something on its way: hurt it, open it...
+        hitBox.Touch(col);
+        return !consumed && (isThrown || returning); // false: the throw ended on this hit (its last enemy, a used-up key): stop right here
+    }
+    void FlyBack(){ // loyal: back to the thrower through walls, speeding up to its throw speed
         if(thrower==null || !thrower.isActiveAndEnabled){Land(); return;} // nobody to come back to: loot here
-        Vector2 to = thrower.center - rb.position;
-        if(to.magnitude < radius+0.4f){Catch(); return;}
-        var w = weaponLoot;
-        float speed = w.throwDeceleration>0 ? Mathf.Min(velocity.magnitude + w.throwDeceleration*dt, w.throwInitSpeed) : w.throwInitSpeed;
-        velocity = to.normalized*speed;
-        rb.MovePosition(rb.position + velocity*dt);
-        Spin(dt);
+        if(Slide.Toward(rb, ref velocity, thrower.center, weaponLoot.throwDeceleration, weaponLoot.throwInitSpeed) < radius+0.4f){Catch(); return;} // AI/Slide.cs
+        Spin();
     }
     void Catch(){ // back into the hand it came from, or the other fist hand; both hands full: it drops at the thrower's feet
         var hand = IsFree(thrownFrom) ? thrownFrom : IsFree(thrower.lWeapon) ? thrower.lWeapon : IsFree(thrower.rWeapon) ? thrower.rWeapon : null;
         if(hand==null){Land(); rb.position = thrower.transform.position; return;}
-        hand.weapon = weaponLoot;
+        hand.weapon = weaponLoot; hand.keyId = keyId;
         SoundPlayer.PlaySound(SoundPlayer.instance.sd_pickup_wep);
         GameManager.Instance.ui.UpdateWeap();
         Destroy(gameObject);
     }
     static bool IsFree(HoldingWeapons h) => h!=null && (h.weapon==null || h.weapon.type==WeaponType.CQC); // empty or fist
-    void Spin(float dt){
-        if(!isThrown)return;
-        var w = weaponLoot;
-        if(w.spinSpeed==0){rb.MoveRotation(PointAngle(velocity)); return;} // point first
-        rb.MoveRotation(rb.rotation + w.spinSpeed*dt*Mathf.Clamp01(velocity.magnitude/Mathf.Max(w.throwInitSpeed,0.01f))); // slows with it
-    }
-    float PointAngle(Vector2 v) => v.sqrMagnitude<1e-6f ? transform.eulerAngles.z : Mathf.Atan2(v.y,v.x)*Mathf.Rad2Deg - weaponLoot.spriteAngle;
+    void Spin(){if(isThrown)Slide.Turn(rb, velocity, weaponLoot.spinSpeed, weaponLoot.throwInitSpeed, weaponLoot.spriteAngle);}
 
     void OnTriggerEnter2D(Collider2D other)
     {
@@ -161,19 +133,20 @@ public class Loot : MonoBehaviour
     }
     bool TryFill(HoldingWeapons hand){ // an empty hand, or bare hands (CQC)
         if(hand.weapon!=null && hand.weapon.type!=WeaponType.CQC)return false;
-        hand.weapon = weaponLoot;
+        hand.weapon = weaponLoot; hand.keyId = keyId;
         SoundPlayer.PlaySound(SoundPlayer.instance.sd_pickup_wep);
         Destroy(gameObject);
         return true;
     }
-    void Swap(Player player, HoldingWeapons hand){(hand.weapon,weaponLoot) = (weaponLoot,hand.weapon);UpdateImage();Yoink((Vector2)transform.position-player.center);} // the old weapon slides away from the player
+    void Swap(Player player, HoldingWeapons hand){(hand.weapon,weaponLoot) = (weaponLoot,hand.weapon); (hand.keyId,keyId) = (keyId,hand.keyId);UpdateImage();Yoink((Vector2)transform.position-player.center);} // the old weapon slides away from the player
     void PickChatSkillHandle(Player player){
         if(skill!=ChatType.invalid && !GameManager.Instance.availableSkill.Contains(skill))GameManager.Instance.availableSkill.Add(skill);
         Destroy(gameObject);
     }
 
     // drop a Loot prefab and/or a weapon (its pickup is made in code); null = nothing. yoink: it slides away
-    public static Loot Drop(Loot prefab, Weapon weapon, Transform from, bool yoink=true){
+    // keyId: if the weapon is a key, which Locks it opens
+    public static Loot Drop(Loot prefab, Weapon weapon, Transform from, bool yoink=true, string keyId=""){
         Loot dropped = null;
         if(prefab!=null){
             dropped = Instantiate(prefab, from.position, Quaternion.identity);
@@ -182,6 +155,7 @@ public class Loot : MonoBehaviour
         }
         if(weapon==null)return dropped;
         dropped = MakeWeaponLoot(weapon, from);
+        dropped.keyId = keyId;
         if(yoink)dropped.Yoink();
         return dropped;
     }

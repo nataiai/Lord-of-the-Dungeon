@@ -54,6 +54,6 @@ public class Weapon : ScriptableObject
 
     [Header("Key: opens a Lock it hits, swung or thrown")]
     public bool isKey;
-    [Tooltip("Opens only Locks with the same keyId. A Lock with an empty keyId takes any key")]
+    [Tooltip("Default id for this key. Each key's Loot (or hand) can set its own, so one key weapon makes many keys. A Lock with an empty keyId takes any key")]
     public string keyId;
 }

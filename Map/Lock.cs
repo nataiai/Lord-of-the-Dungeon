@@ -7,7 +7,7 @@ using UnityEngine.Events;
 public class Lock : MonoBehaviour
 {
     public bool isLocked = true;
-    [Tooltip("Empty = any key opens it. Otherwise only keys with the same keyId")]
+    [Tooltip("Empty = any key opens it. Otherwise only keys with the same id (set on the key's Loot, or the weapon's keyId)")]
     public string keyId;
     [Tooltip("The key is used up when it opens this")]
     public bool consumeKey = true;
@@ -16,7 +16,7 @@ public class Lock : MonoBehaviour
     public AudioClip unlockSound;
     public UnityEvent onUnlock;
 
-    public bool Fits(Weapon key) => isLocked && key!=null && key.isKey && (string.IsNullOrEmpty(keyId) || keyId==key.keyId);
+    public bool Fits(Weapon key, string id) => isLocked && key!=null && key.isKey && (string.IsNullOrEmpty(keyId) || keyId==id);
     public void Unlock(){
         isLocked = false;
         if(unlockSound!=null)SoundPlayer.PlaySound(unlockSound);

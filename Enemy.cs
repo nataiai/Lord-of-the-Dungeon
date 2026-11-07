@@ -14,6 +14,8 @@ public class Enemy : Character
     public Loot loot;
     [Tooltip("Optional. Weapon to drop, no Loot prefab needed")]
     public Weapon weaponLoot;
+    [Tooltip("If weaponLoot is a key: which Locks it opens. Empty = the weapon's keyId")]
+    public string weaponLootKeyId;
     SpriteRenderer sr;
     Collider2D col;
     Color originalSRcolor;
@@ -30,6 +32,8 @@ public class Enemy : Character
     [SerializeField] bool spriteFacesLeft;
     protected virtual bool facesPlayer => true; // false: never flipped (Chest)
     Vector2 way; // where it walks, for the gizmo
+    Vector2 lastPos;
+    float slowFor, stuckUntil; // pushing into something without moving: follow the path for a while
 
     protected virtual void Start(){
         HP = enemyData.maxHP;
@@ -57,7 +61,11 @@ public class Enemy : Character
         if(facesPlayer && Mathf.Abs(movement.x)>0.01f)sr.flipX = (movement.x<0) != spriteFacesLeft; // face the player (left/right)
         if(movement.magnitude<enemyData.noticeRange)notice=true;
         if(notice){
-            way = enemyData.ignoreCollide ? movement.normalized : PathFinding.Direction(center,target,GameManager.Instance.currentRoom.bounds,Mathf.Max(col.bounds.extents.x,col.bounds.extents.y)); // ghosts go straight
+            float speed = ((Vector2)transform.position-lastPos).magnitude/Mathf.Max(Time.deltaTime,1e-4f);
+            lastPos = transform.position;
+            slowFor = speed < enemyData.initSpeed*0.25f && movement.magnitude>1 ? slowFor+Time.deltaTime : 0; // not when it's already at the player
+            if(slowFor>0.3f){stuckUntil = Time.time+1; slowFor = 0;}
+            way = enemyData.ignoreCollide ? movement.normalized : PathFinding.Direction(center,target,GameManager.Instance.currentRoom.bounds,col.bounds.extents,Time.time<stuckUntil); // ghosts go straight
             rb.velocity = Vector2.ClampMagnitude(way + PathFinding.Separation(col, spacing, LayerMask.GetMask("Enemy")), 1) * enemyData.initSpeed; // AI/PathFinding.cs
         }
         setAnimFacing(movement.normalized);
@@ -73,7 +81,7 @@ public class Enemy : Character
         GameManager.Instance._Connect(); // the first kill also joins chat
         sr.color = Color.white;
         if(deathBreathTime==0){
-            Loot.Drop(loot, weaponLoot, transform);
+            Loot.Drop(loot, weaponLoot, transform, true, weaponLootKeyId);
             if(isDead){ // killed, not timed out: chat may summon this type now
                 GameManager.Instance.summondb.Unlock(enemyData);
                 AddSummonTemplate(); // fills summonableEnemy from kills; comment out to fill it by hand
