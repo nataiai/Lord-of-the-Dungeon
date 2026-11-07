@@ -31,4 +31,29 @@ public class Weapon : ScriptableObject
     public BaseWeapon anim;
     public Sprite uiWep;
     public BuffEffect.Buff buff; // Buff section: type none = no effect; copied to each hitbox (BuffEffect.cs)
+
+    [Header("Throw: hold Throw (Q / gamepad X) + this weapon's button. Fist can't be thrown")]
+    public int throwDamage = 1;          // per enemy hit, x the thrower's attack stat (like a swing)
+    public float throwInitSpeed = 10;    // starting speed
+    [Tooltip("Speed lost per second. 0 = flies until it hits something solid")]
+    public float throwDeceleration = 8;
+    [Tooltip("Radius of the thrown weapon: what it hits and bumps into")]
+    public float throwSize = 0.25f;
+    public float throwKnockback = 3;
+    [Tooltip("Enemies it can hit before it stops (loyal: turns back). 0 = no limit")]
+    public int throwMaxHits;
+    [Tooltip("Bounces off solid things instead of stopping there")]
+    public bool isBounce;
+    [Range(0,1)] public float bounciness = 0.6f; // speed kept per bounce
+    [Tooltip("Boomerang: when it stops, it flies back to the thrower through walls, into a fist hand")]
+    public bool isLoyal;
+    [Tooltip("Sprite spin, degrees per second at full speed (slows with it). 0 = flies point first")]
+    public float spinSpeed;
+    [Tooltip("Which way the sprite art points (0 = right, 90 = up), so a non-spinning throw flies point first")]
+    public float spriteAngle = 45;
+
+    [Header("Key: opens a Lock it hits, swung or thrown")]
+    public bool isKey;
+    [Tooltip("Opens only Locks with the same keyId. A Lock with an empty keyId takes any key")]
+    public string keyId;
 }

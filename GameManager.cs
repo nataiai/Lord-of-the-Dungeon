@@ -12,6 +12,8 @@ public class GameManager: MonoBehaviour{
     public UI ui;
     public Enemy mockEnemy;
     public Controller controller;
+    [Tooltip("Bare hands (Database/Weapons/Fist): what a hand holds after throwing its weapon. Can't be thrown")]
+    public Weapon fist;
     public Vector2 playerPos => player.transform.position;
     public Camera uiCam;
     public Camera mainCam;

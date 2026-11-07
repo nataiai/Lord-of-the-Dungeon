@@ -13,7 +13,7 @@ public class Chest : Enemy
         loot = null; weaponLoot = null;
         myRender.sprite = openSprite;
     }
-    public override void recieveDamage(int dmg,bool isMagical){HP=0;}
+    public override void recieveDamage(int dmg,bool isMagical){if(TryGetComponent(out Lock l) && l.isLocked)return; HP=0;} // locked: only a key opens it (Lock.cs)
     protected override void HurtColor(){}
     protected override bool facesPlayer => false;
     public override void OnTriggerStay2D(Collider2D other){}
