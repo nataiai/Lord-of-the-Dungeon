@@ -35,10 +35,10 @@ public class BuffEffect : MonoBehaviour
         tick = Time.time+1;
     }
 
-    // on a hitbox: copy to the hit enemy (the player too, later)
+    // on a hitbox: copy to each Character it can hit
     void OnTriggerEnter2D(Collider2D other)
     {
-        if(TryGetComponent(out HitBox _) && other.TryGetComponent(out Enemy e))buff.CopyTo(e.gameObject);
+        if(TryGetComponent(out HitBox hb) && other.TryGetComponent(out Character c) && hb.CanHit(c))buff.CopyTo(c.gameObject);
     }
 
     // on a character: apply until end. LateUpdate runs after the character moved itself, so slow wins

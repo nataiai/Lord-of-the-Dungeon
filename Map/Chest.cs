@@ -15,5 +15,6 @@ public class Chest : Enemy
     }
     public override void recieveDamage(int dmg,bool isMagical){HP=0;}
     protected override void HurtColor(){}
+    protected override bool facesPlayer => false;
     public override void OnTriggerStay2D(Collider2D other){}
 }

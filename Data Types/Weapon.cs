@@ -23,7 +23,7 @@ public class Weapon : ScriptableObject
     public Vector2 GetOffset(int facing) => new[]{upOffset, rightOffset, downOffset, leftOffset}[facing];
     [Tooltip("Hitbox flying speed. 0 = stays where it spawns")]
     public float velocity;
-    [Tooltip("Seconds before the hitbox disappears. 0 = disappears on first touch")]
+    [Tooltip("Seconds before the hitbox disappears. 0 = disappears on first touch (if it doesn't fly: right away, touching or not)")]
     public float destroyTimer;
     [Tooltip("Enemies it can hit before disappearing. 0 = unlimited")]
     [FormerlySerializedAs("destroyOnHit")]

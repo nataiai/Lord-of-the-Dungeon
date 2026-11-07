@@ -13,6 +13,7 @@ public class EventCertainObjectDestroyed : MonoBehaviour
         if (IsConditionTrue())
         {
             onCollectedSword?.Invoke();
+            PathFinding.Invalidate();
             print("SWORD COLLECTED");
             Destroy(gameObject);
         }

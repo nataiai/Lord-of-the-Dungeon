@@ -16,6 +16,7 @@ public class Destructable : MonoBehaviour
 
     void Start(){HP = hitUntillBreak;}
     void Died(){
+        PathFinding.Invalidate(); // it may have been in the way
         if(destroyAfterDead)Destroy(gameObject);
         Loot.Drop(loot, weaponLoot, transform);
     }
