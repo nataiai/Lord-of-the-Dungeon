@@ -20,7 +20,10 @@ public class HitBox : MonoBehaviour
         if(!rb)rb = GetComponent<Rigidbody2D>();
         rb.velocity = v;
     }
-    void Start(){startTime = Time.time;}
+    void Start(){
+        startTime = Time.time;
+        if(weapon.destroyTimer==0 && weapon.velocity==0)Destroy(gameObject, Time.fixedDeltaTime*2); // instant hit (sword): gone even if it touches nothing, after physics has found what it overlaps
+    }
     void Update(){if(weapon.destroyTimer!=0 && Time.time-startTime>weapon.destroyTimer)Destroy(gameObject);}
 
     void OnTriggerEnter2D(Collider2D other){

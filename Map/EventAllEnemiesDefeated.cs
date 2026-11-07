@@ -12,6 +12,7 @@ public class EventAllEnemiesDefeated : MonoBehaviour
         if (IsConditionTrue())
         {
             onAllEnemiesDefeated?.Invoke();
+            PathFinding.Invalidate(); // doors opened
             print("ALL ENEMIES DEFEATED!");
             SoundPlayer.PlaySound(SoundPlayer.instance.sd_door_open);
             Destroy(gameObject);

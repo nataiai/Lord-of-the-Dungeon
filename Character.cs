@@ -27,6 +27,8 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
     public bool isLooking => looking.magnitude > 0;
     public Rigidbody2D rb;
     float stunTime;
+    Collider2D _body;
+    public Vector2 center{get{if(!_body)_body = GetComponent<Collider2D>(); return _body?(Vector2)_body.bounds.center:(Vector2)transform.position;}} // middle of the body; the transform is at the feet
     public virtual Team team => Team.Neutral;
     public bool IsEnemyOf(Character c) => c!=null && c.team!=team;
 

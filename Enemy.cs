@@ -24,6 +24,9 @@ public class Enemy : Character
     float cooldownTimer;
     bool justSpawn;
     bool notice;
+    [Tooltip("Gap kept between its collider and other enemies' colliders, so they don't stack")]
+    [SerializeField] float spacing = 0.2f;
+    Vector2 way; // where it walks, for the gizmo
 
     protected virtual void Start(){
         HP = enemyData.maxHP;
@@ -42,12 +45,22 @@ public class Enemy : Character
         if(Time.time>lifeSpan+born)Died();
         if(isDead)Died();
         if(StuntMech(enemyData.knocbackRecovery))return;
-        var target = Player.Nearest(transform.position); // chases the nearest player
-        if(target==null)return;
-        movement = target.transform.position - transform.position;
+        var nearest = Player.Nearest(transform.position); // chases the nearest player
+        if(nearest==null)return;
+        Vector2 target = nearest.center;
+        movement = target - center; // body to body, not feet to feet
         if(movement.magnitude<enemyData.noticeRange)notice=true;
-        if(notice)rb.velocity = movement.normalized * enemyData.initSpeed;
+        if(notice){
+            way = enemyData.ignoreCollide ? movement.normalized : PathFinding.Direction(center,target,GameManager.Instance.currentRoom.bounds); // ghosts go through walls
+            rb.velocity = Vector2.ClampMagnitude(way + PathFinding.Separation(col, spacing, LayerMask.GetMask("Enemy")), 1) * enemyData.initSpeed; // AI/PathFinding.cs
+        }
         setAnimFacing(movement.normalized);
+    }
+
+    void OnDrawGizmosSelected(){ // select an enemy in play mode: its direction in yellow, walls it avoids in red
+        PathFinding.DrawGizmos();
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawLine(center, center+way);
     }
 
     protected virtual void Died(){
