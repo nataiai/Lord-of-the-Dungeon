@@ -35,6 +35,10 @@ public class Enemy : Character
         HP = enemyData.maxHP;
         born = Time.time;
         sr = GetComponentInChildren<SpriteRenderer>();
+        foreach(Transform child in sr.transform){
+            var s = child.GetComponent<SpriteRenderer>();
+            if(s!=null)sr=s;
+        }
         originalSRcolor = sr.color;
         GetComponent<Rigidbody2D>().freezeRotation = true;
         gameObject.layer = LayerMask.NameToLayer("Enemy");
