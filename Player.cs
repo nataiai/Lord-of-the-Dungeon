@@ -89,9 +89,15 @@ public class Player : Character
         if(controller.looking.magnitude>0)looking = controller.looking; // no look input: keep the last direction it looked
         else if(!isLooking)looking = movement; // never looked yet: face where it walks
         if(!StuntMech(8))rb.velocity = movement * initSpeed;
-        TryAttack(lWeapon, controller.attackLeft);
-        TryAttack(rWeapon, controller.attackRight);
+        if(controller.throwHold.isPressed){TryThrow(lWeapon, controller.attackLeft); TryThrow(rWeapon, controller.attackRight);}
+        else{TryAttack(lWeapon, controller.attackLeft); TryAttack(rWeapon, controller.attackRight);}
         UpdateAnim();
+    }
+    void TryThrow(HoldingWeapons hand, ControllerButton button){ // throw held + a weapon button: that weapon flies the way it faces
+        if(hand.weapon==null || hand.weapon.type==WeaponType.CQC || !button.isPressedOnce("throw"))return; // bare hands can't be thrown
+        Loot.Throw(hand.weapon, this, isLooking ? looking : Direction.vec2MoveDict[animFacing]);
+        hand.weapon = null;
+        GameManager.Instance.ui.UpdateWeap();
     }
     void TryAttack(HoldingWeapons hand, ControllerButton button){
         if(!hand.isUsable || !button.isPressed)return;

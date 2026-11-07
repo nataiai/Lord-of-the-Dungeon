@@ -30,5 +30,9 @@ public class Weapon : ScriptableObject
     public int maxHits;
     public BaseWeapon anim;
     public Sprite uiWep;
+    [Header("Throw: hold throw + this weapon's button")]
+    public float throwSpeed = 8;   // flying speed; it stops at the first solid thing and stays there as loot
+    [Tooltip("Damage to enemies it flies through. 0 = harmless")]
+    public int throwDamage;
     public BuffEffect.Buff buff; // Buff section: type none = no effect; copied to each hitbox (BuffEffect.cs)
 }
