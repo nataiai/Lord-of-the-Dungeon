@@ -13,15 +13,17 @@ public static class PathFinding
     public static float refresh = 0.25f;  // seconds a field is reused (the target moves)
     public static float wallRefresh = 2f; // seconds walls are cached; Invalidate() when a wall appears or goes
     public static int lookAhead = 4;      // cells ahead an enemy may aim at directly, so it walks smooth lines, not grid steps
-    public static float clearance = 0.2f; // a cell this close to a wall is blocked, so enemies don't snag on corners
+    public static float clearance = 0.2f; // smallest gap kept from walls; bigger enemies keep their own size (radius)
     const int maxCells = 4000;            // BFS limit, for huge rooms
     static readonly Vector2Int[] dirs = {Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left,
                                          new(1,1), new(1,-1), new(-1,-1), new(-1,1)};
     static readonly Dictionary<Vector2Int,Dictionary<Vector2Int,int>> fields = new(); // target cell -> steps to it from each cell
     static readonly Dictionary<Vector2Int,bool> walls = new();
-    static readonly Collider2D[] hits = new Collider2D[8];
-    static readonly RaycastHit2D[] castHits = new RaycastHit2D[8];
-    static readonly ContactFilter2D solid = new ContactFilter2D(); // default: triggers are ignored
+    static readonly Collider2D[] hits = new Collider2D[16];
+    static readonly RaycastHit2D[] castHits = new RaycastHit2D[16];
+    static ContactFilter2D solid; // no triggers, no Enemy layer (crowds would fill hits[] and hide the wall behind them)
+    static bool solidSet;
+    static float gridClearance; // the grid leaves room for the biggest enemy that asked so far
     static float builtAt = -999, wallsAt = -999;
     static int dirtyFrame = -1;
 
@@ -32,11 +34,15 @@ public static class PathFinding
     public static Vector2 ToPos(Vector2Int c)=>(Vector2)c*cell;
 
     // the way to walk from `from` to reach `to`, inside bounds (normalized; straight line if there is no path)
-    public static Vector2 Direction(Vector2 from, Vector2 to, Bounds bounds){
+    // radius: the walker's size (half its collider), so it only takes ways its body fits through
+    public static Vector2 Direction(Vector2 from, Vector2 to, Bounds bounds, float radius=0){
         if(!use)return (to-from).normalized; // off: straight, like before pathfinding
+        if(!solidSet){solid = new ContactFilter2D(); solid.SetLayerMask(~LayerMask.GetMask("Enemy")); solidSet = true;}
+        float r = Mathf.Max(clearance, radius);
+        if(r>gridClearance){gridClearance = r; walls.Clear(); fields.Clear();} // a bigger enemy: rebuild the grid with room for it
         if(Time.time>wallsAt+wallRefresh || (dirtyFrame>=0 && Time.frameCount>=dirtyFrame)){walls.Clear(); fields.Clear(); wallsAt=Time.time; dirtyFrame=-1;}
         if(Time.time>builtAt+refresh){fields.Clear(); builtAt=Time.time;}
-        if(IsClear(from,to))return (to-from).normalized; // nothing in the way: straight there
+        if(IsClear(from,to,r))return (to-from).normalized; // nothing in the way of its body: straight there
         var t = ToCell(to);
         if(!fields.TryGetValue(t,out var dist))fields[t] = dist = Build(t,bounds);
         var c = ToCell(from);
@@ -44,7 +50,7 @@ public static class PathFinding
         if(aim==c)return (to-from).normalized; // no path: straight, like before
         for(int i=0;i<lookAhead;i++){ // aim at the farthest cell down the path that can be walked to straight
             var n = Step(dist,aim);
-            if(n==aim || !IsClear(from,ToPos(n)))break;
+            if(n==aim || !IsClear(from,ToPos(n),r))break;
             aim = n;
         }
         return (ToPos(aim)-from).normalized;
@@ -55,10 +61,10 @@ public static class PathFinding
         foreach(var d in dirs)if(dist.TryGetValue(c+d,out int v)&&v<best){best=v;next=c+d;}
         return next;
     }
-    public static bool IsClear(Vector2 a, Vector2 b){ // an enemy-sized circle can slide from a to b without touching a wall
+    public static bool IsClear(Vector2 a, Vector2 b, float radius){ // a circle this big can slide from a to b without touching a wall
         Vector2 d = b-a;
         if(d.sqrMagnitude<1e-6f)return true;
-        int n = Physics2D.CircleCast(a, clearance, d.normalized, solid, castHits, d.magnitude);
+        int n = Physics2D.CircleCast(a, radius, d.normalized, solid, castHits, d.magnitude);
         for(int i=0;i<n;i++)if(IsWall(castHits[i].collider))return false;
         return true;
     }
@@ -86,7 +92,7 @@ public static class PathFinding
         return !w;
     }
     static bool IsWall(Vector2 p){ // a solid collider that isn't someone walking around (chests count as walls)
-        int n = Physics2D.OverlapCircle(p, clearance, solid, hits);
+        int n = Physics2D.OverlapCircle(p, gridClearance, solid, hits);
         for(int i=0;i<n;i++)if(IsWall(hits[i]))return true;
         return false;
     }
