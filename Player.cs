@@ -11,8 +11,8 @@ public class Direction{
 [System.Serializable]
 public class HoldingWeapons{ // one hand
     public Weapon weapon;
-    [Tooltip("If the weapon is a key: which Locks it opens. Empty = the weapon's keyId")]
-    public string keyId; // a key's own id: one key weapon, many different keys
+    [Tooltip("If the weapon is a key: which Locks it opens (AI/Lock.cs). Empty = the weapon's keyId")]
+    public string keyId;
     public float lastUse;
     public bool isOnCooldown=>lastUse+cooldown>Time.time;
     public bool isUsable=>weapon!=null&&!isOnCooldown;
@@ -37,12 +37,11 @@ public class HoldingWeapons{ // one hand
         HitBox hitBox = Object.Instantiate(weapon.hitBox, initPos, weapon.velocity!=0?Quaternion.identity:Quaternion.FromToRotation(Vector2.right, looking4dir));
         hitBox.weapon = weapon;
         hitBox.owner = player;
-        hitBox.hand = this;
-        hitBox.keyId = keyId;
         if(weapon.buff!=null)weapon.buff.CopyTo(hitBox.gameObject); // weapon -> hitbox
         hitBox.damage = weapon.damage * (weapon.isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
         hitBox.playerPos = playerPos;
         hitBox.setVelocity(player.looking * weapon.velocity);
+        Lock.Swing(hitBox, this); // a key opens a Lock it touches (AI/Lock.cs)
     }
     public void StopAnim(){if(anim!=null)GameObject.Destroy(anim.gameObject);anim=null;}
 }
@@ -87,9 +86,6 @@ public class Player : Character
         HP = maxHP;
         controller = GameManager.Instance.controller;
         invincibleTime = Time.time;
-        if(lWeapon.weapon==null)lWeapon.weapon = GameManager.Instance.fist; // an empty hand is a fist
-        if(rWeapon.weapon==null)rWeapon.weapon = GameManager.Instance.fist;
-        GameManager.Instance.ui.UpdateWeap();
     }
     void Update(){
         if(HP<=0)Died();
@@ -99,18 +95,10 @@ public class Player : Character
         if(!StuntMech(8))rb.velocity = movement * initSpeed;
         if (movement.magnitude > 0) lastMove = movement;
         looking = lastMove;
-        if(controller.throwHold.isPressed){TryThrow(lWeapon, controller.attackLeft); TryThrow(rWeapon, controller.attackRight);}
-        else{TryAttack(lWeapon, controller.attackLeft); TryAttack(rWeapon, controller.attackRight);}
+        if(ThrownWeapon.TryThrow(this)){UpdateAnim(); return;} // Throw held: no attacks (AI/ThrownWeapon.cs)
+        TryAttack(lWeapon, controller.attackLeft);
+        TryAttack(rWeapon, controller.attackRight);
         UpdateAnim();
-    }
-    void TryThrow(HoldingWeapons hand, ControllerButton button){ // hold Throw (Q / gamepad X) + a weapon button: throw that weapon (Loot.Throw)
-        var fist = GameManager.Instance.fist;
-        if(hand.weapon==null || hand.weapon==fist || hand.weapon.type==WeaponType.CQC || !button.isPressedOnce("throw"))return; // fist can't be thrown
-        Loot.Throw(hand.weapon, this, hand, isLooking ? looking : Direction.vec2MoveDict[animFacing]);
-        hand.weapon = fist; // an empty hand is a fist
-        hand.keyId = "";
-        hand.lastUse = Time.time; // no swing straight after
-        GameManager.Instance.ui.UpdateWeap();
     }
     void TryAttack(HoldingWeapons hand, ControllerButton button){
         if(!hand.isUsable || !button.isPressed)return;

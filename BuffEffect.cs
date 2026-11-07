@@ -38,7 +38,7 @@ public class BuffEffect : MonoBehaviour
     // on a hitbox: copy to each Character it can hit
     void OnTriggerEnter2D(Collider2D other)
     {
-        if(TryGetComponent(out HitBox hb) && hb.enabled && other.TryGetComponent(out Character c) && hb.CanHit(c))buff.CopyTo(c.gameObject); // off: a thrown weapon that landed
+        if(TryGetComponent(out HitBox hb) && other.TryGetComponent(out Character c) && hb.CanHit(c))buff.CopyTo(c.gameObject);
     }
 
     // on a character: apply until end. LateUpdate runs after the character moved itself, so slow wins

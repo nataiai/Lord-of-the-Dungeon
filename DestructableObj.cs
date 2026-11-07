@@ -20,7 +20,7 @@ public class Destructable : MonoBehaviour
     void Died(){
         PathFinding.Invalidate(); // it may have been in the way
         if(destroyAfterDead)Destroy(gameObject);
-        Loot.Drop(loot, weaponLoot, transform, true, weaponLootKeyId);
+        Loot.Drop(loot, weaponLoot, transform, weaponLootKeyId);
     }
     public virtual void recieveDamage(int dmg,bool isMagical){ // magic does nothing; any other hit counts as 1
         if(isMagical)return;

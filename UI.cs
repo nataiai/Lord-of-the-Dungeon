@@ -66,8 +66,6 @@ public class UI : MonoBehaviour
     public void UpdateHP(int HP){for(int i=0;i<heart.Count;i++)heart[i].sprite = healthSprite[i<HP?0:1];}
     public void UpdateSkill(){if(skillsReload.Count>0)skillsReload[0].fillAmount=GameManager.Instance.summondb.spawnSkill.getReloadPercent();}
     public void UpdateWeap(){
-        wepImages[0].enabled = player.lWeapon.weapon!=null; // an empty hand (no fist set on GameManager): no icon
-        wepImages[1].enabled = player.rWeapon.weapon!=null;
         if(player.lWeapon.weapon!=null)wepImages[0].sprite = player.lWeapon.weapon.uiWep;
         if(player.rWeapon.weapon!=null)wepImages[1].sprite = player.rWeapon.weapon.uiWep;
     }

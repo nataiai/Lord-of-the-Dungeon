@@ -32,7 +32,9 @@ public class Weapon : ScriptableObject
     public Sprite uiWep;
     public BuffEffect.Buff buff; // Buff section: type none = no effect; copied to each hitbox (BuffEffect.cs)
 
-    [Header("Throw: hold Throw (Q / gamepad X) + this weapon's button. Fist can't be thrown")]
+    [Header("Throw (AI/ThrownWeapon.cs): hold Throw (Q / gamepad X) + this weapon's button. Fist can't be thrown")]
+    [Tooltip("Untick to keep this weapon from being thrown")]
+    public bool canThrow = true;
     public int throwDamage = 1;          // per enemy hit, x the thrower's attack stat (like a swing)
     public float throwInitSpeed = 10;    // starting speed
     [Tooltip("Speed lost per second. 0 = flies until it hits something solid")]
@@ -52,8 +54,8 @@ public class Weapon : ScriptableObject
     [Tooltip("Which way the sprite art points (0 = right, 90 = up), so a non-spinning throw flies point first")]
     public float spriteAngle = 45;
 
-    [Header("Key: opens a Lock it hits, swung or thrown")]
+    [Header("Key (AI/Lock.cs): opens a Lock it hits, swung or thrown")]
     public bool isKey;
-    [Tooltip("Default id for this key. Each key's Loot (or hand) can set its own, so one key weapon makes many keys. A Lock with an empty keyId takes any key")]
+    [Tooltip("Default id for this key. Each key's Loot (or the enemy/chest/crate dropping it) can set its own, so one key weapon makes many keys. A Lock with an empty keyId takes any key")]
     public string keyId;
 }

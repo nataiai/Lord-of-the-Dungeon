@@ -9,6 +9,18 @@ public static class Slide
     public static readonly ContactFilter2D solid = new ContactFilter2D(); // default: triggers are ignored
     static readonly RaycastHit2D[] hits = new RaycastHit2D[16];
 
+    // its Rigidbody2D, or a new kinematic one (so a moving trigger is tracked)
+    public static Rigidbody2D Body(GameObject go){
+        if(go.TryGetComponent(out Rigidbody2D rb))return rb;
+        rb = go.AddComponent<Rigidbody2D>(); rb.bodyType = RigidbodyType2D.Kinematic;
+        return rb;
+    }
+    // a slide radius from its sprite
+    public static float Radius(GameObject go){
+        var sr = go.GetComponentInChildren<SpriteRenderer>();
+        return sr!=null && sr.sprite!=null ? Mathf.Max(Mathf.Min(sr.bounds.extents.x,sr.bounds.extents.y),0.05f) : 0.25f;
+    }
+
     // solid = blocks a slide: anything not a trigger and not a character (chests count as solid)
     public static bool IsSolid(Collider2D col){var ch = col.GetComponentInParent<Character>(); return ch==null || ch is Chest;}
 
