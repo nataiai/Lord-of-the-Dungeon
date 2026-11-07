@@ -61,7 +61,6 @@ public class Player : Character
     const int USEROD = (int)WeaponType.Rod;
     const int SPEAR = (int)WeaponType.Spear;
     const int CQC = (int)WeaponType.CQC;
-    Vector2 lastMove;
     float cooldown;
     string currentAnim;
     [SerializeField] Animator anim;
@@ -85,9 +84,8 @@ public class Player : Character
     void Update(){
         if(HP<=0)Died();
         movement = Vector2.ClampMagnitude(controller.movement,1);
-        looking = controller.looking;
-        if(movement.magnitude>0)lastMove = movement;
-        if(looking.magnitude==0)looking=lastMove;
+        if(controller.looking.magnitude>0)looking = controller.looking; // no look input: keep the last direction it looked
+        else if(!isLooking)looking = movement; // never looked yet: face where it walks
         if(!StuntMech(8))rb.velocity = movement * initSpeed;
         TryAttack(lWeapon, controller.attackLeft);
         TryAttack(rWeapon, controller.attackRight);
