@@ -7,22 +7,27 @@ public class HitBox : MonoBehaviour
 {
     public Weapon weapon;
     public int damage;
-    public Vector2 playerPos;
+    public Character owner; // who used it: hurts only other teams. null = hurts everyone
+    public Vector2 playerPos; // the user's position: knockback pushes away from it
     public float startTime;
-    public HashSet<Enemy> hitEnemy = new();
+    public HashSet<Character> hitEnemy = new();
     private Rigidbody2D rb;
     int hitCount;
 
+    public bool CanHit(Character c) => owner==null ? c!=null : owner.IsEnemyOf(c);
     public void setVelocity(Vector2 v){
         if(v.magnitude==0)return;
         if(!rb)rb = GetComponent<Rigidbody2D>();
         rb.velocity = v;
     }
-    void Start(){startTime = Time.time;}
+    void Start(){
+        startTime = Time.time;
+        if(weapon.destroyTimer==0 && weapon.velocity==0)Destroy(gameObject, Time.fixedDeltaTime*2); // instant hit (sword): gone even if it touches nothing, after physics has found what it overlaps
+    }
     void Update(){if(weapon.destroyTimer!=0 && Time.time-startTime>weapon.destroyTimer)Destroy(gameObject);}
 
     void OnTriggerEnter2D(Collider2D other){
-        if(other.TryGetComponent(out Enemy enemy)){
+        if(other.TryGetComponent(out Character enemy) && CanHit(enemy)){
             if(!hitEnemy.Add(enemy))return; // each enemy once
             SoundPlayer.PlaySound(weapon.hitSound);
             enemy.recieveDamage(damage,weapon.isMagical);

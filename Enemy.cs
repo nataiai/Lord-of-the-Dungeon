@@ -6,6 +6,7 @@ public class Enemy : Character
 {
     public EnemySO enemyData;
     public float initSpeed=>enemyData.initSpeed;
+    public override Team team=>Team.Enemy;
     public override CombatStat combatStat{get=>enemyData.combatStat;set{}}
     public override int maxHP{get=>enemyData.maxHP;set{}}
     [SerializeField] Animator anim;
@@ -23,11 +24,21 @@ public class Enemy : Character
     float cooldownTimer;
     bool justSpawn;
     bool notice;
+    [Tooltip("Gap kept between its collider and other enemies' colliders, so they don't stack")]
+    [SerializeField] float spacing = 0.2f;
+    [Tooltip("Tick if the sprite art faces left. It is flipped to face the player")]
+    [SerializeField] bool spriteFacesLeft;
+    protected virtual bool facesPlayer => true; // false: never flipped (Chest)
+    Vector2 way; // where it walks, for the gizmo
 
     protected virtual void Start(){
         HP = enemyData.maxHP;
         born = Time.time;
         sr = GetComponentInChildren<SpriteRenderer>();
+        foreach(Transform child in sr.transform){
+            var s = child.GetComponent<SpriteRenderer>();
+            if(s!=null)sr=s;
+        }
         originalSRcolor = sr.color;
         GetComponent<Rigidbody2D>().freezeRotation = true;
         gameObject.layer = LayerMask.NameToLayer("Enemy");
@@ -41,10 +52,21 @@ public class Enemy : Character
         if(Time.time>lifeSpan+born)Died();
         if(isDead)Died();
         if(StuntMech(enemyData.knocbackRecovery))return;
-        movement = GameManager.Instance.player.transform.position - transform.position;
+        Vector2 target = GameManager.Instance.player.center;
+        movement = target - center; // body to body, not feet to feet
+        if(facesPlayer && Mathf.Abs(movement.x)>0.01f)sr.flipX = (movement.x<0) != spriteFacesLeft; // face the player (left/right)
         if(movement.magnitude<enemyData.noticeRange)notice=true;
-        if(notice)rb.velocity = movement.normalized * enemyData.initSpeed;
+        if(notice){
+            way = enemyData.ignoreCollide ? movement.normalized : PathFinding.Direction(center,target,GameManager.Instance.currentRoom.bounds,Mathf.Max(col.bounds.extents.x,col.bounds.extents.y)); // ghosts go straight
+            rb.velocity = Vector2.ClampMagnitude(way + PathFinding.Separation(col, spacing, LayerMask.GetMask("Enemy")), 1) * enemyData.initSpeed; // AI/PathFinding.cs
+        }
         setAnimFacing(movement.normalized);
+    }
+
+    void OnDrawGizmosSelected(){ // select an enemy in play mode: its direction in yellow, walls it avoids in red
+        PathFinding.DrawGizmos();
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawLine(center, center+way);
     }
 
     protected virtual void Died(){
@@ -70,7 +92,7 @@ public class Enemy : Character
     }
     public override void recieveDamage(int dmg,bool isMagical){
         base.recieveDamage(dmg,isMagical);
-        GameManager.Instance.ui.ShowText("\""+enemyData.enemyName.ToLowerInvariant()+"\""); // teaches chat the summon name
+        GameManager.Instance.ui.ShowText(enemyData.enemyName.ToLowerInvariant()); // teaches chat the summon name
         if(isDead)return;
         HurtColor();
         dmg -= isMagical?enemyData.combatStat.defenseMagic:enemyData.combatStat.defensePhysic;
@@ -78,12 +100,12 @@ public class Enemy : Character
     }
     protected virtual void HurtColor(){hurtTime = Time.time+0.1f; sr.color = Color.red;}
 
-    public void receiveKnockback(Vector2 pos,float force)=>receiveKnockback(pos,force,enemyData.knockbackResistance);
+    public override void receiveKnockback(Vector2 pos,float force)=>receiveKnockback(pos,force,enemyData.knockbackResistance);
 
     public virtual void OnTriggerStay2D(Collider2D other){
-        if(cooldownTimer>Time.time || deathBreathTime!=0 || !other.TryGetComponent(out Player player))return; // no hits while dying
-        player.receiveKnockback(transform.position,enemyData.attackKnockback);
-        player.recieveDamage(enemyData.combatStat.attackPhysic);
+        if(cooldownTimer>Time.time || deathBreathTime!=0 || !other.TryGetComponent(out Character victim) || !IsEnemyOf(victim))return; // no hits while dying
+        victim.receiveKnockback(transform.position,enemyData.attackKnockback);
+        victim.recieveDamage(enemyData.combatStat.attackPhysic);
         cooldownTimer = Time.time+enemyData.cooldown;
     }
 }

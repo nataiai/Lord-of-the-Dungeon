@@ -10,11 +10,10 @@ using UnityEngine.Networking;
 
 // One chat reader for Twitch (desktop and WebGL) and YouTube (desktop), no package needed.
 // Messages go to GameManager.Instance.chat.addToDB, the same place the Lexone TwitchChat sends them.
-// Backup: set use = false to go back to Lexone, or delete this folder and
-// "&& !UnifiedChat.TryConnect(Data.cn)" in GameManager._Connect.
+// Backup: Lexone (chat.Connect in GameManager._Connect) is used whenever this is off.
 public class UnifiedChat : MonoBehaviour
 {
-    public static bool use = true;
+    public static bool use = false; // ON/OFF: false = Lexone TwitchChat reads chat instead
     ConcurrentQueue<string> inbox = new(); // desktop Twitch lines arrive on another thread
     TcpClient tcp;
 

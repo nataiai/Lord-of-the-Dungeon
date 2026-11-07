@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 330774034f9cd62049988ff75ad5d5bc, type: 3}
+  m_Name: KeyBronze
+  m_EditorClassIdentifier: 
+  type: 904
+  useSound: {fileID: 8300000, guid: 66bd0cbdf7e484a41b698ff2f3d4bfa0, type: 3}
+  hitSound: {fileID: 8300000, guid: 71a7bc9060dc22e40a35e6bb65570e7c, type: 3}
+  isMagical: 0
+  damage: 1
+  cooldown: 0.5
+  knocback: 5
+  hitBoxDistance: 0.2
+  hitBox: {fileID: 7758261912273869097, guid: fe735dbbf417abcd48304b1e00c48587, type: 3}
+  upOffset: {x: 0, y: 0}
+  rightOffset: {x: 0, y: 0}
+  downOffset: {x: 0, y: 0}
+  leftOffset: {x: 0, y: 0}
+  velocity: 0
+  destroyTimer: 0
+  maxHits: 0
+  anim: {fileID: 6972958541385030361, guid: 523207e1db61e3845b1be14b391557dd, type: 3}
+  uiWep: {fileID: 21300000, guid: 6687f76e8b0ed664c8e1e0734c3ac890, type: 3}
+  buff:
+    type: 4
+    duration: 1
+    power: 1
+    isStackable: 0

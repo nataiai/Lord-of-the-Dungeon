@@ -2,13 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum LootType{weapon,chatSkill,None}
+public enum LootType{weapon,chatSkill, instantItem,None}
 
 public class Loot : MonoBehaviour
 {
     public LootType lootType = LootType.None;
     public ChatType skill = ChatType.invalid;
     public Weapon weaponLoot;
+    public InstantItem instantItem;
+    public Animator anim;
+
     SpriteRenderer sr;
 
     void Start(){
@@ -26,8 +29,13 @@ public class Loot : MonoBehaviour
         if (other.TryGetComponent(out Player player)){
             if(lootType==LootType.weapon)PickWeaponHandle(player);
             if(lootType==LootType.chatSkill)PickChatSkillHandle(player);
+            if(lootType==LootType.instantItem)InstantItemUse(player);
             GameManager.Instance.ui.UpdateWeap();
         }
+    }
+    void InstantItemUse(Player player)
+    {
+        
     }
     void PickWeaponHandle(Player player){
         if(TryFill(player.lWeapon)){GameManager.Instance._Connect();return;} // the first weapon joins chat
