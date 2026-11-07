@@ -62,7 +62,7 @@ public static class PathFinding
     public static bool IsClear(Vector2 a, Vector2 b){ // an enemy-sized circle can slide from a to b without touching a wall
         Vector2 d = b-a;
         if(d.sqrMagnitude<1e-6f)return true;
-        int n = Physics2D.CircleCast(a, clearance, d.normalized, d.magnitude, solid, castHits);
+        int n = Physics2D.CircleCast(a, clearance, d.normalized, solid, castHits, d.magnitude);
         for(int i=0;i<n;i++)if(IsWall(castHits[i].collider))return false;
         return true;
     }
