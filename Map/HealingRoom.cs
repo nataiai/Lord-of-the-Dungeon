@@ -1,27 +1,30 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-// Standing in this trigger heals the player HPHealPerSecond times a second (1 HP each), with a sound and the heal animation
+// Every Character standing in this trigger heals 1 HP, HPHealPerSecond times a second, with a sound and its heal animation
 public class HealingRoom : MonoBehaviour
 {
     public float HPHealPerSecond = 3f;
     [SerializeField] AudioClip heal_sound;
-    Player player; // the player while inside, else null
+    readonly List<Character> inside = new();
     float nextHeal;
 
     void OnTriggerEnter2D(Collider2D other){
-        if(!other.TryGetComponent(out player))return;
-        player.isHealing = true;
-        nextHeal = Time.time + 1/HPHealPerSecond;
+        if(!other.TryGetComponent(out Character c))return;
+        if(inside.Count==0)nextHeal = Time.time + 1/HPHealPerSecond;
+        inside.Add(c);
+        c.isHealing = true;
     }
     void OnTriggerExit2D(Collider2D other){
-        if(!other.TryGetComponent(out Player p))return;
-        p.isHealing = false;
-        player = null;
+        if(!other.TryGetComponent(out Character c))return;
+        inside.Remove(c);
+        c.isHealing = false;
     }
     void Update(){
-        if(player==null || Time.time<nextHeal)return;
+        if(inside.Count==0 || Time.time<nextHeal)return;
         nextHeal = Time.time + 1/HPHealPerSecond;
-        player.HealWithEffect(1);
+        inside.RemoveAll(c => c==null); // destroyed while inside
+        foreach(var c in inside)if(!c.isDead)c.HealWithEffect(1); // dying enemies stay dead
         SoundPlayer.PlaySound(heal_sound);
     }
 }

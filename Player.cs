@@ -58,7 +58,6 @@ public class Player : Character
     bool attackState;
     const int IDLE = 0;
     const int MOVING = 1;
-    [HideInInspector] public bool isHealing;
     const int SWING = (int)WeaponType.Swinging;
     const int USEROD = (int)WeaponType.Rod;
     const int SPEAR = (int)WeaponType.Spear;
@@ -75,8 +74,6 @@ public class Player : Character
     public float invincibleTime;
     public bool isInvincible => invincibleTime>Time.time;
     public bool forceAnim;
-    [Tooltip("Heal animation shown on the player for half a second when it heals (healing room, Health Bone)")]
-    [SerializeField] GameObject healEffect;
 
     public override int HP{get=>_HP;set{_HP=value;GameManager.Instance.ui.UpdateHP(HP);}}
 
@@ -107,10 +104,6 @@ public class Player : Character
     public void InstantItemUse(InstantItem item){ // walked into an instant use item
         if(item==null)return;
         if(item.usableItemType==ItemType.Heal)HealWithEffect(item.healAmount);
-    }
-    public void HealWithEffect(int amount){ // heal and show the heal animation
-        Heal(amount);
-        if(healEffect!=null)Destroy(Instantiate(healEffect,transform.position,Quaternion.identity,transform),.5f);
     }
     void Died(){
         HP = maxHP; //test
