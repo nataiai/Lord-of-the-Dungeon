@@ -16,11 +16,11 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
 {
     public abstract CombatStat combatStat{get;set;}
     public abstract int maxHP{get;set;}
-    public Vector2 movement;
+    [HideInInspector] public Vector2 movement;
     Vector2 _looking;
     public Vector2 looking{get => _looking;set => _looking = value.normalized;}
-    public int animFacing; //up = 0, right = 1, down = 2, left = 3
-    public int _HP;
+    [HideInInspector] public int animFacing; //up = 0, right = 1, down = 2, left = 3
+    [HideInInspector] public int _HP;
     public virtual int HP{get=>_HP;set=>_HP=value;}
     public bool isDead => HP<=0;
     public bool isMoving => movement.magnitude > 0;
