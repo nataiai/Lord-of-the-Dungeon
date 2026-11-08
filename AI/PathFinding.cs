@@ -33,7 +33,8 @@ public static class PathFinding
 
     // the way to walk from `from` to reach `to`, inside bounds (normalized; straight line if there is no path)
     // radius: the walker's size (half its collider), so it only takes ways its body fits through
-    public static Vector2 Direction(Vector2 from, Vector2 to, Bounds bounds, float radius=0){
+    // seed: any number per walker (e.g. GetInstanceID), so stuck walkers don't all turn the same way
+    public static Vector2 Direction(Vector2 from, Vector2 to, Bounds bounds, float radius=0, int seed=0){
         if(!Experimental.I.pathFinding)return (to-from).normalized; // off: straight, like before pathfinding
         if(!solidSet){solid = new ContactFilter2D(); solid.SetLayerMask(~LayerMask.GetMask("Enemy")); solid.useTriggers = true; solidSet = true;}
         float r = Mathf.Max(clearance, radius);
@@ -45,13 +46,22 @@ public static class PathFinding
         if(!fields.TryGetValue(t,out var dist))fields[t] = dist = Build(t,bounds);
         var c = ToCell(from);
         var aim = Step(dist,c);
-        if(aim==c)return (to-from).normalized; // no path: straight, like before
+        if(aim==c)return Steer(from,to,r,seed); // no path: turn until free
         for(int i=0;i<lookAhead;i++){ // aim at the farthest cell down the path that can be walked to straight
             var n = Step(dist,aim);
             if(n==aim || !IsClear(from,ToPos(n),r))break;
             aim = n;
         }
         return (ToPos(aim)-from).normalized;
+    }
+    static Vector2 Steer(Vector2 from, Vector2 to, float r, int seed){ // no path found: turn left/right from straight, 30 degrees at a time, until a short step is free
+        Vector2 d = (to-from).normalized;
+        float side = ((seed + (int)(Time.time/2)) & 1)==0 ? 1 : -1; // first side differs per walker and flips every 2s, so a stuck one tries the other way
+        for(int a=30;a<=180;a+=30)foreach(float s in new[]{side,-side}){
+            Vector2 v = Quaternion.Euler(0,0,a*s)*d;
+            if(IsClear(from, from+v*cell*2, r))return v;
+        }
+        return d;
     }
     static Vector2Int Step(Dictionary<Vector2Int,int> dist, Vector2Int c){ // the neighbour one step closer to the target (c if none)
         int best = dist.TryGetValue(c,out int d0)?d0:int.MaxValue; // not on the field: hugging a wall, so step back onto it
