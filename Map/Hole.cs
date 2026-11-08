@@ -1,12 +1,12 @@
 using System.Collections;
 using UnityEngine;
 
-// The player, enemies and loot that touch this trigger fall in: they shrink away, then enemies and loot are gone
+// The player, enemies and loot that touch this trigger fall in: they play their fall clip (or shrink away), then enemies and loot are gone
 // and the player comes back where he entered the room. Flying enemies (ignoreCollide, ghosts) pass over.
 [RequireComponent(typeof(Collider2D))]
 public class Hole : MonoBehaviour
 {
-    const float fallTime = .5f;
+    const float fallShrinkTime = .5f; // when it has no fall clip
 
     void Awake(){ // loot has no Rigidbody2D: a kinematic one here lets it touch the hole too
         if(!TryGetComponent(out Rigidbody2D rb))rb = gameObject.AddComponent<Rigidbody2D>();
@@ -22,10 +22,13 @@ public class Hole : MonoBehaviour
         if(faller.TryGetComponent(out Rigidbody2D rb))rb.velocity = Vector2.zero;
         Transform t = faller.transform;
         Vector3 scale = t.localScale;
-        for(float time=0; time<fallTime; time+=Time.deltaTime){t.localScale = scale*(1-time/fallTime); yield return null;} // fall down animation
-        if(faller is not Player){Destroy(t.gameObject); yield break;}
+        var clip = faller switch{Player p => p.fallClip, Enemy e => e.enemyData.fallClip, Loot l => l.fallClip, _ => null};
+        var animator = faller.GetComponentInChildren<Animator>();
+        if(clip!=null && animator!=null){animator.speed = 1; animator.Play(clip.name, 0, 0f); yield return new WaitForSeconds(clip.length);} // fall down animation
+        else for(float time=0; time<fallShrinkTime; time+=Time.deltaTime){t.localScale = scale*(1-time/fallShrinkTime); yield return null;} // no clip: shrink away
+        if(faller is not Player player){Destroy(t.gameObject); yield break;}
         t.localScale = scale;
-        t.position = GameManager.Instance.map.roomEntryPos;
+        player.Respawn(GameManager.Instance.map.roomEntryPos);
         faller.enabled = col.enabled = true;
     }
 }

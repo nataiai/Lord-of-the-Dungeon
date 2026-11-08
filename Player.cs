@@ -74,6 +74,8 @@ public class Player : Character
     public float invincibleTime;
     public bool isInvincible => invincibleTime>Time.time;
     public bool forceAnim;
+    [Tooltip("Fall down animation when it falls in a hole (a state with this clip's name in its Animator). Empty: it shrinks away")]
+    public AnimationClip fallClip;
 
     public override int HP{get=>_HP;set{_HP=value;GameManager.Instance.ui.UpdateHP(HP);}}
 
@@ -104,6 +106,10 @@ public class Player : Character
     public void InstantItemUse(InstantItem item){ // walked into an instant use item
         if(item==null)return;
         if(item.usableItemType==ItemType.Heal)HealWithEffect(item.healAmount);
+    }
+    public void Respawn(Vector2 pos){
+        transform.position = pos;
+        currentAnim = null; // replay idle/walk, whatever played meanwhile (e.g. the fall)
     }
     void Died(){
         HP = maxHP; //test
