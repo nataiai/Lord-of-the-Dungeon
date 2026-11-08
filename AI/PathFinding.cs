@@ -107,15 +107,15 @@ public static class PathFinding
     // ---------- Separation ----------
     // Pushes `self` away from nearby colliders on `layers`, so characters don't stack. Add it to where it wants to walk:
     //     rb.velocity = Vector2.ClampMagnitude(way + PathFinding.Separation(col, LayerMask.GetMask("Enemy")), 1) * speed;
-    // spacing: the gap kept between collider edges, half the collider's smaller side (bigger bodies keep more room).
+    // spacing: the gap kept between collider edges, the radius of the circle around the collider: 1/√2 for a 1x1 box (bigger bodies keep more room).
     // Each neighbour pushes 0 at `spacing` or farther, 1 when touching, up to 2 when overlapping.
     static readonly Collider2D[] near = new Collider2D[8];
     public static Vector2 Separation(Collider2D self, int layers){
         if(!Experimental.I.separation)return Vector2.zero;
         Vector2 push = Vector2.zero;
         Bounds me = self.bounds;
-        float spacing = Mathf.Min(me.extents.x, me.extents.y);
-        float searchRadius = me.extents.magnitude + spacing;
+        float spacing = me.extents.magnitude; // half the diagonal
+        float searchRadius = 2*spacing; // its own radius + the gap
         int count = Physics2D.OverlapCircleNonAlloc(me.center, searchRadius, near, layers);
 
         for(int i=0;i<count;i++){
