@@ -75,9 +75,8 @@ public class Player : Character
     public float invincibleTime;
     public bool isInvincible => invincibleTime>Time.time;
     public bool forceAnim;
-    [Tooltip("Heal animation shown on the player when it heals (healing room, Health Bone)")]
+    [Tooltip("Heal animation shown on the player for half a second when it heals (healing room, Health Bone)")]
     [SerializeField] GameObject healEffect;
-    [SerializeField] float healEffectLength = .5f;
 
     public override int HP{get=>_HP;set{_HP=value;GameManager.Instance.ui.UpdateHP(HP);}}
 
@@ -111,7 +110,7 @@ public class Player : Character
     }
     public void HealWithEffect(int amount){ // heal and show the heal animation
         Heal(amount);
-        if(healEffect!=null)Destroy(Instantiate(healEffect,transform.position,Quaternion.identity,transform),healEffectLength);
+        if(healEffect!=null)Destroy(Instantiate(healEffect,transform.position,Quaternion.identity,transform),.5f);
     }
     void Died(){
         HP = maxHP; //test
