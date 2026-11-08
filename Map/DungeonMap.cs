@@ -36,6 +36,7 @@ public class DungeonMap : MonoBehaviour // only currentRoom is active
         currentRoom = triggerMap[trigger].transform.parent.GetComponent<DungeonRoom>();
         currentRoom.gameObject.SetActive(true);
         trigger.transform.parent.gameObject.SetActive(false);
+        foreach(var p in FindObjectsByType<Player>(FindObjectsSortMode.None))p.roomEntryPos = p.transform.position; // every player entered the new room
         GameManager.Instance.UpdateMusic();
         PathFinding.Invalidate();
     }

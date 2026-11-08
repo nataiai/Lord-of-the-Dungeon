@@ -11,6 +11,8 @@ public class Loot : MonoBehaviour
     public Weapon weaponLoot;
     public InstantItem instantItem;
     public Animator anim;
+    [Tooltip("Fall down animation when it falls in a hole (a state with this clip's name in its Animator). Empty: it shrinks away")]
+    public AnimationClip fallClip;
 
     SpriteRenderer sr;
 

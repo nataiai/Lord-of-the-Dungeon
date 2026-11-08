@@ -15,4 +15,6 @@ public class EnemySO : ScriptableObject
     public float attackKnockback;
     public bool ignoreCollide;
     public float noticeRange=9999f;
+    [Tooltip("Fall down animation when it falls in a hole (a state with this clip's name in its Animator). Empty: it shrinks away")]
+    public AnimationClip fallClip;
 }
