@@ -12,6 +12,7 @@ public static class PathFinding
     public static float wallRefresh = 2f; // seconds walls are cached; Invalidate() when a wall appears or goes
     public static int lookAhead = 4;      // cells ahead an enemy may aim at directly, so it walks smooth lines, not grid steps
     public static float clearance = 0.2f; // smallest gap kept from walls; bigger enemies keep their own size (radius)
+    public static float spacing = 0.2f;   // gap kept between enemies' colliders, so they don't stack (Separation)
     const int maxCells = 4000;            // BFS limit, for huge rooms
     static readonly Vector2Int[] dirs = {Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left,
                                          new(1,1), new(1,-1), new(-1,-1), new(-1,1)};
@@ -109,7 +110,7 @@ public static class PathFinding
     //     rb.velocity = Vector2.ClampMagnitude(way + PathFinding.Separation(col, 0.2f, LayerMask.GetMask("Enemy")), 1) * speed;
     // spacing: the gap to keep between collider edges. Each neighbour pushes 0 at `spacing` or farther, 1 when touching, up to 2 when overlapping.
     static readonly Collider2D[] near = new Collider2D[8];
-    public static Vector2 Separation(Collider2D self, float spacing, int layers){
+    public static Vector2 Separation(Collider2D self, int layers){
         if(!Experimental.I.separation)return Vector2.zero;
         Vector2 push = Vector2.zero;
         Bounds me = self.bounds;
