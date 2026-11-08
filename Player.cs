@@ -75,6 +75,9 @@ public class Player : Character
     public float invincibleTime;
     public bool isInvincible => invincibleTime>Time.time;
     public bool forceAnim;
+    [Tooltip("Heal animation shown on the player when an item heals (e.g. the healing room's effect)")]
+    [SerializeField] GameObject healEffect;
+    [SerializeField] float healEffectLength = .5f;
 
     public override int HP{get=>_HP;set{_HP=value;GameManager.Instance.ui.UpdateHP(HP);}}
 
@@ -101,6 +104,13 @@ public class Player : Character
         hand.Use(this);
         cooldown = hand.cooldown;
         state = (int)hand.weapon.type;
+    }
+    public void InstantItemUse(InstantItem item){ // walked into an instant use item
+        if(item==null)return;
+        if(item.usableItemType==ItemType.Heal){
+            Heal(item.healAmount);
+            if(healEffect!=null)Destroy(Instantiate(healEffect,transform.position,Quaternion.identity,transform),healEffectLength);
+        }
     }
     void Died(){
         HP = maxHP; //test

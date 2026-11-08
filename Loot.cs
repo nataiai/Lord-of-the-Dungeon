@@ -35,7 +35,8 @@ public class Loot : MonoBehaviour
     }
     void InstantItemUse(Player player)
     {
-        
+        player.InstantItemUse(instantItem);
+        Destroy(gameObject);
     }
     void PickWeaponHandle(Player player){
         if(TryFill(player.lWeapon)){GameManager.Instance._Connect();return;} // the first weapon joins chat
