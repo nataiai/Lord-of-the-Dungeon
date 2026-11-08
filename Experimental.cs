@@ -20,7 +20,7 @@ public class Experimental : MonoBehaviour{
 
     [Header("Enemy AI")]
     [Tooltip("Off: no pathfinding, enemies walk straight at the player")]
-    public bool pathFinding = false;
+    public bool pathFinding = true;
     [Tooltip("Off: no separation, enemies may stack")]
     public bool separation = true;
 
