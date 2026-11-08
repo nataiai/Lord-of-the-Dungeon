@@ -30,11 +30,12 @@ public class HealingRoom : MonoBehaviour
     void Update(){
         inside.RemoveAll(c => c==null); // destroyed while inside
         foreach(var tick in ticks){
-            if(tick.HPHealPerSecond<=0 || Time.time<tick.next)continue;
+            if(Time.time<tick.next)continue;
+            var healing = inside.FindAll(c => c.team==tick.team && !c.isDead); // dying enemies stay dead
+            if(healing.Count==0)continue;
             tick.next = Time.time + 1/tick.HPHealPerSecond;
-            bool healed = false;
-            foreach(var c in inside)if(c.team==tick.team && !c.isDead){c.HealWithEffect(1); healed = true;} // dying enemies stay dead
-            if(healed)SoundPlayer.PlaySound(heal_sound);
+            foreach(var c in healing)c.HealWithEffect(1);
+            SoundPlayer.PlaySound(heal_sound);
         }
     }
 }
