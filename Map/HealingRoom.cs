@@ -21,7 +21,6 @@ public class HealingRoom : MonoBehaviour
     void Update(){
         if(player==null || Time.time<nextHeal)return;
         nextHeal = Time.time + 1/HPHealPerSecond;
-        if(player.HP>=player.maxHP)return; // full: no sound or animation
         player.HealWithEffect(1);
         SoundPlayer.PlaySound(heal_sound);
     }
