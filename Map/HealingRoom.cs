@@ -1,25 +1,22 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Characters standing in this trigger heal 1 HP per tick, each team at its own rate, with a sound and the heal animation.
-// A team with no tick (or 0 per second) is not healed. Default: only the player.
+[System.Flags] public enum Teams{Player = 1<<(int)Team.Player, Enemy = 1<<(int)Team.Enemy, Neutral = 1<<(int)Team.Neutral}
+
+// Characters of the ticked teams standing in this trigger heal 1 HP, HPHealPerSecond times a second, with a sound and the heal animation
 public class HealingRoom : MonoBehaviour
 {
-    [System.Serializable]
-    public class Tick{
-        public Team team;
-        public float HPHealPerSecond = 3f;
-        [HideInInspector] public float next;
-    }
-    public Tick[] ticks = {new Tick{team = Team.Player}};
+    public Teams heals = Teams.Player;
+    public float HPHealPerSecond = 3f;
     [SerializeField] AudioClip heal_sound;
     readonly List<Character> inside = new();
+    float nextHeal;
 
-    Tick TickFor(Character c) => System.Array.Find(ticks, t => t.team==c.team && t.HPHealPerSecond>0);
+    bool Heals(Character c) => heals.HasFlag((Teams)(1<<(int)c.team));
 
     void OnTriggerEnter2D(Collider2D other){
-        if(!other.TryGetComponent(out Character c) || TickFor(c) is not Tick tick)return;
-        if(tick.next<Time.time)tick.next = Time.time + 1/tick.HPHealPerSecond; // first of its team inside: a full tick before healing
+        if(!other.TryGetComponent(out Character c) || !Heals(c))return;
+        if(inside.Count==0)nextHeal = Time.time + 1/HPHealPerSecond;
         inside.Add(c);
         c.isHealing = true;
     }
@@ -28,14 +25,10 @@ public class HealingRoom : MonoBehaviour
         c.isHealing = false;
     }
     void Update(){
+        if(inside.Count==0 || Time.time<nextHeal)return;
+        nextHeal = Time.time + 1/HPHealPerSecond;
         inside.RemoveAll(c => c==null); // destroyed while inside
-        foreach(var tick in ticks){
-            if(Time.time<tick.next)continue;
-            var healing = inside.FindAll(c => c.team==tick.team && !c.isDead); // dying enemies stay dead
-            if(healing.Count==0)continue;
-            tick.next = Time.time + 1/tick.HPHealPerSecond;
-            foreach(var c in healing)c.HealWithEffect(1);
-            SoundPlayer.PlaySound(heal_sound);
-        }
+        foreach(var c in inside)if(!c.isDead)c.HealWithEffect(1); // dying enemies stay dead
+        SoundPlayer.PlaySound(heal_sound);
     }
 }
