@@ -1,26 +1,28 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+// Standing in this trigger heals the player HPHealPerSecond times a second (1 HP each), with a sound and the heal animation
 public class HealingRoom : MonoBehaviour
 {
-    public Collider2D healingArea;
     public float HPHealPerSecond = 3f;
-    public GameObject healingEffect;
-    public float animLengthSec = .5f;
     [SerializeField] AudioClip heal_sound;
-    float stayTime;
+    Player player; // the player while inside, else null
+    float nextHeal;
 
-    void OnTriggerEnter2D(Collider2D other){if(other.TryGetComponent(out Player player)){stayTime=0;player.isHealing=true;}}
-    void OnTriggerExit2D(Collider2D other){if(other.TryGetComponent(out Player player))player.isHealing=false;}
+    void OnTriggerEnter2D(Collider2D other){
+        if(!other.TryGetComponent(out player))return;
+        player.isHealing = true;
+        nextHeal = Time.time + 1/HPHealPerSecond;
+    }
+    void OnTriggerExit2D(Collider2D other){
+        if(!other.TryGetComponent(out Player p))return;
+        p.isHealing = false;
+        player = null;
+    }
     void Update(){
-        var player=GameManager.Instance.player;
-        if(!player.isHealing)return;
-        stayTime+=Time.deltaTime;
-        if(stayTime*HPHealPerSecond<=1)return;
-        stayTime=0;
-        player.Heal();
+        if(player==null || Time.time<nextHeal)return;
+        nextHeal = Time.time + 1/HPHealPerSecond;
+        if(player.HP>=player.maxHP)return; // full: no sound or animation
+        player.HealWithEffect(1);
         SoundPlayer.PlaySound(heal_sound);
-        Destroy(Instantiate(healingEffect,player.transform.position,Quaternion.identity,player.transform),animLengthSec);
     }
 }
