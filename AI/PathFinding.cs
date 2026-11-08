@@ -11,7 +11,7 @@ public static class PathFinding
     public static float refresh = 0.25f;  // seconds a field is reused (the target moves)
     public static float wallRefresh = 2f; // seconds walls are cached; Invalidate() when a wall appears or goes
     public static int lookAhead = 4;      // cells ahead an enemy may aim at directly, so it walks smooth lines, not grid steps
-    public static float margin = 0.25f;   // space kept from walls when the room allows it; tight spots use the exact body
+    static float margin => Experimental.I.wallSpacing; // space kept from walls when the room allows it; tight spots use the exact body
     public static float minBody = 0.4f;   // smallest body size checked, so tiny enemies still keep off walls a bit
     const float skin = 0.05f;             // the body is checked this much smaller, so one resting against a wall isn't "inside" it
     const int maxCells = 4000;            // BFS limit, for huge rooms
@@ -157,7 +157,7 @@ public static class PathFinding
         if(!Experimental.I.separation)return Vector2.zero;
         Vector2 push = Vector2.zero;
         Bounds me = self.bounds;
-        float spacing = me.extents.magnitude; // half the diagonal
+        float spacing = me.extents.magnitude * Experimental.I.enemySpacing; // half the diagonal, times the Experimental setting
         float searchRadius = 2*spacing; // its own radius + the gap
         int count = Physics2D.OverlapCircleNonAlloc(me.center, searchRadius, near, layers);
 

@@ -23,6 +23,10 @@ public class Experimental : MonoBehaviour{
     public bool pathFinding = true;
     [Tooltip("Off: no separation, enemies may stack")]
     public bool separation = true;
+    [Tooltip("Space enemies keep from walls and rocks when the room allows it (tight spots use the exact body)")]
+    public float wallSpacing = 0.25f;
+    [Tooltip("Space enemies keep from each other, times their own size (1 = half their diagonal: 0.71 for a 1x1 enemy)")]
+    public float enemySpacing = 1f;
 
     [Header("Chat")]
     [Tooltip("On: AI/UnifiedChat.cs reads chat. Off: Lexone TwitchChat reads chat")]
