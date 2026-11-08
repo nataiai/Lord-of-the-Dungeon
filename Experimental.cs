@@ -8,11 +8,11 @@ public class Experimental : MonoBehaviour{
 
     [Header("Player")]
     [Tooltip("Attacking stops player movement until the attack animation ends")]
-    public bool stopMoveOnAttack = false;
+    public bool stopMoveOnAttack = true;
     [Tooltip("On: player always faces where it walks. Off: faces the look input (arrows, mouse, right stick) and keeps it when there is none")]
     public bool lookFollowMovement = true;
     [Tooltip("On: attacks fly up, right, down or left only (the way the sprite faces), never diagonal")]
-    public bool fourWayAttack = false;
+    public bool fourWayAttack = true;
     [Tooltip("Player is invincible for invincibleCooldownTime after a hit")]
     public bool enableInvincible = false;
     [Tooltip("Turn the mouse off: no mouse aim or clicks")]
