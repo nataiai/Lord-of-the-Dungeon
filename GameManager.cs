@@ -3,8 +3,8 @@ using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 
 public class GameManager: MonoBehaviour{
-    public bool testWithoutChat;
-    public float testWithoutChatSpawnCooldown = 5f;
+    bool testWithoutChat => Experimental.I.testWithoutChat;
+    float testWithoutChatSpawnCooldown => Experimental.I.testWithoutChatSpawnCooldown;
     public float spawnRangeFromPlayer=3;
     public int FPS = 60;
     public static GameManager Instance { get; private set; }
@@ -56,7 +56,7 @@ public class GameManager: MonoBehaviour{
         if(_connectOnce)return;
         _connectOnce = true;
         chat.channel = Data.cn;
-        if(!testWithoutChat && !UnifiedChat.TryConnect(Data.cn))chat.Connect(); // on/off in AI/UnifiedChat.cs; Lexone (chat.Connect) is the backup
+        if(!testWithoutChat && !UnifiedChat.TryConnect(Data.cn))chat.Connect(); // on/off in Experimental.cs; Lexone (chat.Connect) is the backup
     }
     public void _re(){ // back to the first room
         map.currentRoom.gameObject.SetActive(false);

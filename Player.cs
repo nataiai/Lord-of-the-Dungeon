@@ -52,7 +52,7 @@ public class Player : Character
     public override Team team=>Team.Player;
     public int _maxHP = 4;
     public override int maxHP{get=>_maxHP;set{_maxHP=value;GameManager.Instance.ui.UpdateMaxHP(maxHP);}}
-    public bool enableInvincible;
+    bool enableInvincible => Experimental.I.enableInvincible;
     public float speedBoost;
     public int state; // IDLE, MOVING, or the WeaponType number while attacking
     bool attackState;
@@ -75,7 +75,6 @@ public class Player : Character
     public float invincibleTime;
     public bool isInvincible => invincibleTime>Time.time;
     public bool forceAnim;
-    Vector2 lastMove;
 
     public override int HP{get=>_HP;set{_HP=value;GameManager.Instance.ui.UpdateHP(HP);}}
 
@@ -87,11 +86,11 @@ public class Player : Character
     void Update(){
         if(HP<=0)Died();
         movement = Vector2.ClampMagnitude(controller.movement,1);
-        if(controller.looking.magnitude>0)looking = controller.looking; // no look input: keep the last direction it looked
+        if(Experimental.I.stopMoveOnAttack && attackState)movement = Vector2.zero;
+        if(Experimental.I.lookFollowMovement){if(isMoving)looking = movement;} // face where it walks; standing still: keep the last direction
+        else if(controller.looking.magnitude>0)looking = controller.looking; // no look input: keep the last direction it looked
         else if(!isLooking)looking = movement; // never looked yet: face where it walks
         if(!StuntMech(8))rb.velocity = movement * initSpeed;
-        if (movement.magnitude > 0) lastMove = movement;
-        looking = lastMove;
         TryAttack(lWeapon, controller.attackLeft);
         TryAttack(rWeapon, controller.attackRight);
         UpdateAnim();

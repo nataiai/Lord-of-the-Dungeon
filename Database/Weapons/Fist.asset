@@ -13,16 +13,25 @@ MonoBehaviour:
   m_Name: Fist
   m_EditorClassIdentifier: 
   type: 905
-  useSound: {fileID: 0}
-  hitSound: {fileID: 0}
+  useSound: {fileID: 8300000, guid: 66bd0cbdf7e484a41b698ff2f3d4bfa0, type: 3}
+  hitSound: {fileID: 8300000, guid: 700550a0e4c1c6049a58b89b38acf4c2, type: 3}
   isMagical: 0
   damage: 1
   cooldown: 0.2
   knocback: 0.1
-  range: 2
+  hitBoxDistance: 2
   hitBox: {fileID: 7758261912273869097, guid: 1ef816cb10076439884880b8ebd19b4d, type: 3}
+  upOffset: {x: 0, y: 0}
+  rightOffset: {x: 0, y: 0}
+  downOffset: {x: 0, y: 0}
+  leftOffset: {x: 0, y: 0}
   velocity: 0
   destroyTimer: 0.5
-  destroyOnHit: 0
+  maxHits: 0
   anim: {fileID: 0}
   uiWep: {fileID: 21300000, guid: 26b080e49bfa04646aa1fbf9ad2385e8, type: 3}
+  buff:
+    type: 4
+    duration: 1
+    power: 1
+    isStackable: 0
