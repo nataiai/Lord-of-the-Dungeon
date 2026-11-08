@@ -4,7 +4,8 @@ using UnityEngine;
 // (put it on any object in the scene, or it is made on first use: look for "Experimental" in the Hierarchy)
 public class Experimental : MonoBehaviour{
     static Experimental _i;
-    public static Experimental I => _i ? _i : (_i = FindFirstObjectByType<Experimental>() ?? new GameObject("Experimental").AddComponent<Experimental>());
+    public static Experimental Find => _i ? _i : (_i = FindFirstObjectByType<Experimental>()); // null if there is none, never makes one
+    public static Experimental I => Find ?? (_i = new GameObject("Experimental").AddComponent<Experimental>());
 
     [Header("Player")]
     [Tooltip("Attacking stops player movement until the attack animation ends")]
@@ -30,4 +31,8 @@ public class Experimental : MonoBehaviour{
     [Tooltip("No chat: spawn mockEnemy every testWithoutChatSpawnCooldown seconds (hold L to pause)")]
     public bool testWithoutChat = false;
     public float testWithoutChatSpawnCooldown = 5f;
+
+    [Header("Inspector")]
+    [Tooltip("On: [PlayModeOnly] fields show (and can be edited) while playing. Off: always hidden")]
+    public bool showPlayModeOnly = true;
 }
