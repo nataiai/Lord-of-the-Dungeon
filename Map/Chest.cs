@@ -8,7 +8,11 @@ public class Chest : Enemy
     [SerializeField] SpriteRenderer myRender;
     [SerializeField] AudioClip sd_open_chest;
 
-    protected override void Died(){ // opens; a chest is never destroyed
+    bool opened;
+    protected override void Died(){ // opens; a chest is never destroyed. Called every frame once HP is 0, so only the first call opens it
+        if(opened || !isDead)return; // !isDead: the enemy lifespan timeout, a chest only opens when hit
+        opened = true;
+        if(sd_open_chest!=null)SoundPlayer.PlaySound(sd_open_chest);
         Loot.Drop(loot, weaponLoot, transform);
         loot = null; weaponLoot = null;
         myRender.sprite = openSprite;
