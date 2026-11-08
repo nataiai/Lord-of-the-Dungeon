@@ -38,7 +38,7 @@ public class HoldingWeapons{ // one hand
         if(weapon.buff!=null)weapon.buff.CopyTo(hitBox.gameObject); // weapon -> hitbox
         hitBox.damage = weapon.damage * (weapon.isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
         hitBox.playerPos = playerPos;
-        hitBox.setVelocity(player.looking * weapon.velocity);
+        hitBox.setVelocity((Experimental.I.fourWayAttack ? looking4dir : player.looking) * weapon.velocity);
     }
     public void StopAnim(){if(anim!=null)GameObject.Destroy(anim.gameObject);anim=null;}
 }
@@ -86,11 +86,9 @@ public class Player : Character
         if(HP<=0)Died();
         movement = Vector2.ClampMagnitude(controller.movement,1);
         if(Experimental.I.stopMoveOnAttack && attackState)movement = Vector2.zero;
-        bool arrowFacing = Experimental.I.arrowFacing;
-        if(Experimental.I.lookFollowMovement && !arrowFacing){if(isMoving)looking = movement;} // face where it walks; standing still: keep the last direction
+        if(Experimental.I.lookFollowMovement){if(isMoving)looking = movement;} // face where it walks; standing still: keep the last direction
         else if(controller.looking.magnitude>0)looking = controller.looking; // no look input: keep the last direction it looked
         else if(!isLooking)looking = movement; // never looked yet: face where it walks
-        if(arrowFacing && isLooking)looking = Direction.vec2MoveDict[_setAnimFacing(looking)]; // up, right, down or left only
         if(!StuntMech(8))rb.velocity = movement * initSpeed;
         TryAttack(lWeapon, controller.attackLeft);
         TryAttack(rWeapon, controller.attackRight);
