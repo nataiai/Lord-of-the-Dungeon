@@ -25,7 +25,7 @@ MonoBehaviour:
   rightOffset: {x: 0, y: 0}
   downOffset: {x: 0, y: 0}
   leftOffset: {x: 0, y: 0}
-  velocity: 10
+  velocity: 6
   destroyTimer: 5
   maxHits: 3
   anim: {fileID: 2560578125325753065, guid: 369e6b6bd92b04344bdcd5c3ecd8182c, type: 3}

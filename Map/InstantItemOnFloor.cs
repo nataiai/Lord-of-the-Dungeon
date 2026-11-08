@@ -6,6 +6,7 @@ public class InstantItemOnFloor : MonoBehaviour
 {
     [SerializeField] InstantItem itemSO;
     [SerializeField] Animator anim;
+    [SerializeField] BoxCollider2D col;
     AnimationClip anim_item;
 
     void Start()
@@ -13,5 +14,11 @@ public class InstantItemOnFloor : MonoBehaviour
         anim_item = itemSO.anim_item;
         anim.Play(anim_item.name);
     }
-
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.TryGetComponent(out Player player))
+        {
+            
+        }
+    }
 }
