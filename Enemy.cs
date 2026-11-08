@@ -24,8 +24,6 @@ public class Enemy : Character
     float cooldownTimer;
     bool justSpawn;
     bool notice;
-    [Tooltip("Gap kept between its collider and other enemies' colliders, so they don't stack")]
-    [SerializeField] float spacing = 0.2f;
     [Tooltip("Tick if the sprite art faces left. It is flipped to face the player")]
     [SerializeField] bool spriteFacesLeft;
     protected virtual bool facesPlayer => true; // false: never flipped (Chest)
@@ -57,14 +55,14 @@ public class Enemy : Character
         if(facesPlayer && Mathf.Abs(movement.x)>0.01f)sr.flipX = (movement.x<0) != spriteFacesLeft; // face the player (left/right)
         if(movement.magnitude<enemyData.noticeRange)notice=true;
         if(notice){
-            way = enemyData.ignoreCollide ? movement.normalized : PathFinding.Direction(center,target,GameManager.Instance.currentRoom.bounds,Mathf.Max(col.bounds.extents.x,col.bounds.extents.y)); // ghosts go straight
-            rb.velocity = Vector2.ClampMagnitude(way + PathFinding.Separation(col, spacing, LayerMask.GetMask("Enemy")), 1) * enemyData.initSpeed; // AI/PathFinding.cs
+            way = enemyData.ignoreCollide ? movement.normalized : PathFinding.Direction(center,target,GameManager.Instance.currentRoom.bounds,col); // ghosts go straight
+            rb.velocity = Vector2.ClampMagnitude(way + PathFinding.Separation(col, LayerMask.GetMask("Enemy")), 1) * enemyData.initSpeed; // AI/PathFinding.cs
         }
         setAnimFacing(movement.normalized);
     }
 
     void OnDrawGizmosSelected(){ // select an enemy in play mode: its direction in yellow, walls it avoids in red
-        PathFinding.DrawGizmos();
+        PathFinding.DrawGizmos(col);
         Gizmos.color = Color.yellow;
         Gizmos.DrawLine(center, center+way);
     }
