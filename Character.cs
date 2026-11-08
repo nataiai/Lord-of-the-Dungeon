@@ -57,10 +57,9 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
 
     public virtual void Heal(int heal=1){HP+=heal;if(HP>maxHP)HP=maxHP;}
     [HideInInspector] public bool isHealing; // standing in a healing room
-    [Tooltip("Heal animation shown for half a second when it heals (healing room, Health Bone)")]
-    [SerializeField] GameObject healEffect;
     public void HealWithEffect(int amount){ // heal and show the heal animation
         Heal(amount);
+        var healEffect = GameManager.Instance.healEffect;
         if(healEffect!=null)Destroy(Instantiate(healEffect,transform.position,Quaternion.identity,transform),.5f);
     }
 
