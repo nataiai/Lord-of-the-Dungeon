@@ -5,11 +5,11 @@ using UnityEngine;
 [RequireComponent(typeof(Collider2D))]
 public class HitBox : MonoBehaviour
 {
-    [HideInInspector] public Weapon weapon;
-    [HideInInspector] public int damage;
-    [HideInInspector] public Character owner; // who used it: hurts only other teams. null = hurts everyone
-    [HideInInspector] public Vector2 playerPos; // the user's position: knockback pushes away from it
-    [HideInInspector] public float startTime;
+    [PlayModeOnly] public Weapon weapon;
+    [PlayModeOnly] public int damage;
+    [PlayModeOnly] public Character owner; // who used it: hurts only other teams. null = hurts everyone
+    [PlayModeOnly] public Vector2 playerPos; // the user's position: knockback pushes away from it
+    [PlayModeOnly] public float startTime;
     public HashSet<Character> hitEnemy = new();
     private Rigidbody2D rb;
     int hitCount;

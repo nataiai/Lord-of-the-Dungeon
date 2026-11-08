@@ -16,18 +16,18 @@ public class ControllerButton{
 
 public class Controller : MonoBehaviour
 {
-    [HideInInspector] public Vector2 movement;
-    [HideInInspector] public Vector2 looking;
-    [HideInInspector] public bool attack;
-    [HideInInspector] public ControllerButton switchWeapon;
+    [PlayModeOnly] public Vector2 movement;
+    [PlayModeOnly] public Vector2 looking;
+    [PlayModeOnly] public bool attack;
+    [PlayModeOnly] public ControllerButton switchWeapon;
     bool disableMouse => Experimental.I.disableMouse;
     bool mouseActive=true; // set by the script: on when the mouse moves, off after mouseTimeDeactivation still
     public float mouseDistanceActivation = 10f;
     Vector2 mouseLastPos;
     float mouseLastTime;
     public float mouseTimeDeactivation=1f;
-    [HideInInspector] public ControllerButton attackLeft;
-    [HideInInspector] public ControllerButton attackRight;
+    [PlayModeOnly] public ControllerButton attackLeft;
+    [PlayModeOnly] public ControllerButton attackRight;
 
     void Update(){
         movement = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
