@@ -33,18 +33,20 @@ public class ThrownWeapon : MonoBehaviour
     static void TryThrow(Player p, HoldingWeapons hand, ControllerButton button){
         var w = hand.weapon;
         if(w==null || !w.canThrow || hand.isOnCooldown || w==GameManager.Instance.fist || w.type==WeaponType.CQC || !button.isPressedOnce("throw"))return; // fist can't be thrown; a boomerang still out can't either
-        Throw(w, p, hand.keyId, p.isLooking ? p.looking : Direction.vec2MoveDict[p.animFacing]);
+        Throw(w, p, hand.keyId, p.isLooking ? p.looking : Direction.vec2MoveDict[p.animFacing], hand.lootScale);
         hand.weapon = GameManager.Instance.fist; // an empty hand is a fist
         hand.keyId = "";
         hand.lastUse = Time.time; // no swing straight after
         GameManager.Instance.ui.UpdateWeap();
     }
 
-    public static ThrownWeapon Throw(Weapon weapon, Character by, string keyId, Vector2 dir){
+    // scale: the size it had as loot (zero = 1), so it looks the same flying and landed
+    public static ThrownWeapon Throw(Weapon weapon, Character by, string keyId, Vector2 dir, Vector3 scale=default){
         var go = new GameObject(weapon.name+" (thrown)");
         go.transform.position = by.center;
         if(GameManager.Instance.currentRoom!=null)go.transform.parent = GameManager.Instance.currentRoom.transform; // pauses with its room
         go.transform.rotation = Quaternion.Euler(0,0,Slide.PointAngle(dir, weapon.spriteAngle));
+        go.transform.localScale = scale==Vector3.zero ? Vector3.one : scale;
         var sr = go.AddComponent<SpriteRenderer>();
         sr.sprite = weapon.uiWep;
         var bySr = by.GetComponentInChildren<SpriteRenderer>();
@@ -52,7 +54,7 @@ public class ThrownWeapon : MonoBehaviour
         var t = go.AddComponent<ThrownWeapon>();
         t.radius = Mathf.Max(weapon.throwSize,0.05f);
         var col = go.AddComponent<CircleCollider2D>();
-        col.radius = t.radius; col.isTrigger = true;
+        col.radius = t.radius/Mathf.Max(go.transform.lossyScale.x,0.01f); col.isTrigger = true; // throwSize stays its real size
         t.rb = Slide.Body(go);
         t.weapon = weapon; t.thrower = by; t.keyId = keyId;
         t.damage = weapon.throwDamage * (weapon.isMagical ? by.combatStat.attackMagic : by.combatStat.attackPhysic);

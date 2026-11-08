@@ -13,7 +13,7 @@ public static class AIHooks
     // Loot.Drop, for each loot it makes. from: what dropped it (an enemy or chest, a crate, a thrown weapon landing)
     public static void OnDrop(Loot loot, Transform from){
         if(loot==null)return;
-        if(from.TryGetComponent(out ThrownWeapon t)){loot.keyId = t.keyId; return;} // a thrown weapon landing: keeps its key id, no slide
+        if(from.TryGetComponent(out ThrownWeapon t)){loot.keyId = t.keyId; loot.transform.localScale = from.lossyScale; return;} // a thrown weapon landing: keeps its key id and size, no slide
         if(string.IsNullOrEmpty(loot.keyId) && from.TryGetComponent(out Enemy e))loot.keyId = e.weaponLootKeyId; // a key from a chest or enemy
         LootYoink.Push(loot.gameObject); // slides away (AI/Yoink.cs)
     }

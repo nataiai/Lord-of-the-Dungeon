@@ -54,6 +54,7 @@ public partial class Weapon{
 public partial class HoldingWeapons{
     [Tooltip("If the weapon is a key: which Locks it opens (AI/Lock.cs). Empty = the weapon's keyId")]
     public string keyId;
+    [System.NonSerialized] public Vector3 lootScale; // size of the loot it was picked up from: a throw keeps that size (zero = 1)
 }
 
 public partial class Loot{
