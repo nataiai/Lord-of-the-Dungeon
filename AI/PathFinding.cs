@@ -19,7 +19,7 @@ public static class PathFinding
     static readonly Dictionary<Vector2Int,bool> walls = new();
     static readonly Collider2D[] hits = new Collider2D[16];
     static readonly RaycastHit2D[] castHits = new RaycastHit2D[16];
-    static ContactFilter2D solid; // no triggers, no Enemy layer (crowds would fill hits[] and hide the wall behind them)
+    static ContactFilter2D solid; // no Enemy layer (crowds would fill hits[] and hide the wall behind them). Triggers too: holes are triggers
     static bool solidSet;
     static float gridClearance; // the grid leaves room for the biggest enemy that asked so far
     static float builtAt = -999, wallsAt = -999;
@@ -35,7 +35,7 @@ public static class PathFinding
     // radius: the walker's size (half its collider), so it only takes ways its body fits through
     public static Vector2 Direction(Vector2 from, Vector2 to, Bounds bounds, float radius=0){
         if(!Experimental.I.pathFinding)return (to-from).normalized; // off: straight, like before pathfinding
-        if(!solidSet){solid = new ContactFilter2D(); solid.SetLayerMask(~LayerMask.GetMask("Enemy")); solidSet = true;}
+        if(!solidSet){solid = new ContactFilter2D(); solid.SetLayerMask(~LayerMask.GetMask("Enemy")); solid.useTriggers = true; solidSet = true;}
         float r = Mathf.Max(clearance, radius);
         if(r>gridClearance){gridClearance = r; walls.Clear(); fields.Clear();} // a bigger enemy: rebuild the grid with room for it
         if(Time.time>wallsAt+wallRefresh || (dirtyFrame>=0 && Time.frameCount>=dirtyFrame)){walls.Clear(); fields.Clear(); wallsAt=Time.time; dirtyFrame=-1;}
@@ -89,12 +89,15 @@ public static class PathFinding
         walls[c] = w;
         return !w;
     }
-    static bool IsWall(Vector2 p){ // a solid collider that isn't someone walking around (chests count as walls)
+    static bool IsWall(Vector2 p){ // a solid collider that isn't someone walking around (chests count as walls), or a hole
         int n = Physics2D.OverlapCircle(p, gridClearance, solid, hits);
         for(int i=0;i<n;i++)if(IsWall(hits[i]))return true;
         return false;
     }
-    static bool IsWall(Collider2D col){var ch = col.GetComponentInParent<Character>(); return ch==null || ch is Chest;}
+    static bool IsWall(Collider2D col){
+        if(col.isTrigger)return col.GetComponent<Hole>(); // walkers go around holes; other triggers (doors, loot, hitboxes) are open. Flyers don't pathfind
+        var ch = col.GetComponentInParent<Character>(); return ch==null || ch is Chest;
+    }
 
     public static void DrawGizmos(){ // Scene view: blocked cells in red
         Gizmos.color = new Color(1,0,0,.35f);
