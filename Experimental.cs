@@ -28,6 +28,16 @@ public class Experimental : MonoBehaviour{
     [Tooltip("Space enemies keep from each other, times their own size (1 = half their diagonal: 0.71 for a 1x1 enemy)")]
     public float enemySpacing = 1f;
 
+    [Header("Weapons")]
+    [Tooltip("Off: no throwing, the Throw button (Q / gamepad X) does nothing (AI/ThrownWeapon.cs)")]
+    public bool throwing = true;
+    [Tooltip("Off: a Boomerang's attack flies like a normal shot instead of coming back (AI/Boomerang.cs)")]
+    public bool boomerangReturns = true;
+    [Tooltip("Off: dropped loot stays where it falls instead of sliding away (AI/Yoink.cs)")]
+    public bool yoink = true;
+    [Tooltip("Off: every Lock starts unlocked, no keys needed (AI/Lock.cs)")]
+    public bool locks = true;
+
     [Header("Chat")]
     [Tooltip("On: AI/UnifiedChat.cs reads chat. Off: Lexone TwitchChat reads chat")]
     public bool unifiedChat = false;

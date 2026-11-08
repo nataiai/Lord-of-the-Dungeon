@@ -13,11 +13,11 @@ public class Chest : Enemy
         if(opened || !isDead)return; // !isDead: the enemy lifespan timeout, a chest only opens when hit
         opened = true;
         if(sd_open_chest!=null)SoundPlayer.PlaySound(sd_open_chest);
-        Loot.Drop(loot, weaponLoot, transform);
+        Loot.Drop(loot, weaponLoot, transform, weaponLootKeyId);
         loot = null; weaponLoot = null;
         myRender.sprite = openSprite;
     }
-    public override void recieveDamage(int dmg,bool isMagical){HP=0;}
+    public override void recieveDamage(int dmg,bool isMagical){if(TryGetComponent(out Lock l) && l.isLocked)return; HP=0;} // locked: a key opens it (AI/Lock.cs)
     protected override void HurtColor(){}
     protected override bool facesPlayer => false;
     public override void OnTriggerStay2D(Collider2D other){}

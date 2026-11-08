@@ -11,9 +11,12 @@ public class Direction{
 [System.Serializable]
 public class HoldingWeapons{ // one hand
     public Weapon weapon;
+    [Tooltip("If the weapon is a key: which Locks it opens (AI/Lock.cs). Empty = the weapon's keyId")]
+    public string keyId;
     [PlayModeOnly] public float lastUse;
+    [System.NonSerialized] public bool busy; // its boomerang is still out (AI/Boomerang.cs)
     public bool isOnCooldown=>lastUse+cooldown>Time.time;
-    public bool isUsable=>weapon!=null&&!isOnCooldown;
+    public bool isUsable=>weapon!=null&&!isOnCooldown&&!busy;
     public float cooldown=>weapon.cooldown;
     BaseWeapon anim;
     public void Use(Character user){if(isUsable)ForceUse(user);} // any Character can hold weapons
@@ -39,6 +42,8 @@ public class HoldingWeapons{ // one hand
         hitBox.damage = weapon.damage * (weapon.isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
         hitBox.playerPos = playerPos;
         hitBox.setVelocity((Experimental.I.fourWayAttack ? looking4dir : player.looking) * weapon.velocity);
+        Boomerang.Launch(hitBox, this, player, Experimental.I.fourWayAttack ? looking4dir : player.looking); // a boomerang comes back (AI/Boomerang.cs)
+        Lock.Swing(hitBox, this); // a key opens a Lock it touches (AI/Lock.cs)
     }
     public void StopAnim(){if(anim!=null)GameObject.Destroy(anim.gameObject);anim=null;}
 }
@@ -94,6 +99,7 @@ public class Player : Character
         else if(controller.looking.magnitude>0)looking = controller.looking; // no look input: keep the last direction it looked
         else if(!isLooking)looking = movement; // never looked yet: face where it walks
         if(!StuntMech(8))rb.velocity = movement * initSpeed;
+        if(ThrownWeapon.TryThrow(this)){UpdateAnim(); return;} // Throw held: no attacks (AI/ThrownWeapon.cs)
         TryAttack(lWeapon, controller.attackLeft);
         TryAttack(rWeapon, controller.attackRight);
         UpdateAnim();

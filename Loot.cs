@@ -9,6 +9,8 @@ public class Loot : MonoBehaviour
     public LootType lootType = LootType.None;
     public ChatType skill = ChatType.invalid;
     public Weapon weaponLoot;
+    [Tooltip("If the weapon is a key: which Locks it opens (AI/Lock.cs). Empty = the weapon's keyId")]
+    public string keyId;
     public InstantItem instantItem;
     public Animator anim;
     [Tooltip("Fall down animation when it falls in a hole (a state with this clip's name in its Animator). Empty: it shrinks away")]
@@ -17,13 +19,12 @@ public class Loot : MonoBehaviour
     SpriteRenderer sr;
 
     void Start(){
-        Yoink();
         sr = GetComponentInChildren<SpriteRenderer>();
         if(sr==null)sr = gameObject.AddComponent<SpriteRenderer>();
         UpdateImage();
         if(GetComponent<Collider2D>()==null)gameObject.AddComponent<BoxCollider2D>().isTrigger = true; // after the sprite, so it fits
     }
-    void Yoink(){} // to do: yoink away from origin pos
+    void Yoink()=>LootYoink.Push(gameObject); // slides away (AI/Yoink.cs)
     void UpdateImage(){if(lootType==LootType.weapon)sr.sprite = weaponLoot.uiWep;}
 
     void OnTriggerEnter2D(Collider2D other)
@@ -49,20 +50,20 @@ public class Loot : MonoBehaviour
     }
     bool TryFill(HoldingWeapons hand){ // an empty hand, or bare hands (CQC)
         if(hand.weapon!=null && hand.weapon.type!=WeaponType.CQC)return false;
-        hand.weapon = weaponLoot;
+        hand.weapon = weaponLoot; hand.keyId = keyId;
         SoundPlayer.PlaySound(SoundPlayer.instance.sd_pickup_wep);
         Destroy(gameObject);
         return true;
     }
-    void Swap(HoldingWeapons hand){(hand.weapon,weaponLoot) = (weaponLoot,hand.weapon);UpdateImage();Yoink();}
+    void Swap(HoldingWeapons hand){(hand.weapon,weaponLoot) = (weaponLoot,hand.weapon); (hand.keyId,keyId) = (keyId,hand.keyId);UpdateImage();Yoink();}
     void PickChatSkillHandle(Player player){
         if(skill!=ChatType.invalid && !GameManager.Instance.availableSkill.Contains(skill))GameManager.Instance.availableSkill.Add(skill);
         Destroy(gameObject);
     }
 
     // drop a Loot prefab and/or a weapon (its pickup is made in code); null = nothing
-    public static void Drop(Loot prefab, Weapon weapon, Transform from){
-        if(prefab!=null)Instantiate(prefab, from.position, Quaternion.identity).transform.parent = from.parent;
+    public static void Drop(Loot prefab, Weapon weapon, Transform from, string keyId="", bool yoink=true){ // keyId: if the weapon is a key
+        if(prefab!=null){var p = Instantiate(prefab, from.position, Quaternion.identity); p.transform.parent = from.parent; if(yoink)LootYoink.Push(p.gameObject);}
         if(weapon==null)return;
         var go = new GameObject(weapon.name+" loot");
         go.transform.position = from.position;
@@ -75,5 +76,7 @@ public class Loot : MonoBehaviour
         var loot = go.AddComponent<Loot>();
         loot.lootType = LootType.weapon;
         loot.weaponLoot = weapon;
+        loot.keyId = keyId;
+        if(yoink)LootYoink.Push(go);
     }
 }
