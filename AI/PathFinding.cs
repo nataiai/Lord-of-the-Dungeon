@@ -44,16 +44,32 @@ public static class PathFinding
     }
 
     // the way to walk from `from` to reach `to`, inside bounds (normalized; straight line if there is no path)
-    // body: the walker's collider size (col.bounds.size), so it only takes ways its body fits through, tall or wide
-    // seed: any number per walker (e.g. GetInstanceID), so stuck walkers don't all turn the same way
-    public static Vector2 Direction(Vector2 from, Vector2 to, Bounds bounds, Vector2 body, int seed=0){
+    // walker: its collider. Its size: only ways its body fits through, tall or wide. Its contacts: walks along a wall it touches, not into it
+    public static Vector2 Direction(Vector2 from, Vector2 to, Bounds bounds, Collider2D walker){
         if(!Experimental.I.pathFinding)return (to-from).normalized; // off: straight, like before pathfinding
         if(!solidSet){solid = new ContactFilter2D(); solid.SetLayerMask(~LayerMask.GetMask("Enemy")); solid.useTriggers = true; solidSet = true;}
         if(Time.time>wallsAt+wallRefresh || (dirtyFrame>=0 && Time.frameCount>=dirtyFrame)){foreach(var x in grids.Values){x.walls.Clear(); x.fields.Clear();} wallsAt=Time.time; dirtyFrame=-1;}
         if(Time.time>builtAt+refresh){foreach(var x in grids.Values)x.fields.Clear(); builtAt=Time.time;}
-        return Way(from,to,bounds,body+Vector2.one*2*margin) // keeping space from walls
-            ?? Way(from,to,bounds,body)                       // too tight: just the body
-            ?? Steer(from,to,seed);                           // no path at all: turn until free
+        Vector2 body = walker.bounds.size;
+        int seed = walker.GetInstanceID(); // so stuck walkers don't all turn the same way
+        var way = Way(from,to,bounds,body+Vector2.one*2*margin) // keeping space from walls
+               ?? Way(from,to,bounds,body)                       // too tight: just the body
+               ?? Steer(from,to,seed);                           // no path at all: turn until free
+        return AlongWall(walker,way,seed);
+    }
+    static readonly ContactPoint2D[] touching = new ContactPoint2D[8];
+    static Vector2 AlongWall(Collider2D walker, Vector2 way, int seed){ // pushing into a wall/rock it touches: walk along it instead, toward the side it leans
+        int n = walker.GetContacts(touching);
+        for(int i=0;i<n;i++){
+            var p = touching[i];
+            if(!IsWall(p.collider==walker ? p.otherCollider : p.collider))continue; // other characters don't count
+            Vector2 away = Vector2.Dot(p.normal,(Vector2)walker.bounds.center-p.point)<0 ? -p.normal : p.normal;
+            if(Vector2.Dot(way,away)>=-.1f)continue; // not pushing into it
+            Vector2 along = Vector2.Perpendicular(away);
+            float lean = Vector2.Dot(way,along);
+            return (Mathf.Abs(lean)>.1f ? Mathf.Sign(lean) : (seed&1)==0 ? 1 : -1) * along;
+        }
+        return way;
     }
     static Vector2? Way(Vector2 from, Vector2 to, Bounds bounds, Vector2 body){ // null if this body size has no path
         g = GridFor(body);
@@ -125,9 +141,10 @@ public static class PathFinding
         var ch = col.GetComponentInParent<Character>(); return ch==null || ch is Chest;
     }
 
-    public static void DrawGizmos(Vector2 body){ // Scene view: cells blocked for this body size (with the margin) in red
+    public static void DrawGizmos(Collider2D walker){ // Scene view: cells blocked for this walker's size (with the margin) in red
+        if(!walker)return;
         Gizmos.color = new Color(1,0,0,.35f);
-        foreach(var w in GridFor(body+Vector2.one*2*margin).walls)if(w.Value)Gizmos.DrawCube(ToPos(w.Key),Vector3.one*cell*.9f);
+        foreach(var w in GridFor((Vector2)walker.bounds.size+Vector2.one*2*margin).walls)if(w.Value)Gizmos.DrawCube(ToPos(w.Key),Vector3.one*cell*.9f);
     }
 
     // ---------- Separation ----------
