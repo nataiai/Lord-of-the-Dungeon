@@ -16,6 +16,8 @@ public class GameManager: MonoBehaviour{
     public Camera uiCam;
     public Camera mainCam;
     public UI uiPrefab;
+    [Tooltip("Heal animation shown for half a second on any Character that heals (healing room, Health Bone)")]
+    public GameObject healEffect;
     public TwitchChat chat;
     public SimpleSummonDB summondb => chat.summondb;
     public List<Enemy> summonableEnemy => summondb.summonableEnemy;

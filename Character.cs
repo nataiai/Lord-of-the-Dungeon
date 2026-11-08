@@ -10,7 +10,7 @@ public class CombatStat{
     public int defenseMagic = 1;
 }
 
-public enum Team{Player,Enemy,Neutral} // hitboxes and touch damage only hurt other teams
+[System.Flags] public enum Team{Player=1,Enemy=2,Neutral=4} // hitboxes and touch damage only hurt other teams. Flags: a field can tick several teams
 
 public abstract class Character : MonoBehaviour // remove abstract and fix combat stat if bug
 {
@@ -56,6 +56,12 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
     }
 
     public virtual void Heal(int heal=1){HP+=heal;if(HP>maxHP)HP=maxHP;}
+    [HideInInspector] public bool isHealing; // standing in a healing room
+    public void HealWithEffect(int amount){ // heal and show the heal animation
+        Heal(amount);
+        var healEffect = GameManager.Instance.healEffect;
+        if(healEffect!=null)Destroy(Instantiate(healEffect,transform.position,Quaternion.identity,transform),.5f);
+    }
 
     public virtual void recieveDamage(int dmg,bool isMagical=false){
     }

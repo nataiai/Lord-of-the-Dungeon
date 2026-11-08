@@ -58,7 +58,6 @@ public class Player : Character
     bool attackState;
     const int IDLE = 0;
     const int MOVING = 1;
-    [HideInInspector] public bool isHealing;
     const int SWING = (int)WeaponType.Swinging;
     const int USEROD = (int)WeaponType.Rod;
     const int SPEAR = (int)WeaponType.Spear;
@@ -101,6 +100,10 @@ public class Player : Character
         hand.Use(this);
         cooldown = hand.cooldown;
         state = (int)hand.weapon.type;
+    }
+    public void InstantItemUse(InstantItem item){ // walked into an instant use item
+        if(item==null)return;
+        if(item.usableItemType==ItemType.Heal)HealWithEffect(item.healAmount);
     }
     void Died(){
         HP = maxHP; //test

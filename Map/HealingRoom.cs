@@ -1,26 +1,32 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// Characters of the ticked teams standing in this trigger heal 1 HP, HPHealPerSecond times a second, with a sound and the heal animation
 public class HealingRoom : MonoBehaviour
 {
-    public Collider2D healingArea;
+    public Team heals = Team.Player;
     public float HPHealPerSecond = 3f;
-    public GameObject healingEffect;
-    public float animLengthSec = .5f;
     [SerializeField] AudioClip heal_sound;
-    float stayTime;
+    readonly List<Character> inside = new();
+    float nextHeal;
 
-    void OnTriggerEnter2D(Collider2D other){if(other.TryGetComponent(out Player player)){stayTime=0;player.isHealing=true;}}
-    void OnTriggerExit2D(Collider2D other){if(other.TryGetComponent(out Player player))player.isHealing=false;}
+    bool Heals(Character c) => heals.HasFlag(c.team);
+
+    void OnTriggerEnter2D(Collider2D other){
+        if(!other.TryGetComponent(out Character c) || !Heals(c))return;
+        if(inside.Count==0)nextHeal = Time.time + 1/HPHealPerSecond;
+        inside.Add(c);
+        c.isHealing = true;
+    }
+    void OnTriggerExit2D(Collider2D other){
+        if(!other.TryGetComponent(out Character c) || !inside.Remove(c))return;
+        c.isHealing = false;
+    }
     void Update(){
-        var player=GameManager.Instance.player;
-        if(!player.isHealing)return;
-        stayTime+=Time.deltaTime;
-        if(stayTime*HPHealPerSecond<=1)return;
-        stayTime=0;
-        player.Heal();
+        if(inside.Count==0 || Time.time<nextHeal)return;
+        nextHeal = Time.time + 1/HPHealPerSecond;
+        inside.RemoveAll(c => c==null); // destroyed while inside
+        foreach(var c in inside)if(!c.isDead)c.HealWithEffect(1); // dying enemies stay dead
         SoundPlayer.PlaySound(heal_sound);
-        Destroy(Instantiate(healingEffect,player.transform.position,Quaternion.identity,player.transform),animLengthSec);
     }
 }
