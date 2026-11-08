@@ -11,6 +11,8 @@ public class Experimental : MonoBehaviour{
     public bool stopMoveOnAttack = false;
     [Tooltip("On: player always faces where it walks. Off: faces the look input (arrows, mouse, right stick) and keeps it when there is none")]
     public bool lookFollowMovement = true;
+    [Tooltip("On: no mouse, the 2 attack buttons attack, arrow keys face the player, only up/right/down/left (no diagonals). Overrides lookFollowMovement and disableMouse")]
+    public bool arrowFacing = false;
     [Tooltip("Player is invincible for invincibleCooldownTime after a hit")]
     public bool enableInvincible = false;
     [Tooltip("Turn the mouse off: no mouse aim or clicks")]

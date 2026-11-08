@@ -20,7 +20,7 @@ public class Controller : MonoBehaviour
     public Vector2 looking;
     public bool attack;
     public ControllerButton switchWeapon;
-    bool disableMouse => Experimental.I.disableMouse;
+    bool disableMouse => Experimental.I.disableMouse || Experimental.I.arrowFacing;
     bool mouseActive=true; // set by the script: on when the mouse moves, off after mouseTimeDeactivation still
     public float mouseDistanceActivation = 10f;
     Vector2 mouseLastPos;
