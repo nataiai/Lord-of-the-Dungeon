@@ -22,7 +22,7 @@ public static class Dialogues{
 enum TriggerType{OnStart,OnCall}
 public class Dialogue : MonoBehaviour
 {
-    [SerializeField] DialogueSequence sequence;
+    [SerializeField] DialogueSequence sequence=DialogueSequence.None;
     [SerializeField] TriggerType tt=TriggerType.OnStart;
     [Tooltip("Used only when Sequence is None")]
     [SerializeField] string[] dialogueText;
