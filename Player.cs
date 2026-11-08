@@ -52,7 +52,7 @@ public class Player : Character
     public override Team team=>Team.Player;
     public int _maxHP = 4;
     public override int maxHP{get=>_maxHP;set{_maxHP=value;GameManager.Instance.ui.UpdateMaxHP(maxHP);}}
-    public bool enableInvincible;
+    bool enableInvincible => Experimental.I.enableInvincible;
     public float speedBoost;
     public int state; // IDLE, MOVING, or the WeaponType number while attacking
     bool attackState;
@@ -87,7 +87,7 @@ public class Player : Character
     void Update(){
         if(HP<=0)Died();
         movement = Vector2.ClampMagnitude(controller.movement,1);
-        if(Experimental.stopMoveOnAttack && attackState)movement = Vector2.zero;
+        if(Experimental.I.stopMoveOnAttack && attackState)movement = Vector2.zero;
         if(controller.looking.magnitude>0)looking = controller.looking; // no look input: keep the last direction it looked
         else if(!isLooking)looking = movement; // never looked yet: face where it walks
         if(!StuntMech(8))rb.velocity = movement * initSpeed;

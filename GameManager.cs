@@ -3,8 +3,8 @@ using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 
 public class GameManager: MonoBehaviour{
-    public bool testWithoutChat;
-    public float testWithoutChatSpawnCooldown = 5f;
+    bool testWithoutChat => Experimental.I.testWithoutChat;
+    float testWithoutChatSpawnCooldown => Experimental.I.testWithoutChatSpawnCooldown;
     public float spawnRangeFromPlayer=3;
     public int FPS = 60;
     public static GameManager Instance { get; private set; }

@@ -34,7 +34,7 @@ public static class PathFinding
     // the way to walk from `from` to reach `to`, inside bounds (normalized; straight line if there is no path)
     // radius: the walker's size (half its collider), so it only takes ways its body fits through
     public static Vector2 Direction(Vector2 from, Vector2 to, Bounds bounds, float radius=0){
-        if(!Experimental.pathFinding)return (to-from).normalized; // off: straight, like before pathfinding
+        if(!Experimental.I.pathFinding)return (to-from).normalized; // off: straight, like before pathfinding
         if(!solidSet){solid = new ContactFilter2D(); solid.SetLayerMask(~LayerMask.GetMask("Enemy")); solidSet = true;}
         float r = Mathf.Max(clearance, radius);
         if(r>gridClearance){gridClearance = r; walls.Clear(); fields.Clear();} // a bigger enemy: rebuild the grid with room for it
@@ -107,7 +107,7 @@ public static class PathFinding
     // spacing: the gap to keep between collider edges. Each neighbour pushes 0 at `spacing` or farther, 1 when touching, up to 2 when overlapping.
     static readonly Collider2D[] near = new Collider2D[8];
     public static Vector2 Separation(Collider2D self, float spacing, int layers){
-        if(!Experimental.separation)return Vector2.zero;
+        if(!Experimental.I.separation)return Vector2.zero;
         Vector2 push = Vector2.zero;
         Bounds me = self.bounds;
         float searchRadius = me.extents.magnitude + spacing;

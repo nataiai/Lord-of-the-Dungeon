@@ -17,7 +17,7 @@ public class UnifiedChat : MonoBehaviour
     TcpClient tcp;
 
     public static bool TryConnect(string channel){ // Twitch: name or link. YouTube (desktop only): link or @handle
-        if(!Experimental.unifiedChat || string.IsNullOrWhiteSpace(channel))return false;
+        if(!Experimental.I.unifiedChat || string.IsNullOrWhiteSpace(channel))return false;
         channel = channel.Trim();
         var c = new GameObject("UnifiedChat").AddComponent<UnifiedChat>();
         bool youtube = channel.Contains("youtube.com")||channel.Contains("youtu.be")||channel.StartsWith("@");
