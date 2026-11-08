@@ -55,14 +55,14 @@ public class Enemy : Character
         if(facesPlayer && Mathf.Abs(movement.x)>0.01f)sr.flipX = (movement.x<0) != spriteFacesLeft; // face the player (left/right)
         if(movement.magnitude<enemyData.noticeRange)notice=true;
         if(notice){
-            way = enemyData.ignoreCollide ? movement.normalized : PathFinding.Direction(center,target,GameManager.Instance.currentRoom.bounds,Mathf.Min(col.bounds.extents.x,col.bounds.extents.y),GetInstanceID()); // ghosts go straight
+            way = enemyData.ignoreCollide ? movement.normalized : PathFinding.Direction(center,target,GameManager.Instance.currentRoom.bounds,col.bounds.size,GetInstanceID()); // ghosts go straight
             rb.velocity = Vector2.ClampMagnitude(way + PathFinding.Separation(col, LayerMask.GetMask("Enemy")), 1) * enemyData.initSpeed; // AI/PathFinding.cs
         }
         setAnimFacing(movement.normalized);
     }
 
     void OnDrawGizmosSelected(){ // select an enemy in play mode: its direction in yellow, walls it avoids in red
-        PathFinding.DrawGizmos();
+        if(col)PathFinding.DrawGizmos(col.bounds.size);
         Gizmos.color = Color.yellow;
         Gizmos.DrawLine(center, center+way);
     }

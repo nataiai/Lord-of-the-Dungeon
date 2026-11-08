@@ -11,17 +11,22 @@ public static class PathFinding
     public static float refresh = 0.25f;  // seconds a field is reused (the target moves)
     public static float wallRefresh = 2f; // seconds walls are cached; Invalidate() when a wall appears or goes
     public static int lookAhead = 4;      // cells ahead an enemy may aim at directly, so it walks smooth lines, not grid steps
-    public static float clearance = 0.2f; // smallest gap kept from walls; bigger enemies keep their own size (radius)
+    public static float minBody = 0.4f;   // smallest body size checked, so tiny enemies still keep off walls a bit
+    const float skin = 0.05f;             // the body is checked this much smaller, so one resting against a wall isn't "inside" it
     const int maxCells = 4000;            // BFS limit, for huge rooms
     static readonly Vector2Int[] dirs = {Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left,
                                          new(1,1), new(1,-1), new(-1,-1), new(-1,1)};
-    static readonly Dictionary<Vector2Int,Dictionary<Vector2Int,int>> fields = new(); // target cell -> steps to it from each cell
-    static readonly Dictionary<Vector2Int,bool> walls = new();
+    class Grid{ // what one body size can walk
+        public Vector2 body;
+        public readonly Dictionary<Vector2Int,Dictionary<Vector2Int,int>> fields = new(); // target cell -> steps to it from each cell
+        public readonly Dictionary<Vector2Int,bool> walls = new();
+    }
+    static readonly Dictionary<Vector2Int,Grid> grids = new(); // one per body size (0.1 steps): each enemy is checked with its own width and height
+    static Grid g; // the grid of the walker asking now
     static readonly Collider2D[] hits = new Collider2D[16];
     static readonly RaycastHit2D[] castHits = new RaycastHit2D[16];
     static ContactFilter2D solid; // no Enemy layer (crowds would fill hits[] and hide the wall behind them). Triggers too: holes are triggers
     static bool solidSet;
-    static float gridClearance; // the grid leaves room for the biggest enemy that asked so far
     static float builtAt = -999, wallsAt = -999;
     static int dirtyFrame = -1;
 
@@ -30,36 +35,41 @@ public static class PathFinding
 
     public static Vector2Int ToCell(Vector2 p)=>new(Mathf.RoundToInt(p.x/cell),Mathf.RoundToInt(p.y/cell));
     public static Vector2 ToPos(Vector2Int c)=>(Vector2)c*cell;
+    static Grid GridFor(Vector2 body){
+        body = Vector2.Max(body - Vector2.one*skin, Vector2.one*minBody);
+        var key = new Vector2Int(Mathf.RoundToInt(body.x*10), Mathf.RoundToInt(body.y*10));
+        if(!grids.TryGetValue(key, out var grid))grids[key] = grid = new Grid{body = (Vector2)key/10f};
+        return grid;
+    }
 
     // the way to walk from `from` to reach `to`, inside bounds (normalized; straight line if there is no path)
-    // radius: the walker's size (half its collider), so it only takes ways its body fits through
+    // body: the walker's collider size (col.bounds.size), so it only takes ways its body fits through, tall or wide
     // seed: any number per walker (e.g. GetInstanceID), so stuck walkers don't all turn the same way
-    public static Vector2 Direction(Vector2 from, Vector2 to, Bounds bounds, float radius=0, int seed=0){
+    public static Vector2 Direction(Vector2 from, Vector2 to, Bounds bounds, Vector2 body, int seed=0){
         if(!Experimental.I.pathFinding)return (to-from).normalized; // off: straight, like before pathfinding
         if(!solidSet){solid = new ContactFilter2D(); solid.SetLayerMask(~LayerMask.GetMask("Enemy")); solid.useTriggers = true; solidSet = true;}
-        float r = Mathf.Max(clearance, radius);
-        if(r>gridClearance){gridClearance = r; walls.Clear(); fields.Clear();} // a bigger enemy: rebuild the grid with room for it
-        if(Time.time>wallsAt+wallRefresh || (dirtyFrame>=0 && Time.frameCount>=dirtyFrame)){walls.Clear(); fields.Clear(); wallsAt=Time.time; dirtyFrame=-1;}
-        if(Time.time>builtAt+refresh){fields.Clear(); builtAt=Time.time;}
-        if(IsClear(from,to,r))return (to-from).normalized; // nothing in the way of its body: straight there
+        g = GridFor(body);
+        if(Time.time>wallsAt+wallRefresh || (dirtyFrame>=0 && Time.frameCount>=dirtyFrame)){foreach(var x in grids.Values){x.walls.Clear(); x.fields.Clear();} wallsAt=Time.time; dirtyFrame=-1;}
+        if(Time.time>builtAt+refresh){foreach(var x in grids.Values)x.fields.Clear(); builtAt=Time.time;}
+        if(IsClear(from,to,g.body))return (to-from).normalized; // nothing in the way of its body: straight there
         var t = ToCell(to);
-        if(!fields.TryGetValue(t,out var dist))fields[t] = dist = Build(t,bounds);
+        if(!g.fields.TryGetValue(t,out var dist))g.fields[t] = dist = Build(t,bounds);
         var c = ToCell(from);
         var aim = Step(dist,c);
-        if(aim==c)return Steer(from,to,r,seed); // no path: turn until free
+        if(aim==c)return Steer(from,to,seed); // no path: turn until free
         for(int i=0;i<lookAhead;i++){ // aim at the farthest cell down the path that can be walked to straight
             var n = Step(dist,aim);
-            if(n==aim || !IsClear(from,ToPos(n),r))break;
+            if(n==aim || !IsClear(from,ToPos(n),g.body))break;
             aim = n;
         }
         return (ToPos(aim)-from).normalized;
     }
-    static Vector2 Steer(Vector2 from, Vector2 to, float r, int seed){ // no path found: turn left/right from straight, 30 degrees at a time, until a short step is free
+    static Vector2 Steer(Vector2 from, Vector2 to, int seed){ // no path found: turn left/right from straight, 30 degrees at a time, until a short step is free
         Vector2 d = (to-from).normalized;
         float side = ((seed + (int)(Time.time/2)) & 1)==0 ? 1 : -1; // first side differs per walker and flips every 2s, so a stuck one tries the other way
         for(int a=30;a<=180;a+=30)foreach(float s in new[]{side,-side}){
             Vector2 v = Quaternion.Euler(0,0,a*s)*d;
-            if(IsClear(from, from+v*cell*2, r))return v;
+            if(IsClear(from, from+v*cell*2, g.body))return v;
         }
         return d;
     }
@@ -69,10 +79,10 @@ public static class PathFinding
         foreach(var d in dirs)if(dist.TryGetValue(c+d,out int v)&&v<best){best=v;next=c+d;}
         return next;
     }
-    public static bool IsClear(Vector2 a, Vector2 b, float radius){ // a circle this big can slide from a to b without touching a wall
+    public static bool IsClear(Vector2 a, Vector2 b, Vector2 body){ // a box this big can slide from a to b without touching a wall
         Vector2 d = b-a;
         if(d.sqrMagnitude<1e-6f)return true;
-        int n = Physics2D.CircleCast(a, radius, d.normalized, solid, castHits, d.magnitude);
+        int n = Physics2D.BoxCast(a, body, 0, d.normalized, solid, castHits, d.magnitude);
         for(int i=0;i<n;i++)if(IsWall(castHits[i].collider))return false;
         return true;
     }
@@ -93,14 +103,14 @@ public static class PathFinding
         return dist;
     }
     static bool Walkable(Vector2Int c, Bounds bounds){
-        if(walls.TryGetValue(c,out bool w))return !w;
+        if(g.walls.TryGetValue(c,out bool w))return !w;
         Vector2 p = ToPos(c);
         w = !bounds.Contains(p) || IsWall(p);
-        walls[c] = w;
+        g.walls[c] = w;
         return !w;
     }
-    static bool IsWall(Vector2 p){ // a solid collider that isn't someone walking around (chests count as walls), or a hole
-        int n = Physics2D.OverlapCircle(p, gridClearance, solid, hits);
+    static bool IsWall(Vector2 p){ // the body standing here touches a solid collider that isn't someone walking around (chests count as walls), or a hole
+        int n = Physics2D.OverlapBox(p, g.body, 0, solid, hits);
         for(int i=0;i<n;i++)if(IsWall(hits[i]))return true;
         return false;
     }
@@ -109,9 +119,9 @@ public static class PathFinding
         var ch = col.GetComponentInParent<Character>(); return ch==null || ch is Chest;
     }
 
-    public static void DrawGizmos(){ // Scene view: blocked cells in red
+    public static void DrawGizmos(Vector2 body){ // Scene view: cells blocked for this body size in red
         Gizmos.color = new Color(1,0,0,.35f);
-        foreach(var w in walls)if(w.Value)Gizmos.DrawCube(ToPos(w.Key),Vector3.one*cell*.9f);
+        foreach(var w in GridFor(body).walls)if(w.Value)Gizmos.DrawCube(ToPos(w.Key),Vector3.one*cell*.9f);
     }
 
     // ---------- Separation ----------
