@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[System.Flags] public enum Teams{Player = 1<<(int)Team.Player, Enemy = 1<<(int)Team.Enemy, Neutral = 1<<(int)Team.Neutral}
-
 // Characters of the ticked teams standing in this trigger heal 1 HP, HPHealPerSecond times a second, with a sound and the heal animation
 public class HealingRoom : MonoBehaviour
 {

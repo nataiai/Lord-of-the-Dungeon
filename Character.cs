@@ -11,6 +11,7 @@ public class CombatStat{
 }
 
 public enum Team{Player,Enemy,Neutral} // hitboxes and touch damage only hurt other teams
+[System.Flags] public enum Teams{Player = 1<<(int)Team.Player, Enemy = 1<<(int)Team.Enemy, Neutral = 1<<(int)Team.Neutral} // tick several teams in the Inspector
 
 public abstract class Character : MonoBehaviour // remove abstract and fix combat stat if bug
 {
