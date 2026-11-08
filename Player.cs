@@ -76,12 +76,14 @@ public class Player : Character
     public bool forceAnim;
     [Tooltip("Fall down animation when it falls in a hole (a state with this clip's name in its Animator). Empty: it shrinks away")]
     public AnimationClip fallClip;
+    [HideInInspector] public Vector2 roomEntryPos; // where this player entered the current room: falling in a hole brings it back here
 
     public override int HP{get=>_HP;set{_HP=value;GameManager.Instance.ui.UpdateHP(HP);}}
 
     void Start(){
         HP = maxHP;
         controller = GameManager.Instance.controller;
+        roomEntryPos = transform.position;
         invincibleTime = Time.time;
     }
     void Update(){
@@ -107,13 +109,13 @@ public class Player : Character
         if(item==null)return;
         if(item.usableItemType==ItemType.Heal)HealWithEffect(item.healAmount);
     }
-    public void Respawn(Vector2 pos){
-        transform.position = pos;
+    public void Respawn(){ // back where it entered the room
+        transform.position = roomEntryPos;
         currentAnim = null; // replay idle/walk, whatever played meanwhile (e.g. the fall)
     }
     void Died(){
         HP = maxHP; //test
-        transform.position = new Vector2(0,0);
+        transform.position = roomEntryPos = new Vector2(0,0);
         GameManager.Instance._re();
     }
 

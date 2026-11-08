@@ -9,7 +9,6 @@ public class DungeonMap : MonoBehaviour // only currentRoom is active
     public int width,height; // pixel of each cell
     public RoomTrigger[] roomTrigger;
     public Dictionary<RoomTrigger,RoomTrigger> triggerMap = new();
-    [HideInInspector] public Vector2 roomEntryPos; // where the player entered currentRoom: falling in a hole brings him back here
 
     void OnValidate()=>allRooms = FindObjectsByType<DungeonRoom>(FindObjectsInactive.Include,FindObjectsSortMode.None);
 
@@ -17,7 +16,6 @@ public class DungeonMap : MonoBehaviour // only currentRoom is active
         roomTrigger = FindObjectsByType<RoomTrigger>(FindObjectsInactive.Include,FindObjectsSortMode.None);
         fillTriggerMap();
         foreach(var r in allRooms)if(r.bounds.Contains(GameManager.Instance.playerPos)&&r.gameObject.activeInHierarchy)currentRoom = r;
-        roomEntryPos = GameManager.Instance.playerPos;
     }
     void fillTriggerMap(){ // pair each door trigger with the nearest trigger of another room
         foreach(var a in roomTrigger){
@@ -38,7 +36,7 @@ public class DungeonMap : MonoBehaviour // only currentRoom is active
         currentRoom = triggerMap[trigger].transform.parent.GetComponent<DungeonRoom>();
         currentRoom.gameObject.SetActive(true);
         trigger.transform.parent.gameObject.SetActive(false);
-        roomEntryPos = GameManager.Instance.playerPos;
+        foreach(var p in FindObjectsByType<Player>(FindObjectsSortMode.None))p.roomEntryPos = p.transform.position; // every player entered the new room
         GameManager.Instance.UpdateMusic();
         PathFinding.Invalidate();
     }

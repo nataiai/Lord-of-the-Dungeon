@@ -64,7 +64,6 @@ public class GameManager: MonoBehaviour{
         map.currentRoom.gameObject.SetActive(false);
         initRoom.gameObject.SetActive(true);
         map.currentRoom = initRoom;
-        map.roomEntryPos = playerPos;
     }
     public void TeleportSkill(int x, int y){
         if(true){ // TODO: check cooldown

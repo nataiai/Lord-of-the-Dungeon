@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 
 // The player, enemies and loot that touch this trigger fall in: they play their fall clip (or shrink away), then enemies and loot are gone
-// and the player comes back where he entered the room. Flying enemies (ignoreCollide, ghosts) pass over.
+// and each player comes back where it entered the room. Flying enemies (ignoreCollide, ghosts) pass over.
 [RequireComponent(typeof(Collider2D))]
 public class Hole : MonoBehaviour
 {
@@ -28,7 +28,7 @@ public class Hole : MonoBehaviour
         else for(float time=0; time<fallShrinkTime; time+=Time.deltaTime){t.localScale = scale*(1-time/fallShrinkTime); yield return null;} // no clip: shrink away
         if(faller is not Player player){Destroy(t.gameObject); yield break;}
         t.localScale = scale;
-        player.Respawn(GameManager.Instance.map.roomEntryPos);
+        player.Respawn();
         faller.enabled = col.enabled = true;
     }
 }
