@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 
-public class GameManager: MonoBehaviour{
+public partial class GameManager: MonoBehaviour{
     bool testWithoutChat => Experimental.I.testWithoutChat;
     float testWithoutChatSpawnCooldown => Experimental.I.testWithoutChatSpawnCooldown;
     public float spawnRangeFromPlayer=3;
@@ -12,8 +12,6 @@ public class GameManager: MonoBehaviour{
     [PlayModeOnly] public UI ui;
     public Enemy mockEnemy;
     public Controller controller;
-    [Tooltip("Bare hands (Database/Weapons/Fist): what a hand holds after throwing its weapon. Can't be thrown (AI/ThrownWeapon.cs)")]
-    public Weapon fist;
     public Vector2 playerPos => player.transform.position;
     [PlayModeOnly] public Camera uiCam;
     [PlayModeOnly] public Camera mainCam;

@@ -9,14 +9,11 @@ public class Direction{
 }
 
 [System.Serializable]
-public class HoldingWeapons{ // one hand
+public partial class HoldingWeapons{ // one hand
     public Weapon weapon;
-    [Tooltip("If the weapon is a key: which Locks it opens (AI/Lock.cs). Empty = the weapon's keyId")]
-    public string keyId;
     [PlayModeOnly] public float lastUse;
-    [System.NonSerialized] public bool busy; // its boomerang is still out (AI/Boomerang.cs)
     public bool isOnCooldown=>lastUse+cooldown>Time.time;
-    public bool isUsable=>weapon!=null&&!isOnCooldown&&!busy;
+    public bool isUsable=>weapon!=null&&!isOnCooldown;
     public float cooldown=>weapon.cooldown;
     BaseWeapon anim;
     public void Use(Character user){if(isUsable)ForceUse(user);} // any Character can hold weapons
@@ -42,8 +39,7 @@ public class HoldingWeapons{ // one hand
         hitBox.damage = weapon.damage * (weapon.isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
         hitBox.playerPos = playerPos;
         hitBox.setVelocity((Experimental.I.fourWayAttack ? looking4dir : player.looking) * weapon.velocity);
-        Boomerang.Launch(hitBox, this, player, Experimental.I.fourWayAttack ? looking4dir : player.looking); // a boomerang comes back (AI/Boomerang.cs)
-        Lock.Swing(hitBox, this); // a key opens a Lock it touches (AI/Lock.cs)
+        AIHooks.OnAttack(hitBox, this, player, Experimental.I.fourWayAttack ? looking4dir : player.looking); // keys, boomerang (AI/Hooks.cs)
     }
     public void StopAnim(){if(anim!=null)GameObject.Destroy(anim.gameObject);anim=null;}
 }

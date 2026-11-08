@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 // Throwing weapons: hold Throw (Q / gamepad X), then a weapon button. Settings are on each Weapon (Throw section). ON/OFF: Experimental.throwing
 // The weapon flies (AI/Slide.cs), hurts the thrower's enemies, opens a Lock if it's a key (AI/Lock.cs),
@@ -9,7 +10,7 @@ public class ThrownWeapon : MonoBehaviour
 {
     Weapon weapon;
     Character thrower;
-    string keyId;
+    public string keyId{get; private set;} // a key keeps its id when it lands (AIHooks.OnDrop)
     Vector2 velocity;
     Rigidbody2D rb;
     float radius;
@@ -17,17 +18,21 @@ public class ThrownWeapon : MonoBehaviour
     bool done;
     readonly HashSet<Character> hit = new();
 
+    static bool ThrowHeld(){ // like Controller: a connected gamepad replaces the keyboard
+        if(Gamepad.current!=null)return Gamepad.current.xButton.isPressed;
+        return Keyboard.current!=null && Keyboard.current.qKey.isPressed;
+    }
     // Player.Update: true = Throw is held (it throws on a weapon button), so no attacks this frame
     public static bool TryThrow(Player p){
+        if(!Experimental.I.throwing || !ThrowHeld())return false;
         var c = GameManager.Instance.controller;
-        if(!Experimental.I.throwing || !c.throwHold.isPressed)return false;
         TryThrow(p, p.lWeapon, c.attackLeft);
         TryThrow(p, p.rWeapon, c.attackRight);
         return true;
     }
     static void TryThrow(Player p, HoldingWeapons hand, ControllerButton button){
         var w = hand.weapon;
-        if(w==null || !w.canThrow || hand.busy || w==GameManager.Instance.fist || w.type==WeaponType.CQC || !button.isPressedOnce("throw"))return; // fist can't be thrown; a boomerang still out can't either
+        if(w==null || !w.canThrow || hand.isOnCooldown || w==GameManager.Instance.fist || w.type==WeaponType.CQC || !button.isPressedOnce("throw"))return; // fist can't be thrown; a boomerang still out can't either
         Throw(w, p, hand.keyId, p.isLooking ? p.looking : Direction.vec2MoveDict[p.animFacing]);
         hand.weapon = GameManager.Instance.fist; // an empty hand is a fist
         hand.keyId = "";
@@ -67,17 +72,8 @@ public class ThrownWeapon : MonoBehaviour
 
     bool Touch(Collider2D other){ // what it does to `other`. false = stop right here
         if(weapon.isKey && Lock.TryOpen(other, weapon, keyId, out bool usedUp) && usedUp){done = true; Destroy(gameObject); return false;} // key used up
-        if(thrower!=null && other.TryGetComponent(out Character c) && thrower.IsEnemyOf(c)){ // a chest too: opens it if it's unlocked
-            if(!hit.Add(c))return true; // each once
-            SoundPlayer.PlaySound(weapon.hitSound);
-            c.recieveDamage(damage, weapon.isMagical);
-            c.receiveKnockback(rb.position, weapon.throwKnockback);
-            if(weapon.buff!=null)weapon.buff.CopyTo(c.gameObject);
-            if(weapon.throwMaxHits>0 && weapon.throwMaxHits<=++hitCount){Land(); return false;}
-        }else if(!weapon.isMagical && other.TryGetComponent(out Destructable d)){
-            d.recieveDamage(damage, weapon.isMagical);
-            Land(); return false;
-        }
+        var touched = AIHooks.Hit(other, thrower, weapon, damage, weapon.throwKnockback, rb.position, hit);
+        if(touched==AIHooks.Touched.Crate || touched==AIHooks.Touched.Enemy && weapon.throwMaxHits>0 && weapon.throwMaxHits<=++hitCount){Land(); return false;}
         return true;
     }
     void Land(){
@@ -87,7 +83,7 @@ public class ThrownWeapon : MonoBehaviour
     }
     IEnumerator BecomeLoot(){ // after this physics step, so it lands where it really stopped
         yield return new WaitForFixedUpdate();
-        Loot.Drop(null, weapon, transform, keyId, false);
+        Loot.Drop(null, weapon, transform); // AIHooks.OnDrop gives it the key id, and no slide
         Destroy(gameObject);
     }
 }

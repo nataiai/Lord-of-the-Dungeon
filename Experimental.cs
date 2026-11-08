@@ -2,7 +2,7 @@ using UnityEngine;
 
 // All experimental and test features, on/off in one place. Editable in the Inspector while playing
 // (put it on any object in the scene, or it is made on first use: look for "Experimental" in the Hierarchy)
-public class Experimental : MonoBehaviour{
+public partial class Experimental : MonoBehaviour{ // Weapons switches: AI/Fields.cs
     static Experimental _i;
     public static Experimental I => _i ? _i : (_i = FindFirstObjectByType<Experimental>() ?? new GameObject("Experimental").AddComponent<Experimental>());
 
@@ -27,16 +27,6 @@ public class Experimental : MonoBehaviour{
     public float wallSpacing = 0.25f;
     [Tooltip("Space enemies keep from each other, times their own size (1 = half their diagonal: 0.71 for a 1x1 enemy)")]
     public float enemySpacing = 1f;
-
-    [Header("Weapons")]
-    [Tooltip("Off: no throwing, the Throw button (Q / gamepad X) does nothing (AI/ThrownWeapon.cs)")]
-    public bool throwing = true;
-    [Tooltip("Off: a Boomerang's attack flies like a normal shot instead of coming back (AI/Boomerang.cs)")]
-    public bool boomerangReturns = true;
-    [Tooltip("Off: dropped loot stays where it falls instead of sliding away (AI/Yoink.cs)")]
-    public bool yoink = true;
-    [Tooltip("Off: every Lock starts unlocked, no keys needed (AI/Lock.cs)")]
-    public bool locks = true;
 
     [Header("Chat")]
     [Tooltip("On: AI/UnifiedChat.cs reads chat. Off: Lexone TwitchChat reads chat")]

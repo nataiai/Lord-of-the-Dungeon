@@ -4,13 +4,11 @@ using UnityEngine;
 
 public enum LootType{weapon,chatSkill, instantItem,None}
 
-public class Loot : MonoBehaviour
+public partial class Loot : MonoBehaviour
 {
     public LootType lootType = LootType.None;
     public ChatType skill = ChatType.invalid;
     public Weapon weaponLoot;
-    [Tooltip("If the weapon is a key: which Locks it opens (AI/Lock.cs). Empty = the weapon's keyId")]
-    public string keyId;
     public InstantItem instantItem;
     public Animator anim;
     [Tooltip("Fall down animation when it falls in a hole (a state with this clip's name in its Animator). Empty: it shrinks away")]
@@ -62,8 +60,8 @@ public class Loot : MonoBehaviour
     }
 
     // drop a Loot prefab and/or a weapon (its pickup is made in code); null = nothing
-    public static void Drop(Loot prefab, Weapon weapon, Transform from, string keyId="", bool yoink=true){ // keyId: if the weapon is a key
-        if(prefab!=null){var p = Instantiate(prefab, from.position, Quaternion.identity); p.transform.parent = from.parent; if(yoink)LootYoink.Push(p.gameObject);}
+    public static void Drop(Loot prefab, Weapon weapon, Transform from){
+        if(prefab!=null){var p = Instantiate(prefab, from.position, Quaternion.identity); p.transform.parent = from.parent; AIHooks.OnDrop(p, from);}
         if(weapon==null)return;
         var go = new GameObject(weapon.name+" loot");
         go.transform.position = from.position;
@@ -76,7 +74,6 @@ public class Loot : MonoBehaviour
         var loot = go.AddComponent<Loot>();
         loot.lootType = LootType.weapon;
         loot.weaponLoot = weapon;
-        loot.keyId = keyId;
-        if(yoink)LootYoink.Push(go);
+        AIHooks.OnDrop(loot, from); // slides away, key id (AI/Hooks.cs)
     }
 }

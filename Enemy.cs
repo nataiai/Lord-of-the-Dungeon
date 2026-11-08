@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Enemy : Character
+public partial class Enemy : Character
 {
     public EnemySO enemyData;
     public float initSpeed=>enemyData.initSpeed;
@@ -14,8 +14,6 @@ public class Enemy : Character
     public Loot loot;
     [Tooltip("Optional. Weapon to drop, no Loot prefab needed")]
     public Weapon weaponLoot;
-    [Tooltip("If weaponLoot is a key: which Locks it opens. Empty = the weapon's keyId")]
-    public string weaponLootKeyId;
     SpriteRenderer sr;
     Collider2D col;
     Color originalSRcolor;
@@ -73,7 +71,7 @@ public class Enemy : Character
         GameManager.Instance._Connect(); // the first kill also joins chat
         sr.color = Color.white;
         if(deathBreathTime==0){
-            Loot.Drop(loot, weaponLoot, transform, weaponLootKeyId);
+            Loot.Drop(loot, weaponLoot, transform);
             if(isDead){ // killed, not timed out: chat may summon this type now
                 GameManager.Instance.summondb.Unlock(enemyData);
                 AddSummonTemplate(); // fills summonableEnemy from kills; comment out to fill it by hand

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 
 [CreateAssetMenu(fileName = "WeaponSO", menuName = "Weapon")]
-public class Weapon : ScriptableObject
+public partial class Weapon : ScriptableObject // Throw / Boomerang / Key settings: AI/Fields.cs
 {
     public WeaponType type;
     public AudioClip useSound;
@@ -31,33 +31,4 @@ public class Weapon : ScriptableObject
     public BaseWeapon anim;
     public Sprite uiWep;
     public BuffEffect.Buff buff; // Buff section: type none = no effect; copied to each hitbox (BuffEffect.cs)
-
-    [Header("Throw (AI/ThrownWeapon.cs): hold Throw (Q / gamepad X) + this weapon's button. Fist can't be thrown")]
-    [Tooltip("Untick to keep this weapon from being thrown")]
-    public bool canThrow = true;
-    public int throwDamage = 1;          // per enemy hit, x the thrower's attack stat (like a swing)
-    public float throwInitSpeed = 10;    // starting speed
-    [Tooltip("Speed lost per second. 0 = flies until it hits something solid")]
-    public float throwDeceleration = 8;
-    [Tooltip("Radius of the thrown weapon: what it hits and bumps into")]
-    public float throwSize = 0.25f;
-    public float throwKnockback = 3;
-    [Tooltip("Enemies it can hit before it stops. 0 = no limit")]
-    public int throwMaxHits;
-    [Tooltip("Bounces off solid things instead of stopping there")]
-    public bool isBounce;
-    [Range(0,1)] public float bounciness = 0.6f; // speed kept per bounce
-    [Tooltip("Sprite spin, degrees per second at full speed (slows with it). 0 = flies point first")]
-    public float spinSpeed;
-    [Tooltip("Which way the sprite art points (0 = right, 90 = up), so a non-spinning throw flies point first")]
-    public float spriteAngle = 45;
-
-    [Header("Boomerang (AI/Boomerang.cs): type Boomerang. Its attack flies out at `velocity` and comes back")]
-    [Tooltip("Speed lost per second on the way out; at 0 (or at a wall) it flies back through walls, speeding up the same way")]
-    public float boomerangDeceleration = 10;
-
-    [Header("Key (AI/Lock.cs): opens a Lock it hits, swung or thrown")]
-    public bool isKey;
-    [Tooltip("Default id for this key. Each key's Loot (or the enemy/chest/crate dropping it) can set its own, so one key weapon makes many keys. A Lock with an empty keyId takes any key")]
-    public string keyId;
 }

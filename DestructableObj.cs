@@ -13,14 +13,12 @@ public class Destructable : MonoBehaviour
     [SerializeField] Loot loot;
     [Tooltip("Optional. Weapon to drop, no Loot prefab needed")]
     [SerializeField] Weapon weaponLoot;
-    [Tooltip("If weaponLoot is a key: which Locks it opens. Empty = the weapon's keyId")]
-    [SerializeField] string weaponLootKeyId;
 
     void Start(){HP = hitUntillBreak;}
     void Died(){
         PathFinding.Invalidate(); // it may have been in the way
         if(destroyAfterDead)Destroy(gameObject);
-        Loot.Drop(loot, weaponLoot, transform, weaponLootKeyId);
+        Loot.Drop(loot, weaponLoot, transform);
     }
     public virtual void recieveDamage(int dmg,bool isMagical){ // magic does nothing; any other hit counts as 1
         if(isMagical)return;
