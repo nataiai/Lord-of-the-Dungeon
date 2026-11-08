@@ -92,7 +92,7 @@ public class Player : Character
         else if(!isLooking)looking = movement; // never looked yet: face where it walks
         if(!StuntMech(8))rb.velocity = movement * initSpeed;
         if (movement.magnitude > 0) lastMove = movement;
-        looking = lastMove;
+        if(Experimental.I.lookFollowMovement)looking = lastMove;
         TryAttack(lWeapon, controller.attackLeft);
         TryAttack(rWeapon, controller.attackRight);
         UpdateAnim();
