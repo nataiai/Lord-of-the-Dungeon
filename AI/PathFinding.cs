@@ -11,6 +11,7 @@ public static class PathFinding
     public static float refresh = 0.25f;  // seconds a field is reused (the target moves)
     public static float wallRefresh = 2f; // seconds walls are cached; Invalidate() when a wall appears or goes
     public static int lookAhead = 4;      // cells ahead an enemy may aim at directly, so it walks smooth lines, not grid steps
+    public static float margin = 0.25f;   // space kept from walls when the room allows it; tight spots use the exact body
     public static float minBody = 0.4f;   // smallest body size checked, so tiny enemies still keep off walls a bit
     const float skin = 0.05f;             // the body is checked this much smaller, so one resting against a wall isn't "inside" it
     const int maxCells = 4000;            // BFS limit, for huge rooms
@@ -48,15 +49,20 @@ public static class PathFinding
     public static Vector2 Direction(Vector2 from, Vector2 to, Bounds bounds, Vector2 body, int seed=0){
         if(!Experimental.I.pathFinding)return (to-from).normalized; // off: straight, like before pathfinding
         if(!solidSet){solid = new ContactFilter2D(); solid.SetLayerMask(~LayerMask.GetMask("Enemy")); solid.useTriggers = true; solidSet = true;}
-        g = GridFor(body);
         if(Time.time>wallsAt+wallRefresh || (dirtyFrame>=0 && Time.frameCount>=dirtyFrame)){foreach(var x in grids.Values){x.walls.Clear(); x.fields.Clear();} wallsAt=Time.time; dirtyFrame=-1;}
         if(Time.time>builtAt+refresh){foreach(var x in grids.Values)x.fields.Clear(); builtAt=Time.time;}
+        return Way(from,to,bounds,body+Vector2.one*2*margin) // keeping space from walls
+            ?? Way(from,to,bounds,body)                       // too tight: just the body
+            ?? Steer(from,to,seed);                           // no path at all: turn until free
+    }
+    static Vector2? Way(Vector2 from, Vector2 to, Bounds bounds, Vector2 body){ // null if this body size has no path
+        g = GridFor(body);
         if(IsClear(from,to,g.body))return (to-from).normalized; // nothing in the way of its body: straight there
         var t = ToCell(to);
         if(!g.fields.TryGetValue(t,out var dist))g.fields[t] = dist = Build(t,bounds);
         var c = ToCell(from);
         var aim = Step(dist,c);
-        if(aim==c)return Steer(from,to,seed); // no path: turn until free
+        if(aim==c)return null;
         for(int i=0;i<lookAhead;i++){ // aim at the farthest cell down the path that can be walked to straight
             var n = Step(dist,aim);
             if(n==aim || !IsClear(from,ToPos(n),g.body))break;
@@ -119,9 +125,9 @@ public static class PathFinding
         var ch = col.GetComponentInParent<Character>(); return ch==null || ch is Chest;
     }
 
-    public static void DrawGizmos(Vector2 body){ // Scene view: cells blocked for this body size in red
+    public static void DrawGizmos(Vector2 body){ // Scene view: cells blocked for this body size (with the margin) in red
         Gizmos.color = new Color(1,0,0,.35f);
-        foreach(var w in GridFor(body).walls)if(w.Value)Gizmos.DrawCube(ToPos(w.Key),Vector3.one*cell*.9f);
+        foreach(var w in GridFor(body+Vector2.one*2*margin).walls)if(w.Value)Gizmos.DrawCube(ToPos(w.Key),Vector3.one*cell*.9f);
     }
 
     // ---------- Separation ----------

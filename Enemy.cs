@@ -28,6 +28,7 @@ public class Enemy : Character
     [SerializeField] bool spriteFacesLeft;
     protected virtual bool facesPlayer => true; // false: never flipped (Chest)
     Vector2 way; // where it walks, for the gizmo
+    Vector2 wallNormal; float wallTouch = -1; // the last wall/rock it touched (normal points away from it)
 
     protected virtual void Start(){
         HP = enemyData.maxHP;
@@ -56,11 +57,23 @@ public class Enemy : Character
         if(movement.magnitude<enemyData.noticeRange)notice=true;
         if(notice){
             way = enemyData.ignoreCollide ? movement.normalized : PathFinding.Direction(center,target,GameManager.Instance.currentRoom.bounds,col.bounds.size,GetInstanceID()); // ghosts go straight
+            if(Time.time-wallTouch<.1f && Vector2.Dot(way,wallNormal)<-.1f){ // pushing into a wall: walk along it instead, toward the side it leans
+                Vector2 along = Vector2.Perpendicular(wallNormal);
+                float lean = Vector2.Dot(way,along);
+                way = (Mathf.Abs(lean)>.1f ? Mathf.Sign(lean) : (GetInstanceID()&1)==0 ? 1 : -1) * along;
+            }
             rb.velocity = Vector2.ClampMagnitude(way + PathFinding.Separation(col, LayerMask.GetMask("Enemy")), 1) * enemyData.initSpeed; // AI/PathFinding.cs
         }
         setAnimFacing(movement.normalized);
     }
 
+    void OnCollisionStay2D(Collision2D c){ // remember walls, rocks and chests it touches, not characters
+        var ch = c.collider.GetComponentInParent<Character>();
+        if(ch!=null && ch is not Chest)return;
+        var p = c.GetContact(0);
+        wallNormal = Vector2.Dot(p.normal, center-p.point)<0 ? -p.normal : p.normal; // away from the wall
+        wallTouch = Time.time;
+    }
     void OnDrawGizmosSelected(){ // select an enemy in play mode: its direction in yellow, walls it avoids in red
         if(col)PathFinding.DrawGizmos(col.bounds.size);
         Gizmos.color = Color.yellow;
