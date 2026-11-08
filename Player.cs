@@ -11,7 +11,7 @@ public class Direction{
 [System.Serializable]
 public class HoldingWeapons{ // one hand
     public Weapon weapon;
-    public float lastUse;
+    [PlayModeOnly] public float lastUse;
     public bool isOnCooldown=>lastUse+cooldown>Time.time;
     public bool isUsable=>weapon!=null&&!isOnCooldown;
     public float cooldown=>weapon.cooldown;
@@ -54,7 +54,7 @@ public class Player : Character
     public override int maxHP{get=>_maxHP;set{_maxHP=value;GameManager.Instance.ui.UpdateMaxHP(maxHP);}}
     bool enableInvincible => Experimental.I.enableInvincible;
     public float speedBoost;
-    public int state; // IDLE, MOVING, or the WeaponType number while attacking
+    [PlayModeOnly] public int state; // IDLE, MOVING, or the WeaponType number while attacking
     bool attackState;
     const int IDLE = 0;
     const int MOVING = 1;
@@ -71,12 +71,12 @@ public class Player : Character
     [SerializeField] float knockbackResistance;
     Controller controller;
     public float invincibleCooldownTime;
-    public float invincibleTime;
+    [PlayModeOnly] public float invincibleTime;
     public bool isInvincible => invincibleTime>Time.time;
-    public bool forceAnim;
+    [PlayModeOnly] public bool forceAnim;
     [Tooltip("Fall down animation when it falls in a hole (a state with this clip's name in its Animator). Empty: it shrinks away")]
     public AnimationClip fallClip;
-    [HideInInspector] public Vector2 roomEntryPos; // where this player entered the current room: falling in a hole brings it back here
+    [PlayModeOnly] public Vector2 roomEntryPos; // where this player entered the current room: falling in a hole brings it back here
 
     public override int HP{get=>_HP;set{_HP=value;GameManager.Instance.ui.UpdateHP(HP);}}
 

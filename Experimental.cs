@@ -30,4 +30,8 @@ public class Experimental : MonoBehaviour{
     [Tooltip("No chat: spawn mockEnemy every testWithoutChatSpawnCooldown seconds (hold L to pause)")]
     public bool testWithoutChat = false;
     public float testWithoutChatSpawnCooldown = 5f;
+
+    [Header("Inspector")]
+    [Tooltip("On: [PlayModeOnly] fields show (and can be edited) while playing. Off: always hidden")]
+    public bool showPlayModeOnly = true;
 }

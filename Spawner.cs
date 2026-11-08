@@ -5,7 +5,7 @@ using UnityEngine.Tilemaps;
 public class Spawner : MonoBehaviour // on a room's floor tilemap
 {
     public TilemapRenderer tilemapRenderer;
-    public Bounds bounds;
+    [PlayModeOnly] public Bounds bounds;
 
     void Awake(){
         GetComponent<Tilemap>().CompressBounds();

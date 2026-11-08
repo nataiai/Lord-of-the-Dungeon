@@ -5,9 +5,9 @@ using UnityEngine;
 public class DungeonMap : MonoBehaviour // only currentRoom is active
 {
     public DungeonRoom currentRoom;
-    public DungeonRoom[] allRooms;
+    [HideInInspector] public DungeonRoom[] allRooms;
     public int width,height; // pixel of each cell
-    public RoomTrigger[] roomTrigger;
+    [HideInInspector] public RoomTrigger[] roomTrigger;
     public Dictionary<RoomTrigger,RoomTrigger> triggerMap = new();
 
     void OnValidate()=>allRooms = FindObjectsByType<DungeonRoom>(FindObjectsInactive.Include,FindObjectsSortMode.None);

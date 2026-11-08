@@ -9,12 +9,12 @@ public class GameManager: MonoBehaviour{
     public int FPS = 60;
     public static GameManager Instance { get; private set; }
     public Player player;
-    public UI ui;
+    [PlayModeOnly] public UI ui;
     public Enemy mockEnemy;
     public Controller controller;
     public Vector2 playerPos => player.transform.position;
-    public Camera uiCam;
-    public Camera mainCam;
+    [PlayModeOnly] public Camera uiCam;
+    [PlayModeOnly] public Camera mainCam;
     public UI uiPrefab;
     [Tooltip("Heal animation shown for half a second on any Character that heals (healing room, Health Bone)")]
     public GameObject healEffect;
