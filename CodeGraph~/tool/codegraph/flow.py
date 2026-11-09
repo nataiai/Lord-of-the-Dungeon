@@ -38,6 +38,7 @@ class FNode:
     end: int = 0
     brief: str = ""  # generated short text (used when there's no AI label)
     actions: list = field(default_factory=list)  # engine actions done here (Destroy, Instantiate, ...)
+    purpose: str = ""  # call boxes: what the called function does (its one-line note), shown under the label
     label: str = ""  # AI label (pages.py fills it from the notes)
 
     @property
@@ -67,6 +68,7 @@ class FEdge:
 class Flow:
     nodes: list = field(default_factory=list)
     edges: list = field(default_factory=list)
+    groups: list = field(default_factory=list)  # [(group id, title, [node ids])]: a short callee drawn inside
 
     def node(self, nid: str) -> FNode:
         return next(n for n in self.nodes if n.id == nid)
@@ -170,7 +172,8 @@ def brief_call(st: Stmt, callee_names: list) -> str:
 
 class FlowBuilder:
     def __init__(self, title: str, start_kind: str = "start", classifier: Classifier | None = None,
-                 short_name=lambda mid: mid.split(".")[-1]):
+                 short_name=lambda mid: mid.split(".")[-1], ghosts: bool = True):
+        self.ghosts = ghosts  # union diff: a removed if/loop is one inline ghost box. False: draw it normally
         self.f = Flow()
         self.title = title
         self.start_kind = start_kind
@@ -275,7 +278,7 @@ class FlowBuilder:
             _mark(st, "added")
         if self.cls.simple(st):
             return self._calc(st, pend)
-        if st.status == "removed" and k != "simple":
+        if st.status == "removed" and k != "simple" and self.ghosts:
             g = self._new("ghost", [self._line(st, _summary(st))], st)
             g.brief = short_code(_summary(st))
             self._connect(pend, g)
@@ -444,5 +447,5 @@ def count_statements(stmts) -> int:
 
 
 def build_flow(title: str, stmts: list, start_kind: str = "start", classifier: Classifier | None = None,
-               short_name=lambda mid: mid.split(".")[-1]) -> Flow:
-    return FlowBuilder(title, start_kind, classifier, short_name).build(stmts)
+               short_name=lambda mid: mid.split(".")[-1], ghosts: bool = True) -> Flow:
+    return FlowBuilder(title, start_kind, classifier, short_name, ghosts).build(stmts)

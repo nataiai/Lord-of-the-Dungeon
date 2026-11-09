@@ -52,11 +52,11 @@ flowchart LR
   m_GameManager_Spawn --> m_out_DungeonRoom
   m_GameManager__Connect --> m_out_UnifiedChat
   m_GameManager_TeleportSkill --> m_out_DungeonMap
-  classDef engine fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef own fill:#ffffff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ownev fill:#fff8e1,stroke:#9a6700,stroke-width:2px,color:#3b2300
+  classDef engine fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef own fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ownev fill:#ddf4ff,stroke:#1a7f37,stroke-width:2px,color:#0a3069
   classDef other fill:#f6f8fa,stroke:#8c959f,color:#24292f
-  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:4 3,color:#57606a
+  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:5 3,color:#57606a
   classDef more fill:#ffffff,stroke:#d0d7de,stroke-dasharray:2 2,color:#57606a
   class U_start_up,U_every_frame engine
   class m_out_UnifiedChat ext
@@ -80,14 +80,14 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["⚡ Awake<br><i>when created</i>"])
-  n824e86{{"Another manager already<br>exists?"}}
-  n0f111a[["Remove this duplicate manager<br>→ Destroy()"]]
+  nS(["▶ Awake<br><i>when created</i>"])
+  n824e86{"Another manager already<br>exists?"}
+  n0f111a[["✖ Remove this duplicate<br>manager → Destroy()"]]
   nbe6098["Become the manager; find the<br>cameras and UI"]
-  nb42b42[["If no UI in the scene, make<br>one → Instantiate()"]]
+  nb42b42[["✚ If no UI in the scene, make<br>one → Instantiate()"]]
   nd2144a["Turn off vSync; set the frame<br>rate"]
   nE(["end"])
-  nb2e4fc(["Stop"])
+  nb2e4fc(["⏹ Stop"])
   nS --> n824e86
   n0f111a --> nb2e4fc
   n824e86 -->|no| nbe6098
@@ -95,21 +95,28 @@ flowchart TD
   nbe6098 --> nb42b42
   nb42b42 --> nd2144a
   nd2144a --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 2 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class nbe6098,nd2144a calc
-  class n0f111a,nb42b42 calls
   class n824e86 cond
   class nb2e4fc exit
   class nE fin
+  class n0f111a kill
+  class nb42b42 spawn
   class nS unity
 ```
 
@@ -143,28 +150,40 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["⚡ Start<br><i>before its first frame</i>"])
-  nfb15c5[["Show the player's max hearts →<br>UI.UpdateMaxHP()"]]
-  nfdebc6[["Show the player's current<br>hearts → UI.UpdateHP()"]]
+  nS(["▶ Start<br><i>before its first frame</i>"])
+  nfb15c5[["Show the player's max hearts →<br>UI.UpdateMaxHP()<br><i>Makes enough heart images, and</i><br><i>shows max HP of them.</i>"]]
+  nfdebc6_h["↪ Show the player's current<br>hearts · UI.UpdateHP"]
+  nfdebc6_nafbf9f["set sprite"]
   n6ae454["Find the sound player"]
   nE(["end"])
+  subgraph nfdebc6_g[" "]
+    nfdebc6_h
+    nfdebc6_nafbf9f
+  end
+  style nfdebc6_g fill:#f5f9ff,stroke:#8cb4e8,stroke-dasharray:4 3,color:#0a3069
   nS --> nfb15c5
-  nfb15c5 --> nfdebc6
-  nfdebc6 --> n6ae454
+  nfb15c5 --> nfdebc6_h
   n6ae454 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  nfdebc6_h --> nfdebc6_nafbf9f
+  nfdebc6_nafbf9f --> n6ae454
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
-  class n6ae454 calc
-  class nfb15c5,nfdebc6 calls
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
+  class nfdebc6_nafbf9f,n6ae454 calc
+  class nfb15c5 calls
   class nE fin
+  class nfdebc6_h ghdr
   class nS unity
 ```
 
@@ -195,12 +214,12 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["⚡ Update<br><i>every frame</i>"])
-  n3e5eab{{"Test mode, spawn timer up, L<br>not pressed?"}}
-  ne508c8[["Spawn the test enemy"]]
+  nS(["▶ Update<br><i>every frame</i>"])
+  n3e5eab{"Test mode, spawn timer up, L<br>not pressed?"}
+  ne508c8[["Spawn the test enemy<br><i>Spawns an enemy near the player in</i><br><i>the current room.</i>"]]
   na1060f["Restart the test spawn timer"]
-  n9e886c[["Take the next chat summon, if<br>the cooldown allows →<br>SimpleSummonDB.GetToSpawn()"]]
-  n0f2912[["If chat summoned one (not test<br>mode), spawn it → Spawn()"]]
+  n9e886c[["Take the next chat summon, if<br>the cooldown allows →<br>SimpleSummonDB.GetToSpawn()<br><i>Gives the next summoned enemy when</i><br><i>the cooldown allows, else nothing.</i>"]]
+  n0f2912[["If chat summoned one (not test<br>mode), spawn it → Spawn()<br><i>Spawns an enemy near the player in</i><br><i>the current room.</i>"]]
   nE(["end"])
   nS --> n3e5eab
   n3e5eab -->|yes| ne508c8
@@ -209,16 +228,22 @@ flowchart TD
   n3e5eab -->|no| n9e886c
   n9e886c --> n0f2912
   n0f2912 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 4 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class na1060f calc
   class ne508c8,n9e886c,n0f2912 calls
   class n3e5eab cond
@@ -255,13 +280,13 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["_Connect"])
-  n269a6d{{"Already joined?"}}
+  nS(["▶ _Connect"])
+  n269a6d{"Already joined?"}
   nd9fac0["Mark as joined; remember the<br>channel name"]
-  n08675a{{"Not testing, and unified chat<br>didn't connect?"}}
+  n08675a{"Not testing, and unified chat<br>didn't connect?"}
   n011fcf["Join with Lexone Twitch chat<br>instead"]
   nE(["end"])
-  nb2e4fc(["Stop"])
+  nb2e4fc(["⏹ Stop"])
   nS --> n269a6d
   n269a6d -->|no| nd9fac0
   n269a6d -->|yes| nb2e4fc
@@ -269,16 +294,24 @@ flowchart TD
   n08675a -->|yes| n011fcf
   n011fcf --> nE
   n08675a -->|no| nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 4 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 6 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class nd9fac0,n011fcf calc
   class n269a6d,n08675a cond
   class nb2e4fc exit
@@ -315,7 +348,7 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["_re"])
+  nS(["▶ _re"])
   ncb80a4[["Hide the current room →<br>SetActive()"]]
   n69c3da[["Show the first room →<br>SetActive()"]]
   ncd1439["Make it the current room"]
@@ -324,16 +357,20 @@ flowchart TD
   ncb80a4 --> n69c3da
   n69c3da --> ncd1439
   ncd1439 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class ncd1439 calc
   class ncb80a4,n69c3da calls
   class nE fin
@@ -367,10 +404,10 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["TeleportSkill"])
-  n0b2551{{"Cooldown ready? (always yes<br>for now)"}}
+  nS(["▶ TeleportSkill"])
+  n0b2551{"Cooldown ready? (always yes<br>for now)"}
   nceed3c["Make the target point"]
-  n7d9437{{"Point in this room and not<br>inside anything?"}}
+  n7d9437{"Point in this room and not<br>inside anything?"}
   n2d48fa["Move the player there"]
   nE(["end"])
   nS --> n0b2551
@@ -380,16 +417,24 @@ flowchart TD
   n2d48fa --> nE
   n7d9437 -->|no| nE
   n0b2551 -->|no| nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 5 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 6 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class nceed3c,n2d48fa calc
   class n0b2551,n7d9437 cond
   class nE fin

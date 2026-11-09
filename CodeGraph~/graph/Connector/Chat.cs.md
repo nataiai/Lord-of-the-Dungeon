@@ -23,11 +23,11 @@ flowchart LR
   m_out_GameManager["<b>GameManager</b><br>TeleportSkill"]
   m_Chat_addToDB --> m_Chat_Categorize
   m_Chat_addToDB --> m_out_GameManager
-  classDef engine fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef own fill:#ffffff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ownev fill:#fff8e1,stroke:#9a6700,stroke-width:2px,color:#3b2300
+  classDef engine fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef own fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ownev fill:#ddf4ff,stroke:#1a7f37,stroke-width:2px,color:#0a3069
   classDef other fill:#f6f8fa,stroke:#8c959f,color:#24292f
-  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:4 3,color:#57606a
+  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:5 3,color:#57606a
   classDef more fill:#ffffff,stroke:#d0d7de,stroke-dasharray:2 2,color:#57606a
   class m_out_GameManager other
   class m_Chat_Categorize,m_Chat_addToDB own
@@ -48,28 +48,33 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["Categorize"])
+  nS(["▶ Categorize"])
   nd74057["Split the message into<br>lowercase words"]
-  n134586("  ↻ For each known command  ")
-  n83bb7a{{"Word count fits, and the first<br>word starts the command?"}}
-  n955055(["Return that command"])
-  n258455(["Return not a command"])
+  n134586{{"🔁 For each known command"}}
+  n83bb7a{"Word count fits, and the first<br>word starts the command?"}
+  n955055(["↩ Return that command"])
+  n258455(["↩ Return not a command"])
   nS --> nd74057
   nd74057 --> n134586
   n134586 -->|each| n83bb7a
   n83bb7a -->|yes| n955055
-  n83bb7a -.-> n134586
+  n83bb7a -.->|next| n134586
   n134586 -->|done| n258455
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class nd74057 calc
   class n83bb7a cond
   class n955055,n258455 exit
@@ -106,14 +111,14 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["addToDB"])
+  nS(["▶ addToDB"])
   n119429["Split the message into words"]
   na6f1b7{{"Which command?"}}
-  n08d315{{"ChatType.summon ?"}}
+  n08d315{"ChatType.summon ?"}
   n9fa4bc["Queue a summon of the named<br>enemy"]
   n73e618((" "))
-  nd764ab{{"ChatType.teleport ?"}}
-  n4ca3f6[["If x and y are numbers,<br>teleport the player →<br>GameManager.TeleportSkill()"]]
+  nd764ab{"ChatType.teleport ?"}
+  n4ca3f6[["If x and y are numbers,<br>teleport the player →<br>GameManager.TeleportSkill()<br><i>Chat teleport: moves the player to</i><br><i>(x, y) if free and in this room.</i>"]]
   n14d573((" "))
   nE(["end"])
   nS --> n119429
@@ -128,16 +133,23 @@ flowchart TD
   n73e618 --> n14d573
   nd764ab -->|other| n14d573
   n14d573 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 6 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 7 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n119429,n9fa4bc calc
   class n4ca3f6 calls
   class na6f1b7,n08d315,nd764ab cond

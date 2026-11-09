@@ -30,11 +30,11 @@ flowchart LR
   m_in_UI --> m_HoldingWeapons_getReloadPercent
   m_HoldingWeapons_Use --> m_HoldingWeapons_ForceUse
   m_HoldingWeapons_ForceUse --> m_out_BuffEffect_Buff
-  classDef engine fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef own fill:#ffffff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ownev fill:#fff8e1,stroke:#9a6700,stroke-width:2px,color:#3b2300
+  classDef engine fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef own fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ownev fill:#ddf4ff,stroke:#1a7f37,stroke-width:2px,color:#0a3069
   classDef other fill:#f6f8fa,stroke:#8c959f,color:#24292f
-  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:4 3,color:#57606a
+  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:5 3,color:#57606a
   classDef more fill:#ffffff,stroke:#d0d7de,stroke-dasharray:2 2,color:#57606a
   class m_in_Player,m_in_UI,m_out_BuffEffect_Buff other
   class m_HoldingWeapons_Use,m_HoldingWeapons_getReloadPercent,m_HoldingWeapons_ForceUse own
@@ -96,11 +96,11 @@ flowchart LR
   m_Player_Died --> m_out_GameManager
   m_Player_recieveDamage --> m_out_Character
   m_Player_recieveDamage --> m_Player_HP_set
-  classDef engine fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef own fill:#ffffff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ownev fill:#fff8e1,stroke:#9a6700,stroke-width:2px,color:#3b2300
+  classDef engine fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef own fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ownev fill:#ddf4ff,stroke:#1a7f37,stroke-width:2px,color:#0a3069
   classDef other fill:#f6f8fa,stroke:#8c959f,color:#24292f
-  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:4 3,color:#57606a
+  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:5 3,color:#57606a
   classDef more fill:#ffffff,stroke:#d0d7de,stroke-dasharray:2 2,color:#57606a
   class U_start_up,U_every_frame engine
   class m_in_BuffEffect,m_in_Enemy,m_in_HitBox,m_in_Hole,m_in_InstantItemOnFloor,m_in_Loot,m_out_Character,m_out_GameManager,m_out_HoldingWeapons,m_out_UI other
@@ -123,15 +123,15 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["ForceUse"])
+  nS(["▶ ForceUse"])
   n59933a["Restart the cooldown; find<br>where the hitbox goes"]
-  n184ee8{{"Weapon has a swing animation?"}}
-  n5f085a[["Spawn the swing animation on<br>the user → Instantiate()"]]
+  n184ee8{"Weapon has a swing animation?"}
+  n5f085a[["✚ Spawn the swing animation on<br>the user → Instantiate()"]]
   n591cb1["Play it for the user's facing,<br>fit to the cooldown"]
   n40e0cc["Play the use sound, if any"]
-  n7d38b4[["Spawn the hitbox in front of<br>the user → Instantiate()"]]
+  n7d38b4[["✚ Spawn the hitbox in front of<br>the user → Instantiate()"]]
   nfb7e5e["Tell it its weapon and owner"]
-  n5cabe4[["If the weapon has a buff, give<br>it to the hitbox →<br>Buff.CopyTo()"]]
+  n5cabe4[["If the weapon has a buff, give<br>it to the hitbox →<br>Buff.CopyTo()<br><i>Puts this buff on an object, or</i><br><i>restarts it if already there.</i>"]]
   n8020f5["Set damage from the attack<br>stat, push origin, speed"]
   nE(["end"])
   nS --> n59933a
@@ -145,20 +145,27 @@ flowchart TD
   nfb7e5e --> n5cabe4
   n5cabe4 --> n8020f5
   n8020f5 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 5 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n59933a,n591cb1,n40e0cc,nfb7e5e,n8020f5 calc
-  class n5f085a,n7d38b4,n5cabe4 calls
+  class n5cabe4 calls
   class n184ee8 cond
   class nE fin
+  class n5f085a,n7d38b4 spawn
   class nS start
 ```
 
@@ -195,26 +202,30 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["StopAnim"])
-  n4c712a[["If an animation is playing,<br>remove it → Destroy()"]]
+  nS(["▶ StopAnim"])
+  n4c712a[["✖ If an animation is playing,<br>remove it → Destroy()"]]
   naa5f85["Forget it"]
   nE(["end"])
   nS --> n4c712a
   n4c712a --> naa5f85
   naa5f85 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class naa5f85 calc
-  class n4c712a calls
   class nE fin
+  class n4c712a kill
   class nS start
 ```
 
@@ -244,23 +255,27 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["maxHP · set"])
+  nS(["▶ maxHP · set"])
   ncafc6a["Store the new max"]
-  nfc32bd[["Redraw the heart slots →<br>UI.UpdateMaxHP()"]]
+  nfc32bd[["Redraw the heart slots →<br>UI.UpdateMaxHP()<br><i>Makes enough heart images, and</i><br><i>shows max HP of them.</i>"]]
   nE(["end"])
   nS --> ncafc6a
   ncafc6a --> nfc32bd
   nfc32bd --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class ncafc6a calc
   class nfc32bd calls
   class nE fin
@@ -293,26 +308,37 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["HP · set"])
+  nS(["▶ HP · set"])
   n4250c3["Store the new HP"]
-  n737072[["Refill the hearts on screen →<br>UI.UpdateHP()"]]
+  n737072_h["↪ Refill the hearts on screen<br>· UI.UpdateHP"]
+  n737072_nafbf9f["set sprite"]
   nE(["end"])
+  subgraph n737072_g[" "]
+    n737072_h
+    n737072_nafbf9f
+  end
+  style n737072_g fill:#f5f9ff,stroke:#8cb4e8,stroke-dasharray:4 3,color:#0a3069
   nS --> n4250c3
-  n4250c3 --> n737072
-  n737072 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  n4250c3 --> n737072_h
+  n737072_h --> n737072_nafbf9f
+  n737072_nafbf9f --> nE
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
-  class n4250c3 calc
-  class n737072 calls
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
+  class n4250c3,n737072_nafbf9f calc
   class nE fin
+  class n737072_h ghdr
   class nS start
 ```
 
@@ -342,26 +368,41 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["⚡ Start<br><i>before its first frame</i>"])
-  n104384[["Fill HP to max (redraws the<br>hearts) → HP.set()"]]
+  nS(["▶ Start<br><i>before its first frame</i>"])
+  n104384_h["↪ Fill HP to max (redraws the<br>hearts) · HP.set"]
+  n104384_n4250c3["Store the new HP"]
+  n104384_n737072[["Refill the hearts on screen →<br>UI.UpdateHP()<br><i>Full hearts for current HP, empty</i><br><i>ones for the rest.</i>"]]
   n8c2866["Get the controller; remember<br>the start spot"]
   nE(["end"])
-  nS --> n104384
-  n104384 --> n8c2866
+  subgraph n104384_g[" "]
+    n104384_h
+    n104384_n4250c3
+    n104384_n737072
+  end
+  style n104384_g fill:#f5f9ff,stroke:#8cb4e8,stroke-dasharray:4 3,color:#0a3069
+  nS --> n104384_h
   n8c2866 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  n104384_h --> n104384_n4250c3
+  n104384_n4250c3 --> n104384_n737072
+  n104384_n737072 --> n8c2866
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
-  class n8c2866 calc
-  class n104384 calls
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
+  class n104384_n4250c3,n8c2866 calc
+  class n104384_n737072 calls
   class nE fin
+  class n104384_h ghdr
   class nS unity
 ```
 
@@ -391,32 +432,51 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["⚡ Update<br><i>every frame</i>"])
-  ne77943[["If out of HP, die → Died()"]]
+  nS(["▶ Update<br><i>every frame</i>"])
+  ne77943[["If out of HP, die → Died()<br><i>Test respawn: full HP, back to (0,</i><br><i>0) and the first room.</i>"]]
   ndbd064["Read input, pick facing, move<br>unless stunned"]
-  n5070fd[["Attack with the left hand →<br>TryAttack()"]]
-  n1bd7f4[["Attack with the right hand →<br>TryAttack()"]]
-  n640727[["Update the animation →<br>UpdateAnim()"]]
+  n5070fd[["Attack with the left hand →<br>TryAttack()<br><i>Attacks with one hand if its</i><br><i>button is held and it is ready.</i>"]]
+  n1bd7f4[["Attack with the right hand →<br>TryAttack()<br><i>Attacks with one hand if its</i><br><i>button is held and it is ready.</i>"]]
+  n640727_h["↪ Update the animation ·<br>UpdateAnim"]
+  n640727_nd104f0{"Attack clip still playing<br>(under 90%)?"}
+  n640727_n019d10["Face, play the clip for the<br>state, reset to idle or walk"]
   nE(["end"])
+  subgraph n640727_g[" "]
+    n640727_h
+    n640727_nd104f0
+    n640727_n019d10
+  end
+  style n640727_g fill:#f5f9ff,stroke:#8cb4e8,stroke-dasharray:4 3,color:#0a3069
   nS --> ne77943
   ne77943 --> ndbd064
   ndbd064 --> n5070fd
   n5070fd --> n1bd7f4
-  n1bd7f4 --> n640727
-  n640727 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  n1bd7f4 --> n640727_h
+  n640727_h --> n640727_nd104f0
+  n640727_nd104f0 -->|no| n640727_n019d10
+  n640727_nd104f0 -->|yes| nE
+  n640727_n019d10 --> nE
+  linkStyle 6 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 7 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
-  class ndbd064 calc
-  class ne77943,n5070fd,n1bd7f4,n640727 calls
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
+  class ndbd064,n640727_n019d10 calc
+  class ne77943,n5070fd,n1bd7f4 calls
+  class n640727_nd104f0 cond
   class nE fin
+  class n640727_h ghdr
   class nS unity
 ```
 
@@ -449,34 +509,48 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["TryAttack"])
-  n441299{{"Weapon not ready, or button<br>not held?"}}
+  nS(["▶ TryAttack"])
+  n441299{"Weapon not ready, or button<br>not held?"}
   nc39e71["Force the attack animation"]
-  n3a92de[["Use the weapon →<br>HoldingWeapons.Use()"]]
+  n3a92de_h["↪ Use the weapon ·<br>HoldingWeapons.Use"]
+  n3a92de_n173662[["if isUsable → ForceUse(…) →<br>HoldingWeapons.ForceUse()<br><i>Attacks now - spawns the swing</i><br><i>animation and the hitbox.</i>"]]
   na7960c["Note the cooldown and attack<br>type"]
   nE(["end"])
-  nb2e4fc(["Stop"])
+  nb2e4fc(["⏹ Stop"])
+  subgraph n3a92de_g[" "]
+    n3a92de_h
+    n3a92de_n173662
+  end
+  style n3a92de_g fill:#f5f9ff,stroke:#8cb4e8,stroke-dasharray:4 3,color:#0a3069
   nS --> n441299
   n441299 -->|no| nc39e71
   n441299 -->|yes| nb2e4fc
-  nc39e71 --> n3a92de
-  n3a92de --> na7960c
+  nc39e71 --> n3a92de_h
   na7960c --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  n3a92de_h --> n3a92de_n173662
+  n3a92de_n173662 --> na7960c
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class nc39e71,na7960c calc
-  class n3a92de calls
+  class n3a92de_n173662 calls
   class n441299 cond
   class nb2e4fc exit
   class nE fin
+  class n3a92de_h ghdr
   class nS start
 ```
 
@@ -509,25 +583,31 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["InstantItemUse"])
-  n4f24dc{{"No item?"}}
-  n356f82[["If it is a heal item, heal →<br>Character.HealWithEffect()"]]
+  nS(["▶ InstantItemUse"])
+  n4f24dc{"No item?"}
+  n356f82[["If it is a heal item, heal →<br>Character.HealWithEffect()<br><i>Heals and shows the heal</i><br><i>animation.</i>"]]
   nE(["end"])
-  nb2e4fc(["Stop"])
+  nb2e4fc(["⏹ Stop"])
   nS --> n4f24dc
   n4f24dc -->|no| n356f82
   n4f24dc -->|yes| nb2e4fc
   n356f82 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n356f82 calls
   class n4f24dc cond
   class nb2e4fc exit
@@ -562,28 +642,56 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["Died"])
-  n104384[["Refill HP (redraws the hearts)<br>→ HP.set()"]]
+  nS(["▶ Died"])
+  n104384_h["↪ Refill HP (redraws the<br>hearts) · HP.set"]
+  n104384_n4250c3["Store the new HP"]
+  n104384_n737072[["Refill the hearts on screen →<br>UI.UpdateHP()<br><i>Full hearts for current HP, empty</i><br><i>ones for the rest.</i>"]]
   nbe62ae["Move to (0, 0) and make it the<br>entry spot"]
-  nbdc250[["Go back to the first room →<br>GameManager._re()"]]
+  nbdc250_h["↪ Go back to the first room ·<br>GameManager._re"]
+  nbdc250_ncb80a4[["Hide the current room →<br>SetActive()"]]
+  nbdc250_n69c3da[["Show the first room →<br>SetActive()"]]
+  nbdc250_ncd1439["Make it the current room"]
   nE(["end"])
-  nS --> n104384
-  n104384 --> nbe62ae
-  nbe62ae --> nbdc250
-  nbdc250 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  subgraph n104384_g[" "]
+    n104384_h
+    n104384_n4250c3
+    n104384_n737072
+  end
+  style n104384_g fill:#f5f9ff,stroke:#8cb4e8,stroke-dasharray:4 3,color:#0a3069
+  subgraph nbdc250_g[" "]
+    nbdc250_h
+    nbdc250_ncb80a4
+    nbdc250_n69c3da
+    nbdc250_ncd1439
+  end
+  style nbdc250_g fill:#f5f9ff,stroke:#8cb4e8,stroke-dasharray:4 3,color:#0a3069
+  nS --> n104384_h
+  nbe62ae --> nbdc250_h
+  n104384_h --> n104384_n4250c3
+  n104384_n4250c3 --> n104384_n737072
+  n104384_n737072 --> nbe62ae
+  nbdc250_h --> nbdc250_ncb80a4
+  nbdc250_ncb80a4 --> nbdc250_n69c3da
+  nbdc250_n69c3da --> nbdc250_ncd1439
+  nbdc250_ncd1439 --> nE
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
-  class nbe62ae calc
-  class n104384,nbdc250 calls
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
+  class n104384_n4250c3,nbe62ae,nbdc250_ncd1439 calc
+  class n104384_n737072,nbdc250_ncb80a4,nbdc250_n69c3da calls
   class nE fin
+  class n104384_h,nbdc250_h ghdr
   class nS start
 ```
 
@@ -614,25 +722,31 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["UpdateAnim"])
-  nd104f0{{"Attack clip still playing<br>(under 90%)?"}}
+  nS(["▶ UpdateAnim"])
+  nd104f0{"Attack clip still playing<br>(under 90%)?"}
   n019d10["Face, play the clip for the<br>state, reset to idle or walk"]
   nE(["end"])
-  nb2e4fc(["Let it finish"])
+  nb2e4fc(["⏹ Let it finish"])
   nS --> nd104f0
   nd104f0 -->|no| n019d10
   nd104f0 -->|yes| nb2e4fc
   n019d10 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n019d10 calc
   class nd104f0 cond
   class nb2e4fc exit
@@ -667,25 +781,31 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["ChangeAnimation"])
-  n43e2bd{{"Already playing, and not<br>forced?"}}
+  nS(["▶ ChangeAnimation"])
+  n43e2bd{"Already playing, and not<br>forced?"}
   ncc1dab["Play from the start; fit<br>attacks to the cooldown"]
   nE(["end"])
-  nb2e4fc(["Stop"])
+  nb2e4fc(["⏹ Stop"])
   nS --> n43e2bd
   n43e2bd -->|no| ncc1dab
   n43e2bd -->|yes| nb2e4fc
   ncc1dab --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class ncc1dab calc
   class n43e2bd cond
   class nb2e4fc exit
@@ -720,34 +840,51 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["recieveDamage"])
+  nS(["▶ recieveDamage"])
   n699817["Play the hit sound"]
-  nae1302{{"Invincible right now?"}}
-  nd5bc76[["Lose HP (redraws the hearts) →<br>HP.set()"]]
+  nae1302{"Invincible right now?"}
+  nd5bc76_h["↪ Lose HP (redraws the hearts)<br>· HP.set"]
+  nd5bc76_n4250c3["Store the new HP"]
+  nd5bc76_n737072[["Refill the hearts on screen →<br>UI.UpdateHP()<br><i>Full hearts for current HP, empty</i><br><i>ones for the rest.</i>"]]
   na3ae39["Start the invincible time"]
   nE(["end"])
-  nb2e4fc(["Ignore the hit"])
+  nb2e4fc(["⏹ Ignore the hit"])
+  subgraph nd5bc76_g[" "]
+    nd5bc76_h
+    nd5bc76_n4250c3
+    nd5bc76_n737072
+  end
+  style nd5bc76_g fill:#f5f9ff,stroke:#8cb4e8,stroke-dasharray:4 3,color:#0a3069
   nS --> n699817
   n699817 --> nae1302
-  nae1302 -->|no| nd5bc76
+  nae1302 -->|no| nd5bc76_h
   nae1302 -->|yes| nb2e4fc
-  nd5bc76 --> na3ae39
   na3ae39 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  nd5bc76_h --> nd5bc76_n4250c3
+  nd5bc76_n4250c3 --> nd5bc76_n737072
+  nd5bc76_n737072 --> na3ae39
+  linkStyle 2 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
-  class n699817,na3ae39 calc
-  class nd5bc76 calls
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
+  class n699817,nd5bc76_n4250c3,na3ae39 calc
+  class nd5bc76_n737072 calls
   class nae1302 cond
   class nb2e4fc exit
   class nE fin
+  class nd5bc76_h ghdr
   class nS start
 ```
 
@@ -780,25 +917,31 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["receiveKnockback"])
-  nae1302{{"Invincible right now?"}}
+  nS(["▶ receiveKnockback"])
+  nae1302{"Invincible right now?"}
   ndd2306["Get pushed, reduced by<br>resistance"]
   nE(["end"])
-  nb2e4fc(["Ignore it"])
+  nb2e4fc(["⏹ Ignore it"])
   nS --> nae1302
   nae1302 -->|no| ndd2306
   nae1302 -->|yes| nb2e4fc
   ndd2306 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class ndd2306 calc
   class nae1302 cond
   class nb2e4fc exit

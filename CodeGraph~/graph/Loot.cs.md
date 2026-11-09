@@ -43,11 +43,11 @@ flowchart LR
   m_Loot_InstantItemUse --> m_out_Player
   m_Loot_PickWeaponHandle --> m_Loot_TryFill
   m_Loot_PickWeaponHandle --> m_out_GameManager
-  classDef engine fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef own fill:#ffffff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ownev fill:#fff8e1,stroke:#9a6700,stroke-width:2px,color:#3b2300
+  classDef engine fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef own fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ownev fill:#ddf4ff,stroke:#1a7f37,stroke-width:2px,color:#0a3069
   classDef other fill:#f6f8fa,stroke:#8c959f,color:#24292f
-  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:4 3,color:#57606a
+  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:5 3,color:#57606a
   classDef more fill:#ffffff,stroke:#d0d7de,stroke-dasharray:2 2,color:#57606a
   class U_start_up,U_physics engine
   class m_in_Chest,m_in_Destructable,m_in_Enemy,m_out_GameManager,m_out_Player other
@@ -70,11 +70,11 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["⚡ OnTriggerEnter2D<br><i>something enters its trigger</i>"])
-  n6c3ff2{{"Touched by the player?"}}
-  nf58834[["If a weapon, pick it up →<br>PickWeaponHandle()"]]
-  nd2bf6e[["If a chat skill, learn it →<br>PickChatSkillHandle()"]]
-  naa23c7[["If an instant item, use it →<br>InstantItemUse()"]]
+  nS(["▶ OnTriggerEnter2D<br><i>something enters its trigger</i>"])
+  n6c3ff2{"Touched by the player?"}
+  nf58834[["If a weapon, pick it up →<br>PickWeaponHandle()<br><i>Puts the weapon in a free hand, or</i><br><i>swaps it while a hand's button is …</i>"]]
+  nd2bf6e[["If a chat skill, learn it →<br>PickChatSkillHandle()<br><i>Adds its chat skill to the</i><br><i>available list (once), then …</i>"]]
+  naa23c7[["If an instant item, use it →<br>InstantItemUse()<br><i>Uses the instant item on the</i><br><i>player, then disappears.</i>"]]
   n915fec["Refresh the weapon icons"]
   nE(["end"])
   nS --> n6c3ff2
@@ -84,16 +84,22 @@ flowchart TD
   naa23c7 --> n915fec
   n915fec --> nE
   n6c3ff2 -->|no| nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 6 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n915fec calc
   class nf58834,nd2bf6e,naa23c7 calls
   class n6c3ff2 cond
@@ -130,25 +136,30 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["InstantItemUse"])
-  n443899[["Use the item on the player →<br>Player.InstantItemUse()"]]
-  nbee12d[["Remove this pickup → Destroy()"]]
+  nS(["▶ InstantItemUse"])
+  n443899[["Use the item on the player →<br>Player.InstantItemUse()<br><i>Uses an item it walked into (heal</i><br><i>items heal).</i>"]]
+  nbee12d[["✖ Remove this pickup →<br>Destroy()"]]
   nE(["end"])
   nS --> n443899
   n443899 --> nbee12d
   nbee12d --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
-  class n443899,nbee12d calls
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
+  class n443899 calls
   class nE fin
+  class nbee12d kill
   class nS start
 ```
 
@@ -178,14 +189,14 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["PickWeaponHandle"])
-  n089197{{"Left hand took it?"}}
-  n5aa3bd[["Join chat (only the first time<br>in the game) →<br>GameManager._Connect()"]]
-  n58220d{{"Right hand took it?"}}
+  nS(["▶ PickWeaponHandle"])
+  n089197{"Left hand took it?"}
+  n5aa3bd[["Join chat (only the first time<br>in the game) →<br>GameManager._Connect()<br><i>Joins chat once - unified chat</i><br><i>first, Lexone Twitch chat as …</i>"]]
+  n58220d{"Right hand took it?"}
   n4922ac["Both hands full - swap with<br>the hand whose button is held"]
   nE(["end"])
-  nb2e4fc(["Stop"])
-  n8ac8b5(["Stop"])
+  nb2e4fc(["⏹ Stop"])
+  n8ac8b5(["⏹ Stop"])
   nS --> n089197
   n5aa3bd --> nb2e4fc
   n089197 -->|no| n58220d
@@ -193,16 +204,24 @@ flowchart TD
   n58220d -->|no| n4922ac
   n58220d -->|yes| n8ac8b5
   n4922ac --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 2 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 4 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 5 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n4922ac calc
   class n5aa3bd calls
   class n089197,n58220d cond
@@ -241,31 +260,37 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["TryFill"])
-  n6fc250{{"Hand holds a weapon (not bare<br>fists)?"}}
+  nS(["▶ TryFill"])
+  n6fc250{"Hand holds a weapon (not bare<br>fists)?"}
   n247ddb["Put the weapon in that hand;<br>play the pickup sound"]
-  nbee12d[["Remove this pickup → Destroy()"]]
-  n1902d3(["Return false"])
-  nb1e3d6(["Return true"])
+  nbee12d[["✖ Remove this pickup →<br>Destroy()"]]
+  n1902d3(["↩ Return false"])
+  nb1e3d6(["↩ Return true"])
   nS --> n6fc250
   n6fc250 -->|no| n247ddb
   n6fc250 -->|yes| n1902d3
   n247ddb --> nbee12d
   nbee12d --> nb1e3d6
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n247ddb calc
-  class nbee12d calls
   class n6fc250 cond
   class n1902d3,nb1e3d6 exit
+  class nbee12d kill
   class nS start
 ```
 
@@ -298,26 +323,30 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["PickChatSkillHandle"])
+  nS(["▶ PickChatSkillHandle"])
   n2dde9f["Add the chat skill if it's new"]
-  nbee12d[["Remove this pickup → Destroy()"]]
+  nbee12d[["✖ Remove this pickup →<br>Destroy()"]]
   nE(["end"])
   nS --> n2dde9f
   n2dde9f --> nbee12d
   nbee12d --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n2dde9f calc
-  class nbee12d calls
   class nE fin
+  class nbee12d kill
   class nS start
 ```
 
@@ -347,32 +376,38 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["Drop"])
-  nb75b52[["If there's a loot prefab,<br>place a copy here →<br>Instantiate()"]]
-  nc05090{{"No weapon to drop?"}}
+  nS(["▶ Drop"])
+  nb75b52[["✚ If there's a loot prefab,<br>place a copy here →<br>Instantiate()"]]
+  nc05090{"No weapon to drop?"}
   n86d921["Build a weapon pickup - icon,<br>trigger, loot data"]
   nE(["end"])
-  nb2e4fc(["Stop"])
+  nb2e4fc(["⏹ Stop"])
   nS --> nb75b52
   nb75b52 --> nc05090
   nc05090 -->|no| n86d921
   nc05090 -->|yes| nb2e4fc
   n86d921 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 2 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n86d921 calc
-  class nb75b52 calls
   class nc05090 cond
   class nb2e4fc exit
   class nE fin
+  class nb75b52 spawn
   class nS start
 ```
 

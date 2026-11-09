@@ -60,11 +60,11 @@ flowchart LR
   m_PathFinding_Walkable --> m_PathFinding_IsWall_Vector2_
   m_PathFinding_DrawGizmos --> m_PathFinding_GridFor
   m_PathFinding_DrawGizmos --> m_PathFinding_ToPos
-  classDef engine fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef own fill:#ffffff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ownev fill:#fff8e1,stroke:#9a6700,stroke-width:2px,color:#3b2300
+  classDef engine fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef own fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ownev fill:#ddf4ff,stroke:#1a7f37,stroke-width:2px,color:#0a3069
   classDef other fill:#f6f8fa,stroke:#8c959f,color:#24292f
-  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:4 3,color:#57606a
+  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:5 3,color:#57606a
   classDef more fill:#ffffff,stroke:#d0d7de,stroke-dasharray:2 2,color:#57606a
   class m_in_Destructable,m_in_DungeonMap,m_in_Enemy,m_in_EventAllEnemiesDefeated,m_in_EventCertainObjectDestroyed other
   class m_PathFinding_Invalidate,m_PathFinding_ToCell,m_PathFinding_ToPos,m_PathFinding_GridFor,m_PathFinding_Direction,m_PathFinding_AlongWall,m_PathFinding_Way,m_PathFinding_Steer,m_PathFinding_Step,m_PathFinding_IsClear,m_PathFinding_Build,m_PathFinding_Walkable,m_PathFinding_IsWall_Vector2_,m_PathFinding_DrawGizmos,m_PathFinding_Separation own
@@ -83,21 +83,25 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["GridFor"])
+  nS(["▶ GridFor"])
   n317443["set body, key, grids"]
-  nae4fe2(["return grid"])
+  nae4fe2(["↩ return grid"])
   nS --> n317443
   n317443 --> nae4fe2
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n317443 calc
   class nae4fe2 exit
   class nS start
@@ -127,31 +131,37 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["Direction"])
-  nd5fff8{{"!Experimental.I.pathFinding ?"}}
+  nS(["▶ Direction"])
+  nd5fff8{"!Experimental.I.pathFinding ?"}
   n261509["set solid, useTriggers,<br>solidSet +5 · SetLayerMask(),<br>Clear()"]
-  nd9c966[["way = Way(…)"]]
-  na2433f(["return (to - from).normalized"])
-  nf970a4(["return AlongWall(walker, way,…"])
+  nd9c966[["way = Way(…)<br><i>AI/ (external)</i>"]]
+  na2433f(["↩ return (to -<br>from).normalized"])
+  nf970a4(["↩ return AlongWall(walker,<br>way,…"])
   nS --> nd5fff8
   nd5fff8 -->|no| n261509
   nd5fff8 -->|yes| na2433f
   n261509 --> nd9c966
   nd9c966 --> nf970a4
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n261509 calc
-  class nd9c966 calls
   class nd5fff8 cond
   class na2433f,nf970a4 exit
+  class nd9c966 ext
   class nS start
 ```
 
@@ -182,16 +192,16 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["AlongWall"])
+  nS(["▶ AlongWall"])
   n0c2354["set n"]
-  n99f4aa("  ↻ for (int i = 0; i #60; n; i++)  ")
+  n99f4aa{{"🔁 for (int i = 0; i #60; n; i++)"}}
   n3053f6["set p"]
-  ned5e77{{"!IsWall(p.collider == walker ?<br>p.ot… ?"}}
+  ned5e77{"!IsWall(p.collider == walker ?<br>p.ot… ?"}
   nb3c0f1["set away"]
-  n65228a{{"Vector2.Dot(way, away) #62;= -.1f<br>?"}}
+  n65228a{"Vector2.Dot(way, away) #62;= -.1f<br>?"}
   ne2fd98["set along, lean"]
-  n8adaa6(["return (Mathf.Abs(lean) #62; .1f…"])
-  n80b906(["return way"])
+  n8adaa6(["↩ return (Mathf.Abs(lean) #62;<br>.1f…"])
+  n80b906(["↩ return way"])
   nS --> n0c2354
   n0c2354 --> n99f4aa
   n99f4aa -->|each| n3053f6
@@ -203,16 +213,22 @@ flowchart TD
   n65228a -->|no| ne2fd98
   ne2fd98 --> n8adaa6
   n99f4aa -->|done| n80b906
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 5 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 8 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n0c2354,n3053f6,nb3c0f1,ne2fd98 calc
   class ned5e77,n65228a cond
   class n8adaa6,n80b906 exit
@@ -251,21 +267,21 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["Way"])
-  ndbf665[["g = GridFor(…)"]]
-  nf618e9{{"IsClear(from, to, g.body) ?"}}
-  n178a4f[["t = ToCell(…)"]]
-  n313361[["if !g.fields.TryGetValue(t,… →<br>fields = Build(…)"]]
-  n5c6647[["c = ToCell(…)"]]
-  ndf2bd6[["aim = Step(…)"]]
-  nfdcb74{{"aim == c ?"}}
-  n49863c("  ↻ for (int i = 0; i #60;<br>lookAhead; i++)  ")
-  nac54b8[["n = Step(…)"]]
-  n9ee7da{{"n == aim #124;#124; !IsClear(from,<br>ToPos(n)… ?"}}
+  nS(["▶ Way"])
+  ndbf665[["g = GridFor(…)<br><i>AI/ (external)</i>"]]
+  nf618e9{"IsClear(from, to, g.body) ?"}
+  n178a4f[["t = ToCell(…)<br><i>AI/ (external)</i>"]]
+  n313361[["if !g.fields.TryGetValue(t,… →<br>fields = Build(…)<br><i>AI/ (external)</i>"]]
+  n5c6647[["c = ToCell(…)<br><i>AI/ (external)</i>"]]
+  ndf2bd6[["aim = Step(…)<br><i>AI/ (external)</i>"]]
+  nfdcb74{"aim == c ?"}
+  n49863c{{"🔁 for (int i = 0; i #60;<br>lookAhead; i++)"}}
+  nac54b8[["n = Step(…)<br><i>AI/ (external)</i>"]]
+  n9ee7da{"n == aim #124;#124; !IsClear(from,<br>ToPos(n)… ?"}
   n3e1d1f["set aim"]
-  na2433f(["return (to - from).normalized"])
-  neebe27(["return null"])
-  n095176(["return (ToPos(aim) - from).no…"])
+  na2433f(["↩ return (to -<br>from).normalized"])
+  neebe27(["↩ return null"])
+  n095176(["↩ return (ToPos(aim) -<br>from).no…"])
   nS --> ndbf665
   ndbf665 --> nf618e9
   nf618e9 -->|no| n178a4f
@@ -279,23 +295,33 @@ flowchart TD
   n49863c -->|each| nac54b8
   nac54b8 --> n9ee7da
   n9ee7da -->|no| n3e1d1f
-  n3e1d1f -.-> n49863c
+  n3e1d1f -.->|next| n49863c
   n49863c -->|done| n095176
   n9ee7da -->|yes| n095176
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 2 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 8 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 9 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 12 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 15 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n3e1d1f calc
-  class ndbf665,n178a4f,n313361,n5c6647,ndf2bd6,nac54b8 calls
   class nf618e9,nfdcb74,n9ee7da cond
   class na2433f,neebe27,n095176 exit
+  class ndbf665,n178a4f,n313361,n5c6647,ndf2bd6,nac54b8 ext
   class n49863c loop
   class nS start
 ```
@@ -336,33 +362,38 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["Steer"])
+  nS(["▶ Steer"])
   n47921a["set d, side"]
-  nffb55c("  ↻ for (int a = 30; a #60;= 180; a<br>+= 30)  ")
-  n9be029("  ↻ for each float s in<br>new[]{side, -si…  ")
+  nffb55c{{"🔁 for (int a = 30; a #60;= 180; a<br>+= 30)"}}
+  n9be029{{"🔁 for each float s in<br>new[]{side, -si…"}}
   n4e5566["set v"]
-  nff9c28{{"IsClear(from, from + v * cell<br>* 2,… ?"}}
-  nc1c58e(["return v"])
-  ndc8ffe(["return d"])
+  nff9c28{"IsClear(from, from + v * cell<br>* 2,… ?"}
+  nc1c58e(["↩ return v"])
+  ndc8ffe(["↩ return d"])
   nS --> n47921a
   n47921a --> nffb55c
   nffb55c -->|each| n9be029
   n9be029 -->|each| n4e5566
   n4e5566 --> nff9c28
   nff9c28 -->|yes| nc1c58e
-  nff9c28 -.-> n9be029
-  n9be029 -.-> nffb55c
+  nff9c28 -.->|next| n9be029
+  n9be029 -.->|next| nffb55c
   nffb55c -->|done| ndc8ffe
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 5 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n47921a,n4e5566 calc
   class nff9c28 cond
   class nc1c58e,ndc8ffe exit
@@ -399,21 +430,25 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["Step"])
+  nS(["▶ Step"])
   n51d85a["set best, next"]
-  n186eb0(["return next"])
+  n186eb0(["↩ return next"])
   nS --> n51d85a
   n51d85a --> n186eb0
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n51d85a calc
   class n186eb0 exit
   class nS start
@@ -443,15 +478,15 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["IsClear"])
+  nS(["▶ IsClear"])
   n814b52["set d"]
-  naf66c4{{"d.sqrMagnitude #60; 1e-6f ?"}}
+  naf66c4{"d.sqrMagnitude #60; 1e-6f ?"}
   nc55371["set n"]
-  n99f4aa("  ↻ for (int i = 0; i #60; n; i++)  ")
-  n28ee1b{{"IsWall(castHits[i].collider) ?"}}
-  nb1e3d6(["return true"])
-  n1902d3(["return false"])
-  n9a87d2(["return true"])
+  n99f4aa{{"🔁 for (int i = 0; i #60; n; i++)"}}
+  n28ee1b{"IsWall(castHits[i].collider) ?"}
+  nb1e3d6(["↩ return true"])
+  n1902d3(["↩ return false"])
+  n9a87d2(["↩ return true"])
   nS --> n814b52
   n814b52 --> naf66c4
   naf66c4 -->|no| nc55371
@@ -459,18 +494,25 @@ flowchart TD
   nc55371 --> n99f4aa
   n99f4aa -->|each| n28ee1b
   n28ee1b -->|yes| n1902d3
-  n28ee1b -.-> n99f4aa
+  n28ee1b -.->|next| n99f4aa
   n99f4aa -->|done| n9a87d2
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 2 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 6 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n814b52,nc55371 calc
   class naf66c4,n28ee1b cond
   class nb1e3d6,n1902d3,n9a87d2 exit
@@ -508,16 +550,16 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["Build"])
+  nS(["▶ Build"])
   nc6dbb2["set dist, q · Enqueue()"]
-  ne5f186("  ↻ while q.Count #62; 0 #38;#38;<br>dist.Count #60; m…  ")
+  ne5f186{{"🔁 while q.Count #62; 0 #38;#38;<br>dist.Count #60; m…"}}
   na6b5d3["set c"]
-  nc7498f("  ↻ for each d in dirs  ")
+  nc7498f{{"🔁 for each d in dirs"}}
   n739e6a["set n"]
-  n472189{{"dist.ContainsKey(n) #124;#124;<br>!Walkable(n,… ?"}}
-  n8ed550{{"d.x != 0 #38;#38; d.y != 0 #38;#38;<br>(!Walkable(… ?"}}
+  n472189{"dist.ContainsKey(n) #124;#124;<br>!Walkable(n,… ?"}
+  n8ed550{"d.x != 0 #38;#38; d.y != 0 #38;#38;<br>(!Walkable(… ?"}
   n586b77["set dist · Enqueue()"]
-  na48d4c(["return dist"])
+  na48d4c(["↩ return dist"])
   nS --> nc6dbb2
   nc6dbb2 --> ne5f186
   ne5f186 -->|each| na6b5d3
@@ -528,19 +570,25 @@ flowchart TD
   n472189 -->|no| n8ed550
   n8ed550 -.->|continue| nc7498f
   n8ed550 -->|no| n586b77
-  n586b77 -.-> nc7498f
-  nc7498f -.-> ne5f186
+  n586b77 -.->|next| nc7498f
+  nc7498f -.->|next| ne5f186
   ne5f186 -->|done| na48d4c
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 7 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 9 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class nc6dbb2,na6b5d3,n739e6a,n586b77 calc
   class n472189,n8ed550 cond
   class na48d4c exit
@@ -579,33 +627,39 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["Walkable"])
-  nf34fcd{{"g.walls.TryGetValue(c, out<br>bool w) ?"}}
-  nbae4f0[["p = ToPos(…)"]]
-  nd47c61[["w = IsWall(…)"]]
+  nS(["▶ Walkable"])
+  nf34fcd{"g.walls.TryGetValue(c, out<br>bool w) ?"}
+  nbae4f0[["p = ToPos(…)<br><i>AI/ (external)</i>"]]
+  nd47c61[["w = IsWall(…)<br><i>AI/ (external)</i>"]]
   nbad5f5["set walls"]
-  n492779(["return !w"])
-  n1d4172(["return !w"])
+  n492779(["↩ return !w"])
+  n1d4172(["↩ return !w"])
   nS --> nf34fcd
   nf34fcd -->|no| nbae4f0
   nf34fcd -->|yes| n492779
   nbae4f0 --> nd47c61
   nd47c61 --> nbad5f5
   nbad5f5 --> n1d4172
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class nbad5f5 calc
-  class nbae4f0,nd47c61 calls
   class nf34fcd cond
   class n492779,n1d4172 exit
+  class nbae4f0,nd47c61 ext
   class nS start
 ```
 
@@ -637,28 +691,33 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["IsWall"])
+  nS(["▶ IsWall"])
   nf88ad4["set n"]
-  n99f4aa("  ↻ for (int i = 0; i #60; n; i++)  ")
-  n856bfe{{"IsWall(hits[i]) ?"}}
-  nb1e3d6(["return true"])
-  n1902d3(["return false"])
+  n99f4aa{{"🔁 for (int i = 0; i #60; n; i++)"}}
+  n856bfe{"IsWall(hits[i]) ?"}
+  nb1e3d6(["↩ return true"])
+  n1902d3(["↩ return false"])
   nS --> nf88ad4
   nf88ad4 --> n99f4aa
   n99f4aa -->|each| n856bfe
   n856bfe -->|yes| nb1e3d6
-  n856bfe -.-> n99f4aa
+  n856bfe -.->|next| n99f4aa
   n99f4aa -->|done| n1902d3
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class nf88ad4 calc
   class n856bfe cond
   class nb1e3d6,n1902d3 exit
@@ -693,25 +752,31 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["IsWall"])
-  n275a64{{"col.isTrigger ?"}}
+  nS(["▶ IsWall"])
+  n275a64{"col.isTrigger ?"}
   n315cd9["set ch"]
-  n41a645(["return col.GetComponent#60;Hole#62;…"])
-  n07eb02(["return ch == null #124;#124; ch is Ch…"])
+  n41a645(["↩ return<br>col.GetComponent#60;Hole#62;…"])
+  n07eb02(["↩ return ch == null #124;#124; ch is<br>Ch…"])
   nS --> n275a64
   n275a64 -->|no| n315cd9
   n275a64 -->|yes| n41a645
   n315cd9 --> n07eb02
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n315cd9 calc
   class n275a64 cond
   class n41a645,n07eb02 exit
@@ -744,34 +809,40 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["DrawGizmos"])
-  n10049c{{"!walker ?"}}
+  nS(["▶ DrawGizmos"])
+  n10049c{"!walker ?"}
   nb476f3["set color"]
-  ne9bfda("  ↻ for each w in<br>GridFor((Vector2)walk…  ")
-  nbc8e7f[["if w.Value → ToPos(…)"]]
+  ne9bfda{{"🔁 for each w in<br>GridFor((Vector2)walk…"}}
+  nbc8e7f[["if w.Value → ToPos(…)<br><i>AI/ (external)</i>"]]
   nE(["end"])
-  nb2e4fc(["return"])
+  nb2e4fc(["⏹ return"])
   nS --> n10049c
   n10049c -->|no| nb476f3
   n10049c -->|yes| nb2e4fc
   nb476f3 --> ne9bfda
   ne9bfda -->|each| nbc8e7f
-  nbc8e7f -.-> ne9bfda
+  nbc8e7f -.->|next| ne9bfda
   ne9bfda -->|done| nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class nb476f3 calc
-  class nbc8e7f calls
   class n10049c cond
   class nb2e4fc exit
+  class nbc8e7f ext
   class nE fin
   class ne9bfda loop
   class nS start
@@ -804,17 +875,17 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["Separation"])
-  nd5f71e{{"!Experimental.I.separation ?"}}
+  nS(["▶ Separation"])
+  nd5f71e{"!Experimental.I.separation ?"}
   n437a07["set push, me, spacing +2"]
-  n53e76b("  ↻ for (int i = 0; i #60; count;<br>i++)  ")
+  n53e76b{{"🔁 for (int i = 0; i #60; count;<br>i++)"}}
   n8a9315["set other"]
-  ne9c60b{{"other == self #124;#124;<br>(self.attachedRigi… ?"}}
+  ne9c60b{"other == self #124;#124;<br>(self.attachedRigi… ?"}
   n0f3a6e["set gap"]
-  n48cdbb{{"gap #62;= spacing ?"}}
+  n48cdbb{"gap #62;= spacing ?"}
   n61556e["set away, strength, push"]
-  n7a68cd(["return Vector2.zero"])
-  naa1668(["return push"])
+  n7a68cd(["↩ return Vector2.zero"])
+  naa1668(["↩ return push"])
   nS --> nd5f71e
   nd5f71e -->|no| n437a07
   nd5f71e -->|yes| n7a68cd
@@ -826,18 +897,26 @@ flowchart TD
   n0f3a6e --> n48cdbb
   n48cdbb -.->|continue| n53e76b
   n48cdbb -->|no| n61556e
-  n61556e -.-> n53e76b
+  n61556e -.->|next| n53e76b
   n53e76b -->|done| naa1668
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 7 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 10 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n437a07,n8a9315,n0f3a6e,n61556e calc
   class nd5f71e,ne9c60b,n48cdbb cond
   class n7a68cd,naa1668 exit

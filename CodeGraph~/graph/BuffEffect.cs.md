@@ -23,11 +23,11 @@ flowchart LR
   m_in_HoldingWeapons["<b>HoldingWeapons</b><br>ForceUse"]
   m_in_BuffEffect --> m_BuffEffect_Buff_CopyTo
   m_in_HoldingWeapons --> m_BuffEffect_Buff_CopyTo
-  classDef engine fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef own fill:#ffffff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ownev fill:#fff8e1,stroke:#9a6700,stroke-width:2px,color:#3b2300
+  classDef engine fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef own fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ownev fill:#ddf4ff,stroke:#1a7f37,stroke-width:2px,color:#0a3069
   classDef other fill:#f6f8fa,stroke:#8c959f,color:#24292f
-  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:4 3,color:#57606a
+  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:5 3,color:#57606a
   classDef more fill:#ffffff,stroke:#d0d7de,stroke-dasharray:2 2,color:#57606a
   class m_in_BuffEffect,m_in_HoldingWeapons other
   class m_BuffEffect_Buff_CopyTo own
@@ -59,11 +59,11 @@ flowchart LR
   m_BuffEffect_OnTriggerEnter2D --> m_out_BuffEffect_Buff
   m_BuffEffect_LateUpdate --> m_BuffEffect_Apply
   m_BuffEffect_Apply --> m_out_Character
-  classDef engine fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef own fill:#ffffff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ownev fill:#fff8e1,stroke:#9a6700,stroke-width:2px,color:#3b2300
+  classDef engine fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef own fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ownev fill:#ddf4ff,stroke:#1a7f37,stroke-width:2px,color:#0a3069
   classDef other fill:#f6f8fa,stroke:#8c959f,color:#24292f
-  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:4 3,color:#57606a
+  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:5 3,color:#57606a
   classDef more fill:#ffffff,stroke:#d0d7de,stroke-dasharray:2 2,color:#57606a
   class U_start_up,U_physics,U_every_frame engine
   class m_out_BuffEffect_Buff,m_out_Character other
@@ -86,16 +86,16 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["CopyTo"])
-  n38dff8{{"No effect (type none)?"}}
-  naab257{{"Not stackable?"}}
-  n472399("  ↻ For each buff already on it  ")
-  nf08f44{{"Same type?"}}
+  nS(["▶ CopyTo"])
+  n38dff8{"No effect (type none)?"}
+  naab257{"Not stackable?"}
+  n472399{{"🔁 For each buff already on it"}}
+  nf08f44{"Same type?"}
   n62d11e["Restart its timer"]
   n85f581["Add a new copy, timed for its<br>duration"]
   nE(["end"])
-  nb2e4fc(["Stop"])
-  n8ac8b5(["Stop"])
+  nb2e4fc(["⏹ Stop"])
+  n8ac8b5(["⏹ Stop"])
   nS --> n38dff8
   n38dff8 -->|no| naab257
   n38dff8 -->|yes| nb2e4fc
@@ -103,20 +103,29 @@ flowchart TD
   n472399 -->|each| nf08f44
   nf08f44 -->|yes| n62d11e
   n62d11e --> n8ac8b5
-  nf08f44 -.-> n472399
+  nf08f44 -.->|next| n472399
   n472399 -->|done| n85f581
   naab257 -->|no| n85f581
   n85f581 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 5 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 9 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n62d11e,n85f581 calc
   class n38dff8,naab257,nf08f44 cond
   class nb2e4fc,n8ac8b5 exit
@@ -157,13 +166,13 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["⚡ LateUpdate<br><i>every frame, after all Updates</i>"])
-  n6ee3b6{{"Not on a character?"}}
-  n08a28c{{"Character dead, or buff over?"}}
-  n0f111a[["Remove the buff → Destroy()"]]
-  nf0509f[["Apply it"]]
+  nS(["▶ LateUpdate<br><i>every frame, after all Updates</i>"])
+  n6ee3b6{"Not on a character?"}
+  n08a28c{"Character dead, or buff over?"}
+  n0f111a[["✖ Remove the buff → Destroy()"]]
+  nf0509f[["Apply it<br><i>Slows or stuns every frame; burns</i><br><i>or heals once a second.</i>"]]
   nE(["end"])
-  nb2e4fc(["Stop"])
+  nb2e4fc(["⏹ Stop"])
   nS --> n6ee3b6
   n6ee3b6 -->|no| n08a28c
   n6ee3b6 -->|yes| nb2e4fc
@@ -171,20 +180,29 @@ flowchart TD
   n08a28c -->|no| nf0509f
   n0f111a --> nE
   nf0509f --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 4 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
-  class n0f111a,nf0509f calls
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
+  class nf0509f calls
   class n6ee3b6,n08a28c cond
   class nb2e4fc exit
   class nE fin
+  class n0f111a kill
   class nS unity
 ```
 
@@ -217,14 +235,14 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["Apply"])
+  nS(["▶ Apply"])
   n66868f["Slow cuts speed 10%; stun<br>freezes"]
-  n2354d9{{"Not a full second yet?"}}
+  n2354d9{"Not a full second yet?"}
   nca6318["Next tick in 1 s"]
-  n2294e9[["If burn, deal its damage →<br>Character.recieveDamage()"]]
+  n2294e9[["If burn, deal its damage →<br>Character.recieveDamage()<br><i>runs the Enemy / Player version</i>"]]
   nd05218["If heal, restore its HP"]
   nE(["end"])
-  nb2e4fc(["Stop"])
+  nb2e4fc(["⏹ Stop"])
   nS --> n66868f
   n66868f --> n2354d9
   n2354d9 -->|no| nca6318
@@ -232,16 +250,22 @@ flowchart TD
   nca6318 --> n2294e9
   n2294e9 --> nd05218
   nd05218 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 2 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n66868f,nca6318,nd05218 calc
   class n2294e9 calls
   class n2354d9 cond

@@ -21,11 +21,11 @@ flowchart LR
   m_ControllerButton_isPressedOnce["🔁 isPressedOnce"]
   m_in_UI["<b>UI</b><br>Dialogue, UpdateDialogue"]
   m_in_UI --> m_ControllerButton_isPressedOnce
-  classDef engine fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef own fill:#ffffff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ownev fill:#fff8e1,stroke:#9a6700,stroke-width:2px,color:#3b2300
+  classDef engine fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef own fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ownev fill:#ddf4ff,stroke:#1a7f37,stroke-width:2px,color:#0a3069
   classDef other fill:#f6f8fa,stroke:#8c959f,color:#24292f
-  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:4 3,color:#57606a
+  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:5 3,color:#57606a
   classDef more fill:#ffffff,stroke:#d0d7de,stroke-dasharray:2 2,color:#57606a
   class m_in_UI other
   class m_ControllerButton_isPressedOnce own
@@ -49,11 +49,11 @@ flowchart LR
   U_every_frame --> m_Controller_Update
   m_Controller_Update --> m_Controller_UpdateInput
   m_Controller_UpdateInput --> m_Controller_CheckMouseEnable
-  classDef engine fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef own fill:#ffffff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ownev fill:#fff8e1,stroke:#9a6700,stroke-width:2px,color:#3b2300
+  classDef engine fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef own fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ownev fill:#ddf4ff,stroke:#1a7f37,stroke-width:2px,color:#0a3069
   classDef other fill:#f6f8fa,stroke:#8c959f,color:#24292f
-  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:4 3,color:#57606a
+  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:5 3,color:#57606a
   classDef more fill:#ffffff,stroke:#d0d7de,stroke-dasharray:2 2,color:#57606a
   class U_every_frame engine
   class m_Controller_UpdateInput,m_Controller_CheckMouseEnable own
@@ -75,23 +75,29 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["isPressedOnce"])
-  n6b18f3{{"Not pressed?"}}
-  n1902d3(["Return false"])
-  n47aeb3(["True if this caller hasn't<br>seen this press"])
+  nS(["▶ isPressedOnce"])
+  n6b18f3{"Not pressed?"}
+  n1902d3(["↩ Return false"])
+  n47aeb3(["↩ True if this caller hasn't<br>seen this press"])
   nS --> n6b18f3
   n6b18f3 -->|no| n47aeb3
   n6b18f3 -->|yes| n1902d3
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n6b18f3 cond
   class n1902d3,n47aeb3 exit
   class nS start
@@ -124,25 +130,29 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["⚡ Update<br><i>every frame</i>"])
+  nS(["▶ Update<br><i>every frame</i>"])
   n079405["Read the old input axes; clear<br>the aim"]
-  n1926a8[["Read gamepad, keyboard and<br>mouse → UpdateInput()"]]
+  n1926a8[["Read gamepad, keyboard and<br>mouse → UpdateInput()<br><i>A gamepad replaces everything;</i><br><i>else keyboard, then mouse aim if …</i>"]]
   nf1f1a2["Show the cursor only while the<br>mouse is used"]
   nE(["end"])
   nS --> n079405
   n079405 --> n1926a8
   n1926a8 --> nf1f1a2
   nf1f1a2 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n079405,nf1f1a2 calc
   class n1926a8 calls
   class nE fin
@@ -176,19 +186,25 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["UpdateInput"])
+  nS(["▶ UpdateInput"])
   n539747["Get the connected devices"]
-  n590607{{"Gamepad connected?"}}
+  n590607{"Gamepad connected?"}
   n950fae["Sticks move and aim; bumpers<br>or A/B attack"]
   n9c3ff5["Keyboard: WASD move, arrows<br>aim, O/P attack"]
-  n2ca3df{{"No mouse, or mouse turned off?"}}
+  n2ca3df{"No mouse, or mouse turned off?"}
   n75ebd0["Mouse aim off"]
   na08b7c["Read the mouse position"]
-  n9f6c98[["Turn mouse aim on or off →<br>CheckMouseEnable()"]]
+  n9f6c98_h["↪ Turn mouse aim on or off ·<br>CheckMouseEnable"]
+  n9f6c98_n49a6a6["set mouseActive,<br>mouseLastTime, mouseLastPos"]
   n3a4432["If mouse aim is on, aim at it;<br>clicks attack"]
   nE(["end"])
-  nb2e4fc(["Stop (the gamepad replaces the<br>rest)"])
-  n8ac8b5(["Stop"])
+  nb2e4fc(["⏹ Stop (the gamepad replaces<br>the rest)"])
+  n8ac8b5(["⏹ Stop"])
+  subgraph n9f6c98_g[" "]
+    n9f6c98_h
+    n9f6c98_n49a6a6
+  end
+  style n9f6c98_g fill:#f5f9ff,stroke:#8cb4e8,stroke-dasharray:4 3,color:#0a3069
   nS --> n539747
   n539747 --> n590607
   n950fae --> nb2e4fc
@@ -198,24 +214,33 @@ flowchart TD
   n75ebd0 --> n8ac8b5
   n2ca3df -->|no| na08b7c
   n2ca3df -->|yes| n75ebd0
-  na08b7c --> n9f6c98
-  n9f6c98 --> n3a4432
+  na08b7c --> n9f6c98_h
   n3a4432 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  n9f6c98_h --> n9f6c98_n49a6a6
+  n9f6c98_n49a6a6 --> n3a4432
+  linkStyle 3 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 4 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 7 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 8 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
-  class n539747,n950fae,n9c3ff5,n75ebd0,na08b7c,n3a4432 calc
-  class n9f6c98 calls
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
+  class n539747,n950fae,n9c3ff5,n75ebd0,na08b7c,n9f6c98_n49a6a6,n3a4432 calc
   class n590607,n2ca3df cond
   class nb2e4fc,n8ac8b5 exit
   class nE fin
+  class n9f6c98_h ghdr
   class nS start
 ```
 

@@ -36,11 +36,11 @@ flowchart LR
   m_DungeonMap_roomTriggerExit --> m_DungeonMap_switchRoom
   m_DungeonMap_switchRoom --> m_out_GameManager
   m_DungeonMap_switchRoom --> m_out_PathFinding
-  classDef engine fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef own fill:#ffffff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ownev fill:#fff8e1,stroke:#9a6700,stroke-width:2px,color:#3b2300
+  classDef engine fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef own fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ownev fill:#ddf4ff,stroke:#1a7f37,stroke-width:2px,color:#0a3069
   classDef other fill:#f6f8fa,stroke:#8c959f,color:#24292f
-  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:4 3,color:#57606a
+  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:5 3,color:#57606a
   classDef more fill:#ffffff,stroke:#d0d7de,stroke-dasharray:2 2,color:#57606a
   class U_editor,U_start_up engine
   class m_out_PathFinding ext
@@ -64,28 +64,39 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["⚡ Start<br><i>before its first frame</i>"])
+  nS(["▶ Start<br><i>before its first frame</i>"])
   ne49582["Find every door trigger"]
-  n5e4bd1[["Pair each door with its<br>partner → fillTriggerMap()"]]
+  n5e4bd1_h["↪ Pair each door with its<br>partner · fillTriggerMap"]
+  n5e4bd1_na5cb37["set m, mr, d +1"]
   nf6acd2["Pick the active room that<br>holds the player"]
   nE(["end"])
+  subgraph n5e4bd1_g[" "]
+    n5e4bd1_h
+    n5e4bd1_na5cb37
+  end
+  style n5e4bd1_g fill:#f5f9ff,stroke:#8cb4e8,stroke-dasharray:4 3,color:#0a3069
   nS --> ne49582
-  ne49582 --> n5e4bd1
-  n5e4bd1 --> nf6acd2
+  ne49582 --> n5e4bd1_h
   nf6acd2 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  n5e4bd1_h --> n5e4bd1_na5cb37
+  n5e4bd1_na5cb37 --> nf6acd2
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
-  class ne49582,nf6acd2 calc
-  class n5e4bd1 calls
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
+  class ne49582,n5e4bd1_na5cb37,nf6acd2 calc
   class nE fin
+  class n5e4bd1_h ghdr
   class nS unity
 ```
 
@@ -116,23 +127,27 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["roomTriggerExit"])
+  nS(["▶ roomTriggerExit"])
   n9424b1["Direction to the partner door"]
-  n909d77[["If walking that way, switch<br>room → switchRoom()"]]
+  n909d77[["If walking that way, switch<br>room → switchRoom()<br><i>Moves to the room behind a door -</i><br><i>shows it, hides the old one.</i>"]]
   nE(["end"])
   nS --> n9424b1
   n9424b1 --> n909d77
   n909d77 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n9424b1 calc
   class n909d77 calls
   class nE fin
@@ -165,34 +180,47 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["switchRoom"])
+  nS(["▶ switchRoom"])
   n345bc3["Find the room behind the<br>partner door"]
   n172da7[["Show the new room →<br>SetActive()"]]
   ne51c6e[["Hide the old room →<br>SetActive()"]]
   n6a49c0["Remember where each player<br>entered"]
-  ncc9f0f[["Play the new room's music →<br>GameManager.UpdateMusic()"]]
-  nd2f86b[["Recheck walls for pathfinding<br>→ PathFinding.Invalidate()"]]
+  ncc9f0f_h["↪ Play the new room's music ·<br>GameManager.UpdateMusic"]
+  ncc9f0f_nad1827[["UpdateMusic(…) →<br>SoundPlayer.UpdateMusic()<br><i>Switches to the current room</i><br><i>type's music, or stops it.</i>"]]
+  nd2f86b[["Recheck walls for pathfinding<br>→ PathFinding.Invalidate()<br><i>AI/ (external)</i>"]]
   nE(["end"])
+  subgraph ncc9f0f_g[" "]
+    ncc9f0f_h
+    ncc9f0f_nad1827
+  end
+  style ncc9f0f_g fill:#f5f9ff,stroke:#8cb4e8,stroke-dasharray:4 3,color:#0a3069
   nS --> n345bc3
   n345bc3 --> n172da7
   n172da7 --> ne51c6e
   ne51c6e --> n6a49c0
-  n6a49c0 --> ncc9f0f
-  ncc9f0f --> nd2f86b
+  n6a49c0 --> ncc9f0f_h
   nd2f86b --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  ncc9f0f_h --> ncc9f0f_nad1827
+  ncc9f0f_nad1827 --> nd2f86b
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n345bc3,n6a49c0 calc
-  class n172da7,ne51c6e,ncc9f0f,nd2f86b calls
+  class n172da7,ne51c6e,ncc9f0f_nad1827 calls
+  class nd2f86b ext
   class nE fin
+  class ncc9f0f_h ghdr
   class nS start
 ```
 
@@ -226,26 +254,31 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["_findRoom"])
-  n4bef88("  ↻ For each room  ")
-  n10579d{{"Point inside it?"}}
-  nd48a61(["Return that room"])
-  neebe27(["None found"])
+  nS(["▶ _findRoom"])
+  n4bef88{{"🔁 For each room"}}
+  n10579d{"Point inside it?"}
+  nd48a61(["↩ Return that room"])
+  neebe27(["↩ None found"])
   nS --> n4bef88
   n4bef88 -->|each| n10579d
   n10579d -->|yes| nd48a61
-  n10579d -.-> n4bef88
+  n10579d -.->|next| n4bef88
   n4bef88 -->|done| neebe27
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n10579d cond
   class nd48a61,neebe27 exit
   class n4bef88 loop

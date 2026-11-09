@@ -69,6 +69,7 @@ def cmd_build(a):
     pages.ROOT = os.path.relpath(repo, out).replace(os.sep, "/")
     notes = all_notes(model)
     frame = per_frame(model)
+    every_note = {n.target: n for ns in notes.values() for n in ns}  # callees' notes, for inlined steps / purposes
     only = set(a.only or model.files)
     written = set()
     for path in sorted(model.files):
@@ -79,7 +80,7 @@ def cmd_build(a):
         os.makedirs(os.path.dirname(dest), exist_ok=True)
         notes_rel = os.path.relpath(NOTES, os.path.dirname(dest)).replace(os.sep, "/")
         with open(dest, "w", encoding="utf8", newline="\n") as f:
-            f.write(file_page(model, path, page, notes.get(path, []), frame, notes_rel))
+            f.write(file_page(model, path, page, notes.get(path, []), frame, notes_rel, every_note))
         written.add(path)
     cov = coverage(model)
     with open(os.path.join(out, "index.md"), "w", encoding="utf8", newline="\n") as f:
@@ -166,6 +167,7 @@ def main(argv=None):
     d.add_argument("base", nargs="?", default="HEAD", help="older revision (default HEAD)")
     d.add_argument("head", nargs="?", default=None, help="newer revision (default: the working tree)")
     d.add_argument("--out", help="write the report here (default: print)")
+    d.add_argument("--story", help="the AI's words for this change (default: CodeGraph~/diffs/<commit>.yml)")
     d.set_defaults(fn=lambda a: __import__("codegraph.diff", fromlist=["cmd_diff"]).cmd_diff(a, repo_root(), HOME))
     n = sub.add_parser("notes", help="what needs a note / which notes drifted (the AI's to-do list)")
     n.add_argument("files", nargs="*")

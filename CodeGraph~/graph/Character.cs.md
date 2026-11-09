@@ -51,11 +51,11 @@ flowchart LR
   m_in_Enemy --> m_Character_recieveDamage
   m_in_HitBox --> m_Character_recieveDamage
   m_in_Player --> m_Character_recieveDamage
-  classDef engine fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef own fill:#ffffff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ownev fill:#fff8e1,stroke:#9a6700,stroke-width:2px,color:#3b2300
+  classDef engine fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef own fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ownev fill:#ddf4ff,stroke:#1a7f37,stroke-width:2px,color:#0a3069
   classDef other fill:#f6f8fa,stroke:#8c959f,color:#24292f
-  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:4 3,color:#57606a
+  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:5 3,color:#57606a
   classDef more fill:#ffffff,stroke:#d0d7de,stroke-dasharray:2 2,color:#57606a
   class m_in_BuffEffect,m_in_Enemy,m_in_HealingRoom,m_in_HitBox,m_in_Player,m_in_UI other
   class m_Character_IsEnemyOf,m_Character_setAnimFacing,m_Character_froze,m_Character_StuntMech,m_Character_receiveKnockback_Vector2_float_,m_Character_Heal,m_Character_HealWithEffect,m_Character_recieveDamage own
@@ -74,21 +74,25 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["bodyCollider · get"])
+  nS(["▶ bodyCollider · get"])
   n02b6cf["set _col"]
-  n7bbeac(["return _col"])
+  n7bbeac(["↩ return _col"])
   nS --> n02b6cf
   n02b6cf --> n7bbeac
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n02b6cf calc
   class n7bbeac exit
   class nS start
@@ -120,16 +124,16 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["_setAnimFacing"])
-  n101c2e{{"Looking mostly right?"}}
-  na410f9{{"Looking mostly left?"}}
-  n48213b{{"Looking up?"}}
-  nc9de5c{{"Looking down?"}}
-  nc156ab(["Right (1)"])
-  n4cc99d(["Left (3)"])
-  nd1011c(["Up (0)"])
-  n4674d1(["Down (2)"])
-  nedd5df(["Otherwise: down (2)"])
+  nS(["▶ _setAnimFacing"])
+  n101c2e{"Looking mostly right?"}
+  na410f9{"Looking mostly left?"}
+  n48213b{"Looking up?"}
+  nc9de5c{"Looking down?"}
+  nc156ab(["↩ Right (1)"])
+  n4cc99d(["↩ Left (3)"])
+  nd1011c(["↩ Up (0)"])
+  n4674d1(["↩ Down (2)"])
+  nedd5df(["↩ Otherwise: down (2)"])
   nS --> n101c2e
   n101c2e -->|no| na410f9
   n101c2e -->|yes| nc156ab
@@ -139,16 +143,28 @@ flowchart TD
   n48213b -->|yes| nd1011c
   nc9de5c -->|no| nedd5df
   nc9de5c -->|yes| n4674d1
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 3 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 4 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 5 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 6 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 7 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 8 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n101c2e,na410f9,n48213b,nc9de5c cond
   class nc156ab,n4cc99d,nd1011c,n4674d1,nedd5df exit
   class nS start
@@ -187,25 +203,31 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["StuntMech"])
-  n3f9574{{"Stun time over?"}}
+  nS(["▶ StuntMech"])
+  n3f9574{"Stun time over?"}
   n471a06["Slow down; end the stun once<br>nearly still"]
-  n1902d3(["Not stunned"])
-  nb1e3d6(["Still stunned"])
+  n1902d3(["↩ Not stunned"])
+  nb1e3d6(["↩ Still stunned"])
   nS --> n3f9574
   n3f9574 -->|no| n471a06
   n3f9574 -->|yes| n1902d3
   n471a06 --> nb1e3d6
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n471a06 calc
   class n3f9574 cond
   class n1902d3,nb1e3d6 exit
@@ -240,26 +262,30 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["HealWithEffect"])
+  nS(["▶ HealWithEffect"])
   n5172e2["Heal; get the heal effect"]
-  n42f111[["If there is one, show it for<br>0.5 s → Destroy(),<br>Instantiate()"]]
+  n42f111[["✖ If there is one, show it for<br>0.5 s → Destroy(),<br>Instantiate()"]]
   nE(["end"])
   nS --> n5172e2
   n5172e2 --> n42f111
   n42f111 --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n5172e2 calc
-  class n42f111 calls
   class nE fin
+  class n42f111 kill
   class nS start
 ```
 

@@ -21,11 +21,11 @@ flowchart LR
   m_out_PathFinding["<b>PathFinding</b><br><i>AI/ external</i><br>Invalidate"]
   U_every_frame --> m_EventAllEnemiesDefeated_Update
   m_EventAllEnemiesDefeated_Update --> m_out_PathFinding
-  classDef engine fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef own fill:#ffffff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ownev fill:#fff8e1,stroke:#9a6700,stroke-width:2px,color:#3b2300
+  classDef engine fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef own fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ownev fill:#ddf4ff,stroke:#1a7f37,stroke-width:2px,color:#0a3069
   classDef other fill:#f6f8fa,stroke:#8c959f,color:#24292f
-  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:4 3,color:#57606a
+  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:5 3,color:#57606a
   classDef more fill:#ffffff,stroke:#d0d7de,stroke-dasharray:2 2,color:#57606a
   class U_every_frame engine
   class m_out_PathFinding ext
@@ -47,12 +47,12 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["⚡ Update<br><i>every frame</i>"])
-  n7e9c3f{{"No enemies left?"}}
+  nS(["▶ Update<br><i>every frame</i>"])
+  n7e9c3f{"No enemies left?"}
   nb913fd["Fire the event (e.g. open<br>doors)"]
-  nd2f86b[["Recheck walls for pathfinding<br>→ PathFinding.Invalidate()"]]
+  nd2f86b[["Recheck walls for pathfinding<br>→ PathFinding.Invalidate()<br><i>AI/ (external)</i>"]]
   n12d231["Log it; play the door sound"]
-  nbee12d[["Remove this checker →<br>Destroy()"]]
+  nbee12d[["✖ Remove this checker →<br>Destroy()"]]
   nE(["end"])
   nS --> n7e9c3f
   n7e9c3f -->|yes| nb913fd
@@ -61,20 +61,27 @@ flowchart TD
   n12d231 --> nbee12d
   nbee12d --> nE
   n7e9c3f -->|no| nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 6 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class nb913fd,n12d231 calc
-  class nd2f86b,nbee12d calls
   class n7e9c3f cond
+  class nd2f86b ext
   class nE fin
+  class nbee12d kill
   class nS unity
 ```
 
@@ -107,29 +114,37 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["IsConditionTrue"])
-  n90e5b4{{"Last enemy found still active?"}}
+  nS(["▶ IsConditionTrue"])
+  n90e5b4{"Last enemy found still active?"}
   n0f15f8["Look for any enemy"]
-  na7e2f6{{"Found one?"}}
-  n1902d3(["Not yet"])
-  n6a19b2(["Not yet"])
-  nb1e3d6(["All defeated"])
+  na7e2f6{"Found one?"}
+  n1902d3(["↩ Not yet"])
+  n6a19b2(["↩ Not yet"])
+  nb1e3d6(["↩ All defeated"])
   nS --> n90e5b4
   n90e5b4 -->|no| n0f15f8
   n90e5b4 -->|yes| n1902d3
   n0f15f8 --> na7e2f6
   na7e2f6 -->|no| nb1e3d6
   na7e2f6 -->|yes| n6a19b2
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 4 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 5 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n0f15f8 calc
   class n90e5b4,na7e2f6 cond
   class n1902d3,n6a19b2,nb1e3d6 exit

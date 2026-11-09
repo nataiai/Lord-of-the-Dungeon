@@ -1,0 +1,33 @@
+# The AI's words for commit b47c315 ("Holes"). The generator draws the charts; this says what the change means.
+# Run `codegraph diff <base> <commit>`: it lists what is still missing here.
+
+summary:
+  - Holes work now - anything that walks onto one falls in (fliers pass over).
+  - Enemies and loot that fall are gone; the player comes back where it entered the room.
+  - Every room change now remembers that entry spot.
+
+changes:
+  Hole.OnTriggerEnter2D:
+    now: When a character or loot touches the hole, it starts to fall.
+    so: Holes stop being decoration; fliers still pass over.
+  Hole.Fall:
+    now: Freeze it, play its fall clip or shrink it away, then remove it - or respawn the player.
+    so: Enemies and loot can be lost; the player only loses its position.
+  Hole.Awake:
+    now: Gives the hole a kinematic body, because loot has none.
+    so: Loot falls in too, not only characters.
+  Player.Respawn:
+    now: Moves the player back to where it entered the room.
+    so: A fall sends you back to the room's entrance.
+  Player.Start:
+    before: Full HP, get the controller, start the invincible timer.
+    now: Same, and remember the starting spot as the room entry.
+    so: Falling in the first room returns you to where you started.
+  DungeonMap.switchRoom:
+    before: Show the new room, hide the old one, change music, refresh paths.
+    now: Same, and every player remembers where it entered.
+    so: Falling in a hole puts you back at that room's door.
+  Player.Died:
+    before: Refill HP, go to (0, 0), back to the first room.
+    now: Same, and (0, 0) also becomes the room entry spot.
+    so: After dying, a fall in the first room brings you back to (0, 0).

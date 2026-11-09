@@ -84,8 +84,105 @@ def apply_labels(model: Model, mi, note) -> None:
     start.label = icon(mi, set()) + (mi.member.name.replace(".", " · ") if mi.member.kind == "accessor" else mi.member.name)
 
 
+INLINE_MAX = 4  # a callee with at most this many boxes (and no loop) is drawn inside the caller
+INLINE_SHARED_MAX = 2  # ... even when other functions call it too, if it is this small
+
+
 def is_chart(mi) -> bool:
     return len(mi.flow.steps) >= 2
+
+
+def _overriders(model: Model, mid: str) -> list:
+    return sorted({mi.type.name for mi in model.members.values() if getattr(mi, "overrides", None) == mid})
+
+
+def _purpose(model: Model, notes: dict, callee: str) -> str:
+    """One line on what a called function does: its note, the versions a virtual call may run, or 'external'."""
+    tm = model.project.member_by_id.get(callee)
+    ovr = _overriders(model, callee)
+    if ovr:
+        return "runs the " + " / ".join(ovr) + " version"
+    if tm is not None and model.project.path_is_external(model.project.types[tm.owner].file):
+        return "AI/ (external)"
+    n = notes.get(callee)
+    return n.text.splitlines()[0] if n is not None and n.text else ""
+
+
+def _inlinable(model: Model, caller, callee_id: str, uses_here: int):
+    ci = model.members.get(callee_id)
+    if ci is None or ci.id == caller.id or model.files[ci.type.file].external or _overriders(model, callee_id):
+        return None
+    steps = ci.flow.steps
+    if not steps or len(steps) > INLINE_MAX or any(n.kind in ("loop", "switch") for n in ci.flow.nodes):
+        return None
+    if uses_here > 1:
+        return None
+    if len(model.callers.get(callee_id, [])) > 1 and len(steps) > INLINE_SHARED_MAX:
+        return None
+    return ci
+
+
+def expand(model: Model, mi, notes: dict):
+    """The chart as shown: short callees drawn inside (as a titled group), other calls with a purpose line.
+    Box ids and the AI's labels are unchanged; this only changes the picture."""
+    import copy as _copy
+    from collections import Counter
+    from .flow import FEdge, Flow
+    from .flow import FNode as FNodeT
+    f = Flow([_copy.copy(n) for n in mi.flow.nodes], [_copy.copy(e) for e in mi.flow.edges], [])
+    name = display_name(model, mi.type.full)
+    uses = Counter(n.calls[0] for n in f.nodes if n.kind in ("call", "guard") and len(n.calls) == 1)
+    for node in list(f.nodes):
+        if node.kind not in ("call", "guard") or not node.calls:
+            continue
+        callee = node.calls[0]
+        ci = _inlinable(model, mi, callee, uses[callee]) if node.kind == "call" and len(node.calls) == 1 \
+            and not node.actions else None
+        if ci is None:
+            node.purpose = _purpose(model, notes, callee)
+            continue
+        steps_labels = notes[callee].steps if callee in notes else {}
+        prefix = node.id + "_"
+        cf = ci.flow
+        first = next((e.dst for e in cf.edges if e.src == "nS"), None)
+        if first is None or first == "nE":
+            node.purpose = _purpose(model, notes, callee)
+            continue
+        exits = {n.id for n in cf.nodes if n.kind in ("exit", "end")}
+        inner = []
+        for cn in cf.nodes:
+            if cn.kind in ("start", "end", "exit"):
+                continue
+            c = _copy.copy(cn)
+            c.id = prefix + cn.id
+            c.label = steps_labels.get(cn.id, "") if cn.kind != "join" else ""
+            if c.kind in ("call", "guard") and c.calls:
+                c.purpose = _purpose(model, notes, c.calls[0])
+            inner.append(c)
+        title = (node.label + " · " if node.label else "") + name(callee)
+        head = FNodeT(id=prefix + "h", kind="header", label="↪ " + title)  # the group's title, as a box: no overlap
+        inner.insert(0, head)
+        outs = [(e.dst, e.label, e.kind) for e in f.edges if e.src == node.id]
+        new_edges = []
+        for e in f.edges:
+            if e.dst == node.id:
+                e.dst = head.id
+            if e.src != node.id:
+                new_edges.append(e)
+        new_edges.append(FEdge(head.id, prefix + first))
+        for ce in cf.edges:
+            if ce.src == "nS":
+                continue
+            if ce.dst in exits:  # the callee finishing (or returning early): the caller goes on
+                for dst, lab, kind in outs:
+                    new_edges.append(FEdge(prefix + ce.src, dst, ce.label or lab, ce.kind if ce.label else kind))
+            else:
+                new_edges.append(FEdge(prefix + ce.src, prefix + ce.dst, ce.label, ce.kind))
+        at = f.nodes.index(node)
+        f.nodes[at:at + 1] = inner
+        f.edges = new_edges
+        f.groups.append((prefix + "g", " ", [c.id for c in inner]))
+    return f
 
 
 def _member_link(model: Model, page: str, target: str, label: str) -> str:
@@ -213,7 +310,8 @@ def code_table(model: Model, page: str, path: str, mi) -> list:
     return rows
 
 
-def file_page(model: Model, path: str, page: str, notes: list, frame: set, notes_dir_rel: str) -> str:
+def file_page(model: Model, path: str, page: str, notes: list, frame: set, notes_dir_rel: str,
+              all_notes: dict | None = None) -> str:
     fi = model.files[path]
     by_target = {n.target: n for n in notes}
     mine = sorted(model.file_members(path), key=lambda mi: mi.member.line)
@@ -248,7 +346,8 @@ def file_page(model: Model, path: str, page: str, notes: list, frame: set, notes
         if note is not None and note.image and note.image.get("path"):
             img = quote(f"{notes_dir_rel}/{note.image['path']}", safe="/~.-_")
             L += [f"![{note.image.get('alt', '')}]({img})", ""]
-        L += ["```mermaid", flow_to_mermaid(mi.flow, unity_event=mi.member.name if mi.unity_event else None,
+        shown = expand(model, mi, all_notes or by_target)
+        L += ["```mermaid", flow_to_mermaid(shown, unity_event=mi.member.name if mi.unity_event else None,
                                             coroutine=mi.coroutine, short_name=display_name(model, mi.type.full)),
               "```", ""]
         L += [f"<details><summary>Code (L{mi.member.line}–{mi.member.end})</summary>", ""]

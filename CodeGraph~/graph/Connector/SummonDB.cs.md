@@ -21,11 +21,11 @@ flowchart LR
   m_SummonCommand_SummonCommand["SummonCommand"]
   m_in_Chat["<b>Chat</b><br>addToDB"]
   m_in_Chat --> m_SummonCommand_SummonCommand
-  classDef engine fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef own fill:#ffffff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ownev fill:#fff8e1,stroke:#9a6700,stroke-width:2px,color:#3b2300
+  classDef engine fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef own fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ownev fill:#ddf4ff,stroke:#1a7f37,stroke-width:2px,color:#0a3069
   classDef other fill:#f6f8fa,stroke:#8c959f,color:#24292f
-  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:4 3,color:#57606a
+  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:5 3,color:#57606a
   classDef more fill:#ffffff,stroke:#d0d7de,stroke-dasharray:2 2,color:#57606a
   class m_in_Chat other
   class m_SummonCommand_SummonCommand own
@@ -56,11 +56,11 @@ flowchart LR
   m_in_Enemy --> m_SimpleSummonDB_getEnemy
   m_SimpleSummonDB_GetToSpawn --> m_SimpleSummonDB__Pop
   m_SimpleSummonDB__Pop --> m_SimpleSummonDB_getEnemy
-  classDef engine fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef own fill:#ffffff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ownev fill:#fff8e1,stroke:#9a6700,stroke-width:2px,color:#3b2300
+  classDef engine fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef own fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ownev fill:#ddf4ff,stroke:#1a7f37,stroke-width:2px,color:#0a3069
   classDef other fill:#f6f8fa,stroke:#8c959f,color:#24292f
-  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:4 3,color:#57606a
+  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:5 3,color:#57606a
   classDef more fill:#ffffff,stroke:#d0d7de,stroke-dasharray:2 2,color:#57606a
   class m_in_Chat,m_in_Enemy,m_in_GameManager other
   class m_SimpleSummonDB_GetToSpawn,m_SimpleSummonDB_Add,m_SimpleSummonDB__Pop,m_SimpleSummonDB_Unlock,m_SimpleSummonDB_getEnemy own
@@ -81,31 +81,45 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["GetToSpawn"])
-  n6f665b{{"Cooldown not ready?"}}
-  n9803bb[["Take the next request from the<br>queue → _Pop()"]]
+  nS(["▶ GetToSpawn"])
+  n6f665b{"Cooldown not ready?"}
+  n9803bb_h["↪ Take the next request from<br>the queue · _Pop"]
+  n9803bb_n912e82[["getEnemy(…)<br><i>Finds the unlocked summon template</i><br><i>with this name.</i>"]]
   n295bb4["If it was a real enemy, start<br>the cooldown"]
-  neebe27(["Return nothing"])
-  n06abba(["Return it"])
+  neebe27(["↩ Return nothing"])
+  n06abba(["↩ Return it"])
+  subgraph n9803bb_g[" "]
+    n9803bb_h
+    n9803bb_n912e82
+  end
+  style n9803bb_g fill:#f5f9ff,stroke:#8cb4e8,stroke-dasharray:4 3,color:#0a3069
   nS --> n6f665b
-  n6f665b -->|no| n9803bb
+  n6f665b -->|no| n9803bb_h
   n6f665b -->|yes| neebe27
-  n9803bb --> n295bb4
   n295bb4 --> n06abba
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  n9803bb_h --> n9803bb_n912e82
+  n9803bb_n912e82 --> n295bb4
+  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n295bb4 calc
-  class n9803bb calls
+  class n9803bb_n912e82 calls
   class n6f665b cond
   class neebe27,n06abba exit
+  class n9803bb_h ghdr
   class nS start
 ```
 
@@ -138,28 +152,33 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["getEnemy"])
+  nS(["▶ getEnemy"])
   n555459["Clean up the name"]
-  nc7ea8e("  ↻ For each summonable enemy  ")
-  nb287f9{{"Unlocked and the same name?"}}
-  nb5db5c(["Return it"])
-  neebe27(["Return nothing"])
+  nc7ea8e{{"🔁 For each summonable enemy"}}
+  nb287f9{"Unlocked and the same name?"}
+  nb5db5c(["↩ Return it"])
+  neebe27(["↩ Return nothing"])
   nS --> n555459
   n555459 --> nc7ea8e
   nc7ea8e -->|each| nb287f9
   nb287f9 -->|yes| nb5db5c
-  nb287f9 -.-> nc7ea8e
+  nb287f9 -.->|next| nc7ea8e
   nc7ea8e -->|done| neebe27
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n555459 calc
   class nb287f9 cond
   class nb5db5c,neebe27 exit

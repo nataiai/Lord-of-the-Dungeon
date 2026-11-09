@@ -1,41 +1,34 @@
 # CodeGraph
 
-Every C# file as small pictures. A program draws them; the AI writes the short text inside.
+Every C# function as a small chart. A program draws it; the AI writes the words.
 
-## Reading a chart (one per function)
+## Reading a chart
 
-| Box | Means |
-|---|---|
-| 🟨 pill | where it starts, and when Unity runs it (⚡ every frame, before the first frame, …) |
-| gray box | simple math: setting values, small helpers |
-| **blue box** | a call to another function that does real work (`→ Died()`), or an engine action (`→ Destroy()`) |
-| hexagon | a decision that matters (yes / no) |
-| small pill | stop / return |
+- 🟢 **▶ green** — where it starts (and when Unity runs it)
+- ⬜ **white** — simple math: setting values, small helpers
+- 🔵 **blue** — goes into another function; the second line says what that function does.
+  A short function is drawn **inside** the box group instead.
+- 🟡 **yellow diamond** — a question: **yes** goes green, **no** goes red
+- 🔁 loop · ⏳ wait · ✚ spawn · ✖ remove · 🔴 **⏹ stop**
 
-The text in each box is written by the AI in plain words. The exact code is under **Code** below each chart.
-Every line of code is inside some box (the generator checks it).
+The exact code is under **Code** below each chart.
 
-## Where the text comes from
+## Comparing two commits
 
-- The **generator** (`tool/`) reads the code and draws the boxes. Same code, same picture.
-- The **AI** writes `notes/<file>.yml`: one line per function, a few words per box.
-- Each box's words are tied to that box's exact code. If the code changes, the words disappear (the box shows a
-  short code summary instead) until the AI rewrites them, so the text can't go stale.
+`python "CodeGraph~/tool/codegraph.py" diff A B` writes, for every changed function:
 
-## Compare two commits
+- **Before / Now / So** — what it did, what it does now, what that means (written by the AI)
+- a **Before** chart (what goes away in red) and a **Now** chart (what is new in green), like GitHub's split view
 
-`python "CodeGraph~/tool/codegraph.py" diff A B` writes the same charts with changes marked:
-blue `+` added · orange `−` removed · yellow `~` changed, plus a short list of what changed.
+The AI's words for a change live in `diffs/<commit>.yml`; `diff` prints what is still missing.
 
 ## Commands
 
 ```
 pip install -r "CodeGraph~/tool/requirements.txt"
-python "CodeGraph~/tool/codegraph.py" build      # draw everything into CodeGraph~/graph
-python "CodeGraph~/tool/codegraph.py" diff HEAD~1 HEAD
-python "CodeGraph~/tool/codegraph.py" notes      # what the AI still has to write
-python "CodeGraph~/tool/codegraph.py" check      # fails if a note points at code that is gone
+python "CodeGraph~/tool/codegraph.py" build       # all charts into CodeGraph~/graph
+python "CodeGraph~/tool/codegraph.py" diff A B    # compare two commits
+python "CodeGraph~/tool/codegraph.py" notes       # words the AI still has to write
 ```
 
-`AI/` is treated as an outside library: it shows up only as the functions your code calls.
-Unity ignores this folder (its name ends in `~`).
+`AI/` is treated as an outside library. Unity ignores this folder (its name ends in `~`).

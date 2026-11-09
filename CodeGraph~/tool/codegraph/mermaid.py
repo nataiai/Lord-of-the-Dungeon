@@ -52,29 +52,37 @@ UNITY_PHASE = {
 PHASE_ORDER = ["start-up", "every frame", "physics", "teardown", "editor"]
 
 # --- palette: structure (browse) -------------------------------------------------------
+# --- palette: structure. Colors people read without a legend: green = start, yellow = a question,
+# blue = goes to another function (like a link), red = stop / remove, white / gray = plain steps.
 STYLE_BROWSE = """\
-classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
 classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
-classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a"""
+classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold"""
+EDGE_YES = "stroke:#1a7f37,stroke-width:2px,color:#1a7f37"
+EDGE_NO = "stroke:#cf222e,stroke-width:1.5px,color:#cf222e"
 
-# --- palette: diff. Okabe-Ito blue / vermilion / yellow (safe for red-green color blindness), and color is
-# never the only cue: + / − / ~ markers, thick border for added, dashed border for removed, gray for unchanged
+# --- palette: diff. The colors everyone already reads in git / GitHub: green new, red removed, yellow changed.
+# The + / − / ~ marks stay as a backup for color-blind readers.
 STYLE_DIFF = """\
-classDef same fill:#f6f8fa,stroke:#d0d7de,color:#6e7781
-classDef added fill:#dcecf7,stroke:#0072b2,stroke-width:3px,color:#00304d
-classDef removed fill:#fbe4d8,stroke:#d55e00,stroke-width:2px,stroke-dasharray:6 4,color:#5c2600
-classDef modified fill:#fbf5c4,stroke:#8a7a00,stroke-width:3px,color:#3d3500
+classDef same fill:#ffffff,stroke:#d0d7de,color:#57606a
+classDef added fill:#dafbe1,stroke:#1a7f37,stroke-width:3px,color:#0f3d1d
+classDef removed fill:#ffebe9,stroke:#cf222e,stroke-width:3px,color:#82071e
+classDef modified fill:#fff8c5,stroke:#bf8700,stroke-width:3px,color:#4d2d00
 classDef impacted fill:#ffffff,stroke:#6e7781,stroke-width:2px,stroke-dasharray:2 3,color:#24292f"""
 
-EDGE_ADDED = "stroke:#0072b2,stroke-width:3px"
-EDGE_REMOVED = "stroke:#d55e00,stroke-width:2px,stroke-dasharray:6 4"
+EDGE_ADDED = "stroke:#1a7f37,stroke-width:3px"
+EDGE_REMOVED = "stroke:#cf222e,stroke-width:3px"
 
 MARK = {"added": "+ ", "removed": "− ", "modified": "~ ", "same": ""}
 
@@ -141,12 +149,23 @@ def node_text(node: FNode, short_name=lambda mid: mid.split(".")[-1]) -> str:
 def _label(node: FNode, diff: bool, subtitle: str = "", short_name=None) -> str:
     text = node_text(node, short_name) if short_name else node_text(node)
     if node.kind == "loop":
-        text = "↻ " + text
+        text = "🔁 " + text
     if node.kind == "wait" and not text.startswith("⏳"):
         text = "⏳ " + text
+    if node.kind == "exit":
+        bare = all(l.text.strip() in ("return", "yield break") for l in node.lines)
+        text = ("⏹ " if bare else "↩ ") + text
+    if node.kind in ("start", "unity") and not diff:
+        text = "▶ " + text.lstrip("⚡ ").strip() if not text.startswith("▶") else text
+    if node.kind in ("call", "guard") and "Destroy" in node.actions:
+        text = "✖ " + text
+    elif node.kind in ("call", "guard") and "Instantiate" in node.actions:
+        text = "✚ " + text
     if diff:
         text = MARK[node.status] + text
     out = [esc(p) for p in wrap_words(text, LABEL_WRAP, 3)]
+    if node.purpose and not diff:  # what the called function does, in small italics
+        out += ["<i>" + esc(p) + "</i>" for p in wrap_words(node.purpose, LABEL_WRAP + 4, 2)]
     if subtitle:
         out.append("<i>" + esc(subtitle) + "</i>")
     return "<br>".join(out)
@@ -157,14 +176,16 @@ def _shape(node: FNode, label: str) -> str:
     q = f'"{label}"'
     if k in ("start", "end", "exit"):
         return f"([{q}])"
-    if k in ("decision", "switch", "try", "case"):
+    if k in ("decision", "case"):  # the flowchart shape everyone reads as "a question"
+        return "{" + q + "}"
+    if k in ("switch", "try", "loop"):
         return "{{" + q + "}}"
-    if k == "loop":  # rounded boxes get little padding: pad with no-break spaces so the label isn't clipped
-        return f'("\u00a0\u00a0{label}\u00a0\u00a0")'
     if k == "wait":
         return f"[/{q}/]"
     if k == "join":  # a merge point on a switch rail
         return '((" "))'
+    if k == "header":  # title of a short function drawn inside the caller
+        return f"[{q}]"
     if k in ("call", "guard") and (node.calls or node.actions):
         return f"[[{q}]]"
     return f"[{q}]"
@@ -174,8 +195,14 @@ def _browse_class(node: FNode, unity: bool) -> str:
     k = node.kind
     if k == "start":
         return "unity" if unity else "start"
+    if k in ("call", "guard") and "Destroy" in node.actions:
+        return "kill"
+    if k in ("call", "guard") and "Instantiate" in node.actions:
+        return "spawn"
+    if k in ("call", "guard") and node.purpose == "AI/ (external)":
+        return "ext"
     return {"end": "fin", "decision": "cond", "switch": "cond", "try": "cond", "case": "cond", "loop": "loop",
-            "exit": "exit", "wait": "wait", "join": "join"}.get(k, "calls" if k in ("call", "guard") else "calc")
+            "exit": "exit", "wait": "wait", "join": "join", "header": "ghdr"}.get(k, "calls" if k in ("call", "guard") else "calc")
 
 
 def flow_to_mermaid(flow: Flow, *, unity_event: str | None = None, coroutine: bool = False, diff: bool = False,
@@ -189,11 +216,22 @@ def flow_to_mermaid(flow: Flow, *, unity_event: str | None = None, coroutine: bo
     # exits last: dagre then places them beside the main path, which stays straight (DRAKON)
     for n in [x for x in flow.nodes if x.kind != "exit"] + [x for x in flow.nodes if x.kind == "exit"]:
         lines.append(f"  {n.id}{_shape(n, _label(n, diff, subtitle if n.id == 'nS' else '', short_name))}")
+    for gid, title, ids in getattr(flow, "groups", []):  # a short called function, drawn inside the caller
+        t = title if len(title) <= 52 else title[:51].rstrip() + "…"
+        lines.append(f'  subgraph {gid}["{esc(t)}"]')
+        lines += [f"    {i}" for i in ids]
+        lines.append("  end")
+        lines.append(f"  style {gid} fill:#f5f9ff,stroke:#8cb4e8,stroke-dasharray:4 3,color:#0a3069")
     link_styles = []
     for i, e in enumerate(flow.edges):
         arrow = {"back": "-.->", "invisible": "~~~"}.get(e.kind, "-->")
-        lab = f"|{esc(e.label)}|" if e.label and e.kind != "invisible" else ""
+        label = e.label or ("next" if e.kind == "back" else "")
+        lab = f"|{esc(label)}|" if label and e.kind != "invisible" else ""
         lines.append(f"  {e.src} {arrow}{lab} {e.dst}")
+        if not diff and e.label == "yes":
+            link_styles.append(f"  linkStyle {i} {EDGE_YES}")
+        elif not diff and e.label == "no":
+            link_styles.append(f"  linkStyle {i} {EDGE_NO}")
         if diff and e.status == "added":
             link_styles.append(f"  linkStyle {i} {EDGE_ADDED}")
         elif diff and e.status == "removed":
@@ -212,11 +250,11 @@ def flow_to_mermaid(flow: Flow, *, unity_event: str | None = None, coroutine: bo
 # ----------------------------------------------------------------------------- maps
 
 MAP_STYLE = """\
-classDef engine fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-classDef own fill:#ffffff,stroke:#0969da,stroke-width:2px,color:#0a3069
-classDef ownev fill:#fff8e1,stroke:#9a6700,stroke-width:2px,color:#3b2300
+classDef engine fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+classDef own fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+classDef ownev fill:#ddf4ff,stroke:#1a7f37,stroke-width:2px,color:#0a3069
 classDef other fill:#f6f8fa,stroke:#8c959f,color:#24292f
-classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:4 3,color:#57606a
+classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:5 3,color:#57606a
 classDef more fill:#ffffff,stroke:#d0d7de,stroke-dasharray:2 2,color:#57606a"""
 
 MAP_STYLE_DIFF = """\

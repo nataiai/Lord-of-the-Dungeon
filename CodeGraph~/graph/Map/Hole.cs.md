@@ -24,11 +24,11 @@ flowchart LR
   U_start_up --> m_Hole_Awake
   U_physics --> m_Hole_OnTriggerEnter2D
   m_Hole_OnTriggerEnter2D --> m_Hole_Fall
-  classDef engine fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef own fill:#ffffff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ownev fill:#fff8e1,stroke:#9a6700,stroke-width:2px,color:#3b2300
+  classDef engine fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef own fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ownev fill:#ddf4ff,stroke:#1a7f37,stroke-width:2px,color:#0a3069
   classDef other fill:#f6f8fa,stroke:#8c959f,color:#24292f
-  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:4 3,color:#57606a
+  classDef ext fill:#f6f8fa,stroke:#8c959f,stroke-dasharray:5 3,color:#57606a
   classDef more fill:#ffffff,stroke:#d0d7de,stroke-dasharray:2 2,color:#57606a
   class U_start_up,U_physics engine
   class m_Hole_Fall own
@@ -50,27 +50,33 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["⚡ OnTriggerEnter2D<br><i>something enters its trigger</i>"])
+  nS(["▶ OnTriggerEnter2D<br><i>something enters its trigger</i>"])
   nf75948["Get the character, or else the<br>loot"]
-  n2d4641{{"Nothing to drop, already<br>falling, or a flier?"}}
-  nbbfd1f[["Start the fall → Fall(),<br>StartCoroutine()"]]
+  n2d4641{"Nothing to drop, already<br>falling, or a flier?"}
+  nbbfd1f[["Start the fall → Fall(),<br>StartCoroutine()<br><i>Freezes it, plays its fall (or</i><br><i>shrinks it), then removes or …</i>"]]
   nE(["end"])
-  nb2e4fc(["Skip"])
+  nb2e4fc(["⏹ Skip"])
   nS --> nf75948
   nf75948 --> n2d4641
   n2d4641 -->|no| nbbfd1f
   n2d4641 -->|yes| nb2e4fc
   nbbfd1f --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 2 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class nf75948 calc
   class nbbfd1f calls
   class n2d4641 cond
@@ -109,19 +115,19 @@ config:
     rankSpacing: 30
 ---
 flowchart TD
-  nS(["⏳ Fall<br><i>coroutine: can wait</i>"])
+  nS(["▶ ⏳ Fall<br><i>coroutine: can wait</i>"])
   nfc587d["Freeze it; find its fall clip<br>and animator"]
-  nbbdef8{{"Has a fall clip and an<br>animator?"}}
+  nbbdef8{"Has a fall clip and an<br>animator?"}
   n8efc72["Play the fall clip"]
   naa312b[/"⏳ Wait for the clip to end"/]
-  n0f4e9e("  ↻ For 0.5 s  ")
+  n0f4e9e{{"🔁 For 0.5 s"}}
   nc1664e["Shrink it a little"]
   nb3bf40[/"⏳ Wait a frame"/]
-  n76f92d{{"Not a player?"}}
-  n885d6b[["Remove it → Destroy()"]]
+  n76f92d{"Not a player?"}
+  n885d6b[["✖ Remove it → Destroy()"]]
   n3349eb["Restore its size, respawn at<br>the room entry, unfreeze"]
   nE(["end"])
-  nb26d12(["Stop"])
+  nb26d12(["⏹ Stop"])
   nS --> nfc587d
   nfc587d --> nbbdef8
   nbbdef8 -->|yes| n8efc72
@@ -129,28 +135,36 @@ flowchart TD
   nbbdef8 -->|no| n0f4e9e
   n0f4e9e -->|each| nc1664e
   nc1664e --> nb3bf40
-  nb3bf40 -.-> n0f4e9e
+  nb3bf40 -.->|next| n0f4e9e
   naa312b --> n76f92d
   n0f4e9e -->|done| n76f92d
   n885d6b --> nb26d12
   n76f92d -->|no| n3349eb
   n76f92d -->|yes| n885d6b
   n3349eb --> nE
-  classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
-  classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
-  classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
-  classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
-  classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
-  classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
-  classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
+  linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  linkStyle 4 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 11 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 12 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
+  classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
+  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
+  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
+  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
+  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
+  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
   classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
+  classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class nfc587d,n8efc72,nc1664e,n3349eb calc
-  class n885d6b calls
   class nbbdef8,n76f92d cond
   class nb26d12 exit
   class nE fin
+  class n885d6b kill
   class n0f4e9e loop
   class nS start
   class naa312b,nb3bf40 wait
