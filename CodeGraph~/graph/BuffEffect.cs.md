@@ -5,7 +5,9 @@
 
 🤖 A timed burn, heal, slow or stun, passed from hitboxes to characters. *(BuffEffect)*
 
-<sub>⚡ Unity calls it · 🔁 runs every frame · ⏳ can wait · blue box = calls another function · gray box = simple math · [code](../../BuffEffect.cs) · [all files](index.md)</sub>
+<sub>[code](../../BuffEffect.cs) · [all files](index.md)</sub>
+
+<details><summary><sub>key</sub></summary><sub>▶ green: start · gray: simple math · ƒ blue: another function (short ones drawn inside) · yellow ◇: question / 🔁 loop / ⏳ wait · ✚ ✖ engine action · 📦 outside library · ⏹ end · ⚡ Unity calls it · 🔁 in a title: runs every frame</sub></details>
 
 ## Map · BuffEffect.Buff
 
@@ -75,7 +77,7 @@ flowchart LR
 
 ## 🔁 CopyTo
 
-🤖 Puts this buff on an object, or restarts it if already there.
+🤖 Puts this buff on an object; restarts an existing one unless stackable.
 
 ```mermaid
 ---
@@ -93,7 +95,7 @@ flowchart TD
   nf08f44{"Same type?"}
   n62d11e["Restart its timer"]
   n85f581["Add a new copy, timed for its<br>duration"]
-  nE(["end"])
+  nE(["⏹ end"])
   nb2e4fc(["⏹ Stop"])
   n8ac8b5(["⏹ Stop"])
   nS --> n38dff8
@@ -107,23 +109,23 @@ flowchart TD
   n472399 -->|done| n85f581
   naab257 -->|no| n85f581
   n85f581 --> nE
-  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 1 stroke:#8c959f,stroke-width:1.5px,color:#59636e
   linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
   linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
   linkStyle 5 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
-  linkStyle 9 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 9 stroke:#8c959f,stroke-width:1.5px,color:#59636e
   classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
   classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calc fill:#f6f8fa,stroke:#d1d9e0,color:#59636e
   classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
-  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
-  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
-  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef ext fill:#f6f8fa,stroke:#59636e,stroke-width:1.5px,stroke-dasharray:5 5,color:#1f2328
+  classDef cond fill:#fff8c5,stroke:#9a6700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef wait fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef exit fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef fin fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef act fill:#ffffff,stroke:#59636e,stroke-width:1.5px,color:#1f2328
   classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
-  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
-  classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
   classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n62d11e,n85f581 calc
@@ -169,9 +171,9 @@ flowchart TD
   nS(["▶ LateUpdate<br><i>every frame, after all Updates</i>"])
   n6ee3b6{"Not on a character?"}
   n08a28c{"Character dead, or buff over?"}
-  n0f111a[["✖ Remove the buff → Destroy()"]]
-  nf0509f[["Apply it<br><i>Slows or stuns every frame; burns</i><br><i>or heals once a second.</i>"]]
-  nE(["end"])
+  n0f111a[/"✖ Remove the buff → Destroy()"/]
+  nf0509f[["ƒ Run the buff's effect on the<br>character → Apply()<br><i>Slows or stuns every frame; burns</i><br><i>or heals once a second. · 6 steps</i>"]]
+  nE(["⏹ end"])
   nb2e4fc(["⏹ Stop"])
   nS --> n6ee3b6
   n6ee3b6 -->|no| n08a28c
@@ -180,22 +182,22 @@ flowchart TD
   n08a28c -->|no| nf0509f
   n0f111a --> nE
   nf0509f --> nE
-  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 1 stroke:#8c959f,stroke-width:1.5px,color:#59636e
   linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
   linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
-  linkStyle 4 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 4 stroke:#8c959f,stroke-width:1.5px,color:#59636e
   classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
   classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calc fill:#f6f8fa,stroke:#d1d9e0,color:#59636e
   classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
-  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
-  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
-  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef ext fill:#f6f8fa,stroke:#59636e,stroke-width:1.5px,stroke-dasharray:5 5,color:#1f2328
+  classDef cond fill:#fff8c5,stroke:#9a6700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef wait fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef exit fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef fin fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef act fill:#ffffff,stroke:#59636e,stroke-width:1.5px,color:#1f2328
   classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
-  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
-  classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
   classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class nf0509f calls
@@ -214,7 +216,7 @@ flowchart TD
 | Stop | <code>return</code> <sub>L47</sub> |
 | Character dead, or buff over? | <code>cha.isDead \|\| Time.time &gt; end</code> <sub>L48</sub> |
 | Remove the buff → Destroy() | <code>Destroy(this)</code> <sub>L48</sub> |
-| Apply it → [`Apply`](#m-buffeffect-apply) | <code>Apply(cha)</code> <sub>L49</sub> |
+| Run the buff's effect on the character → Apply() → [`Apply`](#m-buffeffect-apply) | <code>Apply(cha)</code> <sub>L49</sub> |
 
 Source: [L45–50](../../BuffEffect.cs#L45-L50)
 
@@ -239,9 +241,9 @@ flowchart TD
   n66868f["Slow cuts speed 10%; stun<br>freezes"]
   n2354d9{"Not a full second yet?"}
   nca6318["Next tick in 1 s"]
-  n2294e9[["If burn, deal its damage →<br>Character.recieveDamage()<br><i>runs the Enemy / Player version</i>"]]
-  nd05218["If heal, restore its HP"]
-  nE(["end"])
+  n2294e9[["ƒ If burn, deal its damage →<br>Character.recieveDamage()<br><i>runs the Enemy / Player version</i>"]]
+  nd05218["If heal, heal it by its power"]
+  nE(["⏹ end"])
   nb2e4fc(["⏹ Stop"])
   nS --> n66868f
   n66868f --> n2354d9
@@ -250,20 +252,20 @@ flowchart TD
   nca6318 --> n2294e9
   n2294e9 --> nd05218
   nd05218 --> nE
-  linkStyle 2 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#8c959f,stroke-width:1.5px,color:#59636e
   linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
   classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
   classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calc fill:#f6f8fa,stroke:#d1d9e0,color:#59636e
   classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
-  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
-  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
-  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef ext fill:#f6f8fa,stroke:#59636e,stroke-width:1.5px,stroke-dasharray:5 5,color:#1f2328
+  classDef cond fill:#fff8c5,stroke:#9a6700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef wait fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef exit fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef fin fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef act fill:#ffffff,stroke:#59636e,stroke-width:1.5px,color:#1f2328
   classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
-  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
-  classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
   classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n66868f,nca6318,nd05218 calc
@@ -283,7 +285,7 @@ flowchart TD
 | Stop | <code>return</code> <sub>L55</sub> |
 | Next tick in 1 s | <code>tick = Time.time + 1</code> <sub>L56</sub> |
 | If burn, deal its damage → Character.recieveDamage() → [`Character.recieveDamage`](Character.cs.md#m-character-recievedamage) | <code>if buff.type == BuffType.burn</code> <sub>L57</sub><br><code>cha.recieveDamage(buff.power)</code> <sub>L57</sub> |
-| If heal, restore its HP | <code>if(buff.type == BuffType.heal)cha.Heal(buff.power)</code> <sub>L58</sub> |
+| If heal, heal it by its power | <code>if(buff.type == BuffType.heal)cha.Heal(buff.power)</code> <sub>L58</sub> |
 
 Source: [L52–59](../../BuffEffect.cs#L52-L59)
 

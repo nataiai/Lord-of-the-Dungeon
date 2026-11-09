@@ -57,29 +57,30 @@ PHASE_ORDER = ["start-up", "every frame", "physics", "teardown", "editor"]
 STYLE_BROWSE = """\
 classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
 classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+classDef calc fill:#f6f8fa,stroke:#d1d9e0,color:#59636e
 classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
-classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
-classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
-classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+classDef ext fill:#f6f8fa,stroke:#59636e,stroke-width:1.5px,stroke-dasharray:5 5,color:#1f2328
+classDef cond fill:#fff8c5,stroke:#9a6700,stroke-width:1.5px,color:#3d2a00
+classDef loop fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+classDef wait fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+classDef exit fill:#59636e,stroke:#424a53,color:#ffffff
+classDef fin fill:#59636e,stroke:#424a53,color:#ffffff
+classDef act fill:#ffffff,stroke:#59636e,stroke-width:1.5px,color:#1f2328
 classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
-classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
-classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
 classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
 classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold"""
 EDGE_YES = "stroke:#1a7f37,stroke-width:2px,color:#1a7f37"
-EDGE_NO = "stroke:#cf222e,stroke-width:1.5px,color:#cf222e"
+EDGE_NO = "stroke:#8c959f,stroke-width:1.5px,color:#59636e"
 
 # --- palette: diff. The colors everyone already reads in git / GitHub: green new, red removed, yellow changed.
 # The + / − / ~ marks stay as a backup for color-blind readers.
 STYLE_DIFF = """\
 classDef same fill:#ffffff,stroke:#d0d7de,color:#57606a
 classDef added fill:#dafbe1,stroke:#1a7f37,stroke-width:3px,color:#0f3d1d
-classDef removed fill:#ffebe9,stroke:#cf222e,stroke-width:3px,color:#82071e
+classDef removed fill:#ffebe9,stroke:#cf222e,stroke-width:3px,stroke-dasharray:6 4,color:#82071e
 classDef modified fill:#fff8c5,stroke:#bf8700,stroke-width:3px,color:#4d2d00
-classDef impacted fill:#ffffff,stroke:#6e7781,stroke-width:2px,stroke-dasharray:2 3,color:#24292f"""
+classDef impacted fill:#ffffff,stroke:#6e7781,stroke-width:2px,stroke-dasharray:2 3,color:#24292f
+classDef stub fill:#ffffff,stroke:#8c959f,stroke-dasharray:2 3,color:#8c959f"""
 
 EDGE_ADDED = "stroke:#1a7f37,stroke-width:3px"
 EDGE_REMOVED = "stroke:#cf222e,stroke-width:3px"
@@ -157,10 +158,17 @@ def _label(node: FNode, diff: bool, subtitle: str = "", short_name=None) -> str:
         text = ("⏹ " if bare else "↩ ") + text
     if node.kind in ("start", "unity") and not diff:
         text = "▶ " + text.lstrip("⚡ ").strip() if not text.startswith("▶") else text
-    if node.kind in ("call", "guard") and "Destroy" in node.actions:
-        text = "✖ " + text
-    elif node.kind in ("call", "guard") and "Instantiate" in node.actions:
-        text = "✚ " + text
+    if node.kind in ("call", "guard") and not diff:
+        if "Destroy" in node.actions:
+            text = "✖ " + text
+        elif "Instantiate" in node.actions:
+            text = "✚ " + text
+        elif node.purpose == "AI/ (external)":
+            text = "📦 " + text
+        elif node.calls:
+            text = "ƒ " + text
+    if node.kind == "end":
+        text = "⏹ " + text
     if diff:
         text = MARK[node.status] + text
     out = [esc(p) for p in wrap_words(text, LABEL_WRAP, 3)]
@@ -181,13 +189,17 @@ def _shape(node: FNode, label: str) -> str:
     if k in ("switch", "try", "loop"):
         return "{{" + q + "}}"
     if k == "wait":
-        return f"[/{q}/]"
+        return f"({q})"
     if k == "join":  # a merge point on a switch rail
         return '((" "))'
+    if k == "stub":
+        return f"({q})"
     if k == "header":  # title of a short function drawn inside the caller
         return f"[{q}]"
-    if k in ("call", "guard") and (node.calls or node.actions):
+    if k in ("call", "guard") and node.calls:
         return f"[[{q}]]"
+    if k in ("call", "guard") and node.actions:
+        return f"[/{q}/]"
     return f"[{q}]"
 
 
@@ -195,10 +207,10 @@ def _browse_class(node: FNode, unity: bool) -> str:
     k = node.kind
     if k == "start":
         return "unity" if unity else "start"
-    if k in ("call", "guard") and "Destroy" in node.actions:
+    if k in ("call", "guard") and "Destroy" in node.actions and not node.calls:
         return "kill"
-    if k in ("call", "guard") and "Instantiate" in node.actions:
-        return "spawn"
+    if k in ("call", "guard") and node.actions and not node.calls:
+        return "act"
     if k in ("call", "guard") and node.purpose == "AI/ (external)":
         return "ext"
     return {"end": "fin", "decision": "cond", "switch": "cond", "try": "cond", "case": "cond", "loop": "loop",
@@ -240,7 +252,7 @@ def flow_to_mermaid(flow: Flow, *, unity_event: str | None = None, coroutine: bo
     lines += ["  " + l for l in (STYLE_DIFF if diff else STYLE_BROWSE).splitlines()]
     groups: dict[str, list] = {}
     for n in flow.nodes:
-        cls = n.status if diff else _browse_class(n, bool(unity_event))
+        cls = ("stub" if n.kind == "stub" else n.status) if diff else _browse_class(n, bool(unity_event))
         groups.setdefault(cls, []).append(n.id)
     for cls in sorted(groups):
         lines.append(f"  class {','.join(groups[cls])} {cls}")

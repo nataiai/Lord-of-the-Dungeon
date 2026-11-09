@@ -69,7 +69,7 @@ Player.Update:
   anchor: 32124683
   steps:
     ne77943: If out of HP, die
-    ndbd064: Read input, pick facing, move unless stunned
+    ndbd064: Read input, pick facing, move unless attacking or stunned
     n5070fd: Attack with the left hand
     n1bd7f4: Attack with the right hand
     n640727: Update the animation
@@ -108,7 +108,7 @@ Player.UpdateAnim:
   text: Each frame, plays the clip for idle, walking or the attack.
   anchor: 6cfa72ae
   steps:
-    nd104f0: Attack clip still playing (under 90%)?
+    nd104f0: Attack clip still playing, no new attack?
     nb2e4fc: Let it finish
     n019d10: Face, play the clip for the state, reset to idle or walk
 
@@ -129,7 +129,7 @@ Player.recieveDamage:
   anchor: dde55018
   steps:
     n699817: Play the hit sound
-    nae1302: Invincible right now?
+    nae1302: Invincibility enabled and active?
     nb2e4fc: Ignore the hit
     nd5bc76: Lose HP (redraws the hearts)
     na3ae39: Start the invincible time
@@ -138,6 +138,6 @@ Player.receiveKnockback:
   text: Gets pushed back unless invincible, less with resistance.
   anchor: 610850d2
   steps:
-    nae1302: Invincible right now?
+    nae1302: Invincibility enabled and active?
     nb2e4fc: Ignore it
-    ndd2306: Get pushed, reduced by resistance
+    ndd2306: Get pushed and stunned, less with resistance

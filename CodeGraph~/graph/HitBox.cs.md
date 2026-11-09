@@ -3,7 +3,9 @@
 
 🤖 An attack's damage area - hurts what it touches, then disappears.
 
-<sub>⚡ Unity calls it · 🔁 runs every frame · ⏳ can wait · blue box = calls another function · gray box = simple math · [code](../../HitBox.cs) · [all files](index.md)</sub>
+<sub>[code](../../HitBox.cs) · [all files](index.md)</sub>
+
+<details><summary><sub>key</sub></summary><sub>▶ green: start · gray: simple math · ƒ blue: another function (short ones drawn inside) · yellow ◇: question / 🔁 loop / ⏳ wait · ✚ ✖ engine action · 📦 outside library · ⏹ end · ⚡ Unity calls it · 🔁 in a title: runs every frame</sub></details>
 
 ## Map
 
@@ -65,26 +67,26 @@ flowchart TD
   nS(["▶ setVelocity"])
   n107d06{"No speed?"}
   n241099["Fly at that speed"]
-  nE(["end"])
+  nE(["⏹ end"])
   nb2e4fc(["⏹ Stop (it stays put)"])
   nS --> n107d06
   n107d06 -->|no| n241099
   n107d06 -->|yes| nb2e4fc
   n241099 --> nE
-  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 1 stroke:#8c959f,stroke-width:1.5px,color:#59636e
   linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
   classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
   classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calc fill:#f6f8fa,stroke:#d1d9e0,color:#59636e
   classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
-  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
-  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
-  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef ext fill:#f6f8fa,stroke:#59636e,stroke-width:1.5px,stroke-dasharray:5 5,color:#1f2328
+  classDef cond fill:#fff8c5,stroke:#9a6700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef wait fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef exit fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef fin fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef act fill:#ffffff,stroke:#59636e,stroke-width:1.5px,color:#1f2328
   classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
-  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
-  classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
   classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n241099 calc
@@ -123,23 +125,23 @@ config:
 flowchart TD
   nS(["▶ Start<br><i>before its first frame</i>"])
   n8c0d53["Note when it appeared"]
-  n29f8cd[["✖ If an instant hit, remove it<br>2 physics steps later →<br>Destroy()"]]
-  nE(["end"])
+  n29f8cd[/"✖ If an instant hit, remove it<br>2 physics steps later →<br>Destroy()"/]
+  nE(["⏹ end"])
   nS --> n8c0d53
   n8c0d53 --> n29f8cd
   n29f8cd --> nE
   classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
   classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calc fill:#f6f8fa,stroke:#d1d9e0,color:#59636e
   classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
-  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
-  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
-  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef ext fill:#f6f8fa,stroke:#59636e,stroke-width:1.5px,stroke-dasharray:5 5,color:#1f2328
+  classDef cond fill:#fff8c5,stroke:#9a6700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef wait fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef exit fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef fin fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef act fill:#ffffff,stroke:#59636e,stroke-width:1.5px,color:#1f2328
   classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
-  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
-  classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
   classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n8c0d53 calc
@@ -163,7 +165,7 @@ Source: [L23–26](../../HitBox.cs#L23-L26)
 
 ## ⚡ OnTriggerEnter2D · something enters its trigger
 
-🤖 On touch, hurts and pushes each foe once, or breaks a prop.
+🤖 On touch, hurts and pushes each foe once, or damages a prop.
 
 ```mermaid
 ---
@@ -178,17 +180,17 @@ flowchart TD
   n0d68c1{"Touched a character it may<br>hit?"}
   ne2ac55{"Already hit this one?"}
   n87f62c["Play the hit sound"]
-  nb94866[["Hurt it →<br>Character.recieveDamage()<br><i>runs the Enemy / Player version</i>"]]
+  nb94866[["ƒ Hurt it →<br>Character.recieveDamage()<br><i>runs the Enemy / Player version</i>"]]
   na8b982["Push it away from the attacker"]
-  n4b577e[["✖ If out of hits, remove the<br>hitbox → Destroy()"]]
+  n4b577e[/"✖ If out of hits, remove the<br>hitbox → Destroy()"/]
   n7d1471{"Non-magic hit on a breakable<br>prop?"}
   nefeac6_h["↪ Damage the prop ·<br>Destructable.recieveDamage"]
   nefeac6_n129e7b{"Magic hit?"}
   nefeac6_n9ada94["Lose one hit; show the next<br>sprite"]
-  nefeac6_n300dd8[["Out of hits? Break →<br>Destructable.Died()<br><i>Breaks - frees its spot for</i><br><i>pathfinding, maybe vanishes, drops …</i>"]]
-  nbee12d[["✖ Remove the hitbox →<br>Destroy()"]]
-  nc17712[["✖ No timer? Remove it on first<br>touch → Destroy()"]]
-  nE(["end"])
+  nefeac6_n300dd8[["ƒ Out of hits? Break →<br>Destructable.Died()<br><i>Breaks - frees its spot for</i><br><i>pathfinding, maybe vanishes, drops …</i>"]]
+  nbee12d[/"✖ Remove the hitbox →<br>Destroy()"/]
+  nc17712[/"✖ No timer? Remove it on first<br>touch → Destroy()"/]
+  nE(["⏹ end"])
   nb2e4fc(["⏹ Skip"])
   subgraph nefeac6_g[" "]
     nefeac6_h
@@ -217,25 +219,25 @@ flowchart TD
   nefeac6_n9ada94 --> nefeac6_n300dd8
   nefeac6_n300dd8 --> nbee12d
   linkStyle 1 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
-  linkStyle 2 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#8c959f,stroke-width:1.5px,color:#59636e
   linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
-  linkStyle 8 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 8 stroke:#8c959f,stroke-width:1.5px,color:#59636e
   linkStyle 9 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
-  linkStyle 12 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
-  linkStyle 15 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 12 stroke:#8c959f,stroke-width:1.5px,color:#59636e
+  linkStyle 15 stroke:#8c959f,stroke-width:1.5px,color:#59636e
   linkStyle 16 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
   classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
   classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calc fill:#f6f8fa,stroke:#d1d9e0,color:#59636e
   classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
-  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
-  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
-  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef ext fill:#f6f8fa,stroke:#59636e,stroke-width:1.5px,stroke-dasharray:5 5,color:#1f2328
+  classDef cond fill:#fff8c5,stroke:#9a6700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef wait fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef exit fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef fin fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef act fill:#ffffff,stroke:#59636e,stroke-width:1.5px,color:#1f2328
   classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
-  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
-  classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
   classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n87f62c,na8b982,nefeac6_n9ada94 calc

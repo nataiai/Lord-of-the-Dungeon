@@ -3,7 +3,9 @@
 
 🤖 The on-screen HUD - hearts, weapon reloads, enemy names and dialogue.
 
-<sub>⚡ Unity calls it · 🔁 runs every frame · ⏳ can wait · blue box = calls another function · gray box = simple math · [code](../../UI.cs) · [all files](index.md)</sub>
+<sub>[code](../../UI.cs) · [all files](index.md)</sub>
+
+<details><summary><sub>key</sub></summary><sub>▶ green: start · gray: simple math · ƒ blue: another function (short ones drawn inside) · yellow ◇: question / 🔁 loop / ⏳ wait · ✚ ✖ engine action · 📦 outside library · ⏹ end · ⚡ Unity calls it · 🔁 in a title: runs every frame</sub></details>
 
 ## Map
 
@@ -74,23 +76,23 @@ config:
 flowchart TD
   nS(["▶ Update<br><i>every frame</i>"])
   n5d0fb2["Fill the weapon and summon<br>reload bars"]
-  n1eca0c[["Show dialogue, if any →<br>UpdateDialogue()<br><i>While dialogue shows - freeze the</i><br><i>player, type it out, click to go …</i>"]]
-  nE(["end"])
+  n1eca0c[["ƒ Show dialogue, if any →<br>UpdateDialogue()<br><i>While dialogue shows - freeze the</i><br><i>player, type it out, click to go …</i>"]]
+  nE(["⏹ end"])
   nS --> n5d0fb2
   n5d0fb2 --> n1eca0c
   n1eca0c --> nE
   classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
   classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calc fill:#f6f8fa,stroke:#d1d9e0,color:#59636e
   classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
-  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
-  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
-  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef ext fill:#f6f8fa,stroke:#59636e,stroke-width:1.5px,stroke-dasharray:5 5,color:#1f2328
+  classDef cond fill:#fff8c5,stroke:#9a6700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef wait fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef exit fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef fin fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef act fill:#ffffff,stroke:#59636e,stroke-width:1.5px,color:#1f2328
   classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
-  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
-  classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
   classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n5d0fb2 calc
@@ -127,29 +129,30 @@ config:
 flowchart TD
   nS(["▶ ShowText"])
   nfb3807["Set the text"]
-  n585589[["Cancel the previous hide timer<br>→ StopCoroutine()"]]
-  n20ff75[["Show it, hide it in 2 s →<br>d_foo(), StartCoroutine()<br><i>Shows the name box for 2 seconds,</i><br><i>then hides it.</i>"]]
-  nE(["end"])
+  n585589[/"Cancel the previous hide timer<br>→ StopCoroutine()"/]
+  n20ff75[["ƒ Show it, hide it in 2 s →<br>d_foo(), StartCoroutine()<br><i>Shows the name box for 2 seconds,</i><br><i>then hides it. · 3 steps</i>"]]
+  nE(["⏹ end"])
   nS --> nfb3807
   nfb3807 --> n585589
   n585589 --> n20ff75
   n20ff75 --> nE
   classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
   classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calc fill:#f6f8fa,stroke:#d1d9e0,color:#59636e
   classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
-  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
-  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
-  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef ext fill:#f6f8fa,stroke:#59636e,stroke-width:1.5px,stroke-dasharray:5 5,color:#1f2328
+  classDef cond fill:#fff8c5,stroke:#9a6700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef wait fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef exit fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef fin fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef act fill:#ffffff,stroke:#59636e,stroke-width:1.5px,color:#1f2328
   classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
-  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
-  classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
   classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
+  class n585589 act
   class nfb3807 calc
-  class n585589,n20ff75 calls
+  class n20ff75 calls
   class nE fin
   class nS start
 ```
@@ -182,29 +185,29 @@ config:
 ---
 flowchart TD
   nS(["▶ ⏳ d_foo<br><i>coroutine: can wait</i>"])
-  neb879b[["Show the name box →<br>SetActive()"]]
-  n577bf2[/"⏳ Wait 2 seconds"/]
-  n282fc5[["Hide it → SetActive()"]]
-  nE(["end"])
+  neb879b[/"Show the name box →<br>SetActive()"/]
+  n577bf2("⏳ Wait 2 seconds")
+  n282fc5[/"Hide it → SetActive()"/]
+  nE(["⏹ end"])
   nS --> neb879b
   neb879b --> n577bf2
   n577bf2 --> n282fc5
   n282fc5 --> nE
   classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
   classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calc fill:#f6f8fa,stroke:#d1d9e0,color:#59636e
   classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
-  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
-  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
-  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef ext fill:#f6f8fa,stroke:#59636e,stroke-width:1.5px,stroke-dasharray:5 5,color:#1f2328
+  classDef cond fill:#fff8c5,stroke:#9a6700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef wait fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef exit fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef fin fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef act fill:#ffffff,stroke:#59636e,stroke-width:1.5px,color:#1f2328
   classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
-  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
-  classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
   classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
-  class neb879b,n282fc5 calls
+  class neb879b,n282fc5 act
   class nE fin
   class nS start
   class n577bf2 wait
@@ -240,9 +243,9 @@ flowchart TD
   nS(["▶ UpdateMaxHP"])
   ne88ca2["Get the row of hearts"]
   n1f9ef8{{"🔁 While hearts are missing"}}
-  n593eab[["✚ Copy the first heart →<br>Instantiate()"]]
+  n593eab[/"✚ Copy the first heart →<br>Instantiate()"/]
   n8376d8["Show only max HP hearts"]
-  nE(["end"])
+  nE(["⏹ end"])
   nS --> ne88ca2
   ne88ca2 --> n1f9ef8
   n1f9ef8 -->|each| n593eab
@@ -251,22 +254,22 @@ flowchart TD
   n8376d8 --> nE
   classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
   classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calc fill:#f6f8fa,stroke:#d1d9e0,color:#59636e
   classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
-  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
-  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
-  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef ext fill:#f6f8fa,stroke:#59636e,stroke-width:1.5px,stroke-dasharray:5 5,color:#1f2328
+  classDef cond fill:#fff8c5,stroke:#9a6700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef wait fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef exit fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef fin fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef act fill:#ffffff,stroke:#59636e,stroke-width:1.5px,color:#1f2328
   classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
-  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
-  classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
   classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
+  class n593eab act
   class ne88ca2,n8376d8 calc
   class nE fin
   class n1f9ef8 loop
-  class n593eab spawn
   class nS start
 ```
 
@@ -300,15 +303,15 @@ config:
 flowchart TD
   nS(["▶ UpdateDialogue"])
   ndcc209{"No dialogue?"}
-  n08b799[["Hide the dialogue box →<br>SetActive()"]]
+  n08b799[/"Hide the dialogue box →<br>SetActive()"/]
   nddaa24["Freeze the player; mark<br>invincible; block attacks"]
-  n50711f[["Show the dialogue box →<br>SetActive()"]]
+  n50711f[/"Show the dialogue box →<br>SetActive()"/]
   ncbd7c9["Type out the current line"]
   n52d4a9{"Left attack just pressed?"}
   n41cf43{"Line still typing?"}
   n9fe583["Show the whole line now"]
   n8e6eb7["Go to the next line, or end"]
-  nE(["end"])
+  nE(["⏹ end"])
   nb2e4fc(["⏹ Done"])
   n8ac8b5(["⏹ Done"])
   nS --> ndcc209
@@ -324,28 +327,28 @@ flowchart TD
   n41cf43 -->|yes| n9fe583
   n8e6eb7 --> nE
   n52d4a9 -->|no| nE
-  linkStyle 2 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 2 stroke:#8c959f,stroke-width:1.5px,color:#59636e
   linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
   linkStyle 7 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
-  linkStyle 9 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 9 stroke:#8c959f,stroke-width:1.5px,color:#59636e
   linkStyle 10 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
-  linkStyle 12 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 12 stroke:#8c959f,stroke-width:1.5px,color:#59636e
   classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
   classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calc fill:#f6f8fa,stroke:#d1d9e0,color:#59636e
   classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
-  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
-  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
-  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef ext fill:#f6f8fa,stroke:#59636e,stroke-width:1.5px,stroke-dasharray:5 5,color:#1f2328
+  classDef cond fill:#fff8c5,stroke:#9a6700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef wait fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef exit fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef fin fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef act fill:#ffffff,stroke:#59636e,stroke-width:1.5px,color:#1f2328
   classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
-  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
-  classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
   classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
+  class n08b799,n50711f act
   class nddaa24,ncbd7c9,n9fe583,n8e6eb7 calc
-  class n08b799,n50711f calls
   class ndcc209,n52d4a9,n41cf43 cond
   class nb2e4fc,n8ac8b5 exit
   class nE fin

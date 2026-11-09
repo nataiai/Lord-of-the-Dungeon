@@ -34,7 +34,7 @@ Controller.UpdateInput:
     n590607: Gamepad connected?
     n950fae: Sticks move and aim; bumpers or A/B attack
     nb2e4fc: Stop (the gamepad replaces the rest)
-    n9c3ff5: "Keyboard: WASD move, arrows aim, O/P attack"
+    n9c3ff5: "Keyboard: WASD move, arrows aim, K/O/P attack, Q switch"
     n2ca3df: No mouse, or mouse turned off?
     n75ebd0: Mouse aim off
     n8ac8b5: Stop

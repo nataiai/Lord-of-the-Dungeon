@@ -120,21 +120,57 @@ def align(old: list, new: list) -> list:
     return out
 
 
-def split_union(stmts: list) -> tuple:
-    """A union tree (from align) -> (before tree, after tree), each keeping the change marks for coloring."""
+def split_union(stmts: list, cls: Classifier | None = None) -> tuple:
+    """A union tree (from align) -> (before tree, after tree), each keeping the change marks for coloring.
+    A step that has its own box on one side only (a call, decision, loop, exit) leaves a small dotted stub on the
+    other side ("+1 new step here"), so the two charts stay alike (Blueprint Diff / BPMN diff tools do this).
+    A plain line added to / removed from a gray box marks that box yellow on the other side instead."""
     before, after = [], []
+    pending = {"added": [], "removed": []}
+
+    def boxed(st):
+        return not (cls.simple(st) if cls is not None else st.kind == "simple")
+
+    def calc(st):
+        return st is not None and st.kind != "stub" and not boxed(st)
+
+    def flush(nxt_b=None, nxt_a=None):
+        for status, tree, nxt in (("added", before, nxt_b), ("removed", after, nxt_a)):
+            items = pending[status]
+            if not items:
+                continue
+            prev = tree[-1] if tree else None
+            near = prev if calc(prev) else nxt if calc(nxt) else None  # the gray box these lines join
+            n = sum(1 for x in items if boxed(x) or near is None)
+            if n:
+                word = "new step" if status == "added" else "step"
+                tail = "here" if status == "added" else "removed here"
+                sign = "+" if status == "added" else "−"
+                tree.append(Stmt("stub", f"{sign}{n} {word}{'s' if n > 1 else ''} {tail}", 0, 0))
+            if near is not None and any(not boxed(x) for x in items) and near.status == "same":
+                near.status = "modified"
+            pending[status] = []
+
     for st in stmts:
+        b = a = None
         if st.status != "added":
             b = copy.copy(st)
             if st.status == "modified" and st.old_text is not None:
                 b.text, b.full = st.old_text, getattr(st, "old_full", None) or st.old_text
                 b.old_text = None
-            b.parts = [(l, split_union(sub)[0]) for l, sub in st.parts]
-            before.append(b)
+            b.parts = [(l, split_union(sub, cls)[0]) for l, sub in st.parts]
         if st.status != "removed":
             a = copy.copy(st)
-            a.parts = [(l, split_union(sub)[1]) for l, sub in st.parts]
+            a.parts = [(l, split_union(sub, cls)[1]) for l, sub in st.parts]
+        if st.status in ("added", "removed"):
+            pending[st.status].append(st)
+        else:
+            flush(b, a)
+        if b is not None:
+            before.append(b)
+        if a is not None:
             after.append(a)
+    flush()
     return before, after
 
 
@@ -385,9 +421,9 @@ DOT = {"added": "🟢", "removed": "🔴", "modified": "🟡"}
 
 
 def _chart(mi, stmts, cls, name, labels: dict, story_steps: dict, part: str):
-    """One side of a function's diff, like GitHub's split view: Before shows what goes away / gets replaced in red,
-    Now shows what is new / the replacement in green. A changed box shows the AI's words for it (from the change's
-    story), else its actual code, so the two sides really show the difference."""
+    """One side of a function's diff. Before: removed steps red, changed steps yellow (old words). Now: new steps
+    green, changed steps yellow (new words). Unchanged steps gray with their usual words. A changed box shows the
+    AI's words for it (from the change's story), else its actual code, so the two sides show real values."""
     flow = build_flow(mi.title, stmts, "start", cls, name, ghosts=False)
     for n in flow.nodes:
         if n.kind in ("start", "end", "join"):
@@ -395,10 +431,8 @@ def _chart(mi, stmts, cls, name, labels: dict, story_steps: dict, part: str):
         if n.status == "same":
             n.label = labels.get(n.id, "")
         else:
-            n.label = story_steps.get(n.id) or _code_label(n)
-            for l in n.lines:  # GitHub split view: old side red, new side green
-                if l.status == "modified":
-                    l.status = "removed" if part == "before" else "added"
+            # Now side: the box is current code, so its usual AI words apply; Before side: the story's words, else code
+            n.label = story_steps.get(n.id) or (labels.get(n.id, "") if part == "after" else "") or _code_label(n)
     flow.nodes[0].label = icon(mi, set()) + mi.member.name
     return flow, flow_to_mermaid(flow, unity_event=mi.member.name if mi.unity_event else None, coroutine=mi.coroutine,
                                  diff=part, short_name=name)
@@ -413,71 +447,148 @@ def _code_label(n) -> str:
     return text if len(text) <= 70 else text[:69].rstrip() + "…"
 
 
+def _rows(stmts, out):
+    """Changed steps as (before, now) code pairs; an added / removed if or loop is one row."""
+    for st in stmts:
+        full = re.sub(r"\s+", " ", st.full or st.text)
+        if st.status == "added":
+            out.append(("", full))
+        elif st.status == "removed":
+            out.append((full, ""))
+        else:
+            if st.status == "modified":
+                old = re.sub(r"\s+", " ", getattr(st, "old_full", None) or st.old_text or "")
+                out.append((old if st.kind == "simple" else (st.old_text or ""), full if st.kind == "simple" else st.text))
+            for _, sub in st.parts:
+                _rows(sub, out)
+    return out
+
+
+def _cut(t: str, n: int = 90) -> str:
+    return t if len(t) <= n else t[: n - 1].rstrip() + "…"
+
+
 def report(old: Model, new: Model, base: str, head: str, subject: str = "", notes: dict | None = None,
            story: dict | None = None) -> str:
-    """story: the AI's words for this change (diffs/<commit>.yml): summary lines, and before / now / so per function."""
+    """story: the AI's words for this change (diffs/<commit>.yml): summary, parts, checks, and per function
+    when / before / now / so (+ tag) and optional words for changed boxes (steps)."""
     notes = notes or {}
     story = story or {}
     said = story.get("changes", {}) or {}
     d = diff_models(old, new)
-    own = [c for c in d["members"] if not _is_external(new, _file_of(new, old, c.id))]
+    own_all = [c for c in d["members"] if not _is_external(new, _file_of(new, old, c.id))]
     ext = [c for c in d["members"] if _is_external(new, _file_of(new, old, c.id))]
-    own = [c for c in own if any(True for _ in _all(c.stmts)) or c.status == "modified"]  # empty stubs: list only
-    own.sort(key=lambda c: (RANK[c.rank], c.id))
-    L = [GENERATED, f"# What this change does", "", f"`{base}` → `{head}`" + (f" · {subject}" if subject else ""), ""]
+    own = [c for c in own_all if any(True for _ in _all(c.stmts)) or c.status == "modified"]
+    quiet = [c for c in own_all if c not in own]  # empty methods that came or went: no behavior
+    fields = [f for f in d["fields"] if not _is_external(new, _file_of(new, old, f[0]))]
+    by_id = {c.id: c for c in own}
+    # story order: the AI's parts (set-up before use, then along the calls), else the change's own clusters
+    parts = story.get("parts") or []
+    ordered, seen = [], set()
+    for p_ in parts:
+        for fid in p_.get("functions", []) or []:
+            if fid in by_id and fid not in seen:
+                ordered.append(by_id[fid])
+                seen.add(fid)
+    rest = sorted([c for c in own if c.id not in seen], key=lambda c: (RANK[c.rank], c.id))
+    ordered += rest
+
+    L = [GENERATED, "# What this change does", "", f"`{base}` → `{head}`" + (f" · *{subject}*" if subject else ""), ""]
     summary = story.get("summary") or []
     if isinstance(summary, str):
         summary = [summary]
     if summary:
-        L += [f"- {s_}" for s_ in summary] + [""]
+        L += ["**In the game:**", ""] + [f"- {x}" for x in summary] + [""]
     else:
-        L += ["*(The AI hasn't described this change yet: run `codegraph diff` and fill in the .yml it names.)*", ""]
-    # list: one line per function, in plain words
-    L += ["| | Function | What happens now |", "|---|---|---|"]
-    for c in own:
-        mi = c.new or c.old
-        w = said.get(c.id, {}) or {}
-        L.append(f"| {DOT[c.status]}&nbsp;{WORD[c.status]} | [`{c.id}`](#{_slug(c.id)}) | {esc_md(w.get('so') or w.get('now') or '')} |")
-    fields = [f for f in d["fields"] if not _is_external(new, _file_of(new, old, f[0]))]
+        L += ["*(No description yet: run `codegraph diff`, then write the .yml it names.)*", ""]
+    counts = []
+    for st_, word in (("modified", "changed"), ("added", "new"), ("removed", "removed")):
+        n = sum(1 for c in own if c.status == st_)
+        if n:
+            counts.append(f"{DOT[st_]} {n} {word}")
     if fields:
-        L.append("| | values | " + ", ".join(DOT[st] + f" `{t.split('.')[-1]}.{n}`" for t, n, st, m, o in fields) + " |")
-    if ext:
-        L.append(f"| ⚪ | `AI/` (outside) | {len(ext)} functions changed inside |")
-    L += ["", "## How the pieces connect now", "", "```mermaid",
-          impact_map({"members": own, "fields": fields}, old, new), "```", ""]
+        counts.append(f"{len(fields)} values")
+    if quiet:
+        counts.append(f"{len(quiet)} empty functions came or went")
+    L += [" · ".join(counts), ""]
+    if parts:
+        for p_ in parts:
+            items = [by_id[f] for f in (p_.get("functions") or []) if f in by_id]
+            if not items:
+                continue
+            L.append(f"- **{p_.get('name', 'Part')}:** " + " → ".join(f"[`{_short(c.id)}`](#{_slug(c.id)})" for c in items))
+        L.append("")
+    else:
+        L += ["| | Function | So |", "|---|---|---|"]
+        for c in ordered:
+            w = said.get(c.id, {}) or {}
+            L.append(f"| {DOT[c.status]}&nbsp;{WORD[c.status]} | [`{c.id}`](#{_slug(c.id)}) | {esc_md(w.get('so') or '')} |")
+        L.append("")
+    checks = story.get("checks") or []
+    if checks:
+        L += ["**Check these:**", ""] + [f"- {x}" for x in checks] + [""]
+
     cls = Classifier(old.complex | new.complex, NOTABLE, old.complex_body | new.complex_body)
-    for c in own:
+    for c in ordered:
         mi = c.new or c.old
         name = display_name(new if c.new else old, mi.type.full)
         note = notes.get(c.id)
         labels = note.steps if note is not None else {}
-        before, after = split_union(c.stmts)
+        before, after = split_union(c.stmts, cls)
         w = said.get(c.id, {}) or {}
-        L += [f'<a id="{_slug(c.id)}"></a>', "", f"## {DOT[c.status]} {c.id} · {WORD[c.status]}", ""]
-        for key, word in (("before", "Before"), ("now", "Now"), ("so", "So")):
-            if w.get(key):
-                L.append(f"**{word}:** {w[key]}  ")
-        if w:
-            L.append("")
         story_steps = {str(k): str(v) for k, v in (w.get("steps") or {}).items()}
+        L += [f'<a id="{_slug(c.id)}"></a>', "", f"## {DOT[c.status]} {c.id} · {WORD[c.status]}", ""]
+        card = []
+        for key, word in (("when", "When"), ("before", "Before"), ("now", "Now"), ("so", "So")):
+            if w.get(key):
+                tag = f" *[{w['tag']}]*" if key == "so" and w.get("tag") else ""
+                card.append(f"**{word}:** {w[key]}{tag}")
+        if card:
+            L += ["> " + "<br>".join(card), ""]
+        if c.status == "modified":
+            rows = _rows(c.stmts, [])
+            same = sum(1 for x in _all(c.stmts) if x.status == "same" and x.kind not in ("break", "continue"))
+            if rows:
+                L += ["| Before | Now |", "|---|---|"]
+                for b, a in rows:
+                    L.append(f"| {('<code>' + esc_md(_cut(b)) + '</code>') if b else '—'} | "
+                             f"{('<code>' + esc_md(_cut(a)) + '</code>') if a else '—'} |")
+                L += ["", f"<sub>{same} unchanged steps not listed</sub>", ""]
         if c.status != "added":
             _, chart = _chart(c.old, before, cls, name, labels, story_steps, "before")
-            L += ["**Before**" if c.status != "removed" else "**It did**", "", "```mermaid", chart, "```", ""]
+            L += ["**Before**" if c.status != "removed" else "**What it did**", "", "```mermaid", chart, "```", ""]
         if c.status != "removed":
             _, chart = _chart(c.new, after, cls, name, labels, story_steps, "after")
             L += ["**Now**", "", "```mermaid", chart, "```", ""]
-    gone = [c for c in d["members"] if c not in own and not _is_external(new, _file_of(new, old, c.id))]
-    if gone:
-        L += ["Also: " + ", ".join(f"{DOT[c.status]} `{c.id}` {WORD[c.status]} (empty)" for c in gone), ""]
+    L += ["<details><summary>How the changed pieces connect · other changes</summary>", "", "```mermaid",
+          impact_map({"members": own, "fields": fields}, old, new), "```", ""]
+    if fields:
+        L.append("Values: " + ", ".join(DOT[st_] + f" `{t.split('.')[-1]}.{n}`" for t, n, st_, m, o in fields))
+        warn = [f"`{n}` {o.init or '(none)'} → {m.init or '(none)'}" for t, n, st_, m, o in fields
+                if st_ == "modified" and o.init != m.init and m.kind == "field" and ("public" in m.mods or "SerializeField" in m.attrs)]
+        if warn:
+            L.append("<br>⚠️ New defaults don't reach objects already saved in scenes: " + ", ".join(warn))
+        L.append("")
+    if quiet:
+        L += ["Empty functions: " + ", ".join(f"{DOT[c.status]} `{c.id}` {WORD[c.status]}" for c in quiet), ""]
+    if ext:
+        L += [f"`AI/` (outside library): {len(ext)} functions changed inside.", ""]
+    L += ["</details>", ""]
     return "\n".join(L) + "\n"
+
+
+def _short(mid: str) -> str:
+    parts = mid.split("(")[0].split(".")
+    return ".".join(parts[-2:])
 
 
 def _slug(mid: str) -> str:
     return "d-" + "".join(ch if ch.isalnum() else "-" for ch in mid).strip("-").lower()
 
 
-def todo(old: Model, new: Model, story: dict) -> list:
+def todo(old: Model, new: Model, story: dict, notes: dict | None = None) -> list:
     """Changed functions the AI hasn't described yet."""
+    notes = notes or {}
     d = diff_models(old, new)
     said = story.get("changes", {}) or {}
     out = []
@@ -485,12 +596,28 @@ def todo(old: Model, new: Model, story: dict) -> list:
         if _is_external(new, _file_of(new, old, c.id)) or not (any(True for _ in _all(c.stmts)) or c.status == "modified"):
             continue
         w = said.get(c.id) or {}
-        need = [k for k in (("now", "so") if c.status == "added" else ("before",) if c.status == "removed"
-                            else ("before", "now", "so")) if not w.get(k)]
+        need = [k for k in (("when", "now", "so") if c.status == "added" else ("before",) if c.status == "removed"
+                            else ("when", "before", "now", "so")) if not w.get(k)]
         if need:
             out.append(f"{c.id} ({WORD[c.status]}): {', '.join(need)}")
+        if c.status == "modified":  # changed boxes: a few words each, on each side (else the chart shows code)
+            cls = Classifier(old.complex | new.complex, NOTABLE, old.complex_body | new.complex_body)
+            before, after = split_union(c.stmts, cls)
+            have = {str(k) for k in (w.get("steps") or {})}
+            for side, tree, mi in (("before", before, c.old), ("now", after, c.new)):
+                f = build_flow(mi.title, tree, "start", cls, ghosts=False)
+                for n in f.nodes:
+                    current = side == "now" and n.id in (notes.get(c.id).steps if notes.get(c.id) else {})
+                    if n.status != "same" and n.kind not in ("start", "end", "join", "stub") and n.id not in have \
+                            and not current:
+                        code = " | ".join(l.text for l in n.lines if l.status != "same")
+                        out.append(f"  steps {n.id} ({side}): {code[:140]}")
+    head = []
     if not story.get("summary"):
-        out.insert(0, "summary: 1-3 lines, what the change does for the player / game")
+        head.append("summary: 1-3 'before -> now' lines, what changes in the game, tagged [intended] / [side effect?]")
+    if not story.get("parts"):
+        head.append("parts: name each part of the change, functions in story order (set-up before use)")
+    out = head + out
     return out
 
 
@@ -523,7 +650,7 @@ def cmd_diff(a, repo: str, home: str):
         import yaml
         with open(story_path, encoding="utf8") as f:
             story = yaml.safe_load(f) or {}
-    missing = todo(old, new, story)
+    missing = todo(old, new, story, notes)
     if missing:
         import sys
         print(f"AI to-do: describe this change in {os.path.relpath(story_path, repo)}:", file=sys.stderr)

@@ -11,11 +11,11 @@ Enemy.Start:
   anchor: 0f20c722
 
 Enemy.Update:
-  text: Each frame, walk to the player around walls.
+  text: Each frame, once it notices the player, chase them around walls.
   anchor: d1033f11
   image: {path: images/enemy-update.svg, alt: "An enemy walks around a rock to the player, another enemy is pushed apart, a ghost flies straight through."}
   steps:
-    nd92fc0: Turn solid once free; end the hurt flash
+    nd92fc0: Once free, turn solid (unless a flier); end the hurt flash
     n5dc508: If its time is up, die
     na64b22: If dead, die
     nf2b12c: Stunned?
@@ -24,7 +24,7 @@ Enemy.Update:
     n5a53b0: Noticed the player?
     n96b99c: Find the way around walls (fliers go straight)
     n37145c: Move, keeping apart from other enemies
-    n627e46: Turn to face that way
+    n627e46: Point its animation toward the player
 
 Enemy.OnDrawGizmosSelected:
   text: Editor only, when selected - shows the cells it avoids and where it walks.
@@ -57,7 +57,7 @@ Enemy.AddSummonTemplate:
     n9e2a68: Reset its color
     na4413f: Copy this enemy
     nd7af5b: Hide the copy
-    n9dc6c6: Name it, drop its loot, add it to the list
+    n9dc6c6: Name it, clear its loot, add it to the summons
 
 Enemy.recieveDamage:
   text: Shows its name, then takes damage minus defense (at least 1).
@@ -74,7 +74,7 @@ Enemy.HurtColor:
   anchor: 4719a130
 
 Enemy.receiveKnockback:
-  text: Gets pushed back, less if it resists knockback.
+  text: Gets pushed back and stunned; resistance weakens the push.
   anchor: cb0f4003
 
 Enemy.OnTriggerStay2D:

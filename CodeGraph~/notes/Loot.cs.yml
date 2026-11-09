@@ -68,7 +68,7 @@ Loot.PickChatSkillHandle:
   text: Adds its chat skill to the available list (once), then disappears.
   anchor: 16bcbe69
   steps:
-    n2dde9f: Add the chat skill if it's new
+    n2dde9f: Add the chat skill if set and new
     nbee12d: Remove this pickup
 
 Loot.Drop:

@@ -2,32 +2,64 @@
 # Run `codegraph diff <base> <commit>`: it lists what is still missing here.
 
 summary:
-  - Holes work now - anything that walks onto one falls in (fliers pass over).
-  - Enemies and loot that fall are gone; the player comes back where it entered the room.
-  - Every room change now remembers that entry spot.
+  - "Before: holes did nothing. Now: anything that walks onto one falls in (fliers pass over). [intended]"
+  - "Enemies and loot that fall are gone; the player is sent back to where it entered the room. [intended]"
+  - "An enemy that falls is removed without dying: no loot, no chat unlock. [side effect?]"
+
+parts:
+  - name: Remember where each player entered the room
+    functions: [Player.Start, DungeonMap.switchRoom, Player.Died]
+  - name: Fall into holes
+    functions: [Hole.Awake, Hole.OnTriggerEnter2D, Hole.Fall, Player.Respawn]
+
+checks:
+  - Falling costs the player no HP; it only moves it back.
+  - Enemies destroyed by a hole skip Died(), so they drop no loot and don't unlock chat summons.
 
 changes:
-  Hole.OnTriggerEnter2D:
-    now: When a character or loot touches the hole, it starts to fall.
-    so: Holes stop being decoration; fliers still pass over.
-  Hole.Fall:
-    now: Freeze it, play its fall clip or shrink it away, then remove it - or respawn the player.
-    so: Enemies and loot can be lost; the player only loses its position.
-  Hole.Awake:
-    now: Gives the hole a kinematic body, because loot has none.
-    so: Loot falls in too, not only characters.
-  Player.Respawn:
-    now: Moves the player back to where it entered the room.
-    so: A fall sends you back to the room's entrance.
   Player.Start:
+    when: The player appears in the scene.
     before: Full HP, get the controller, start the invincible timer.
     now: Same, and remember the starting spot as the room entry.
     so: Falling in the first room returns you to where you started.
+    tag: intended
+    steps:
+      nc49fd5: Get the controller; start the invincible timer
   DungeonMap.switchRoom:
+    when: You walk through a door into another room.
     before: Show the new room, hide the old one, change music, refresh paths.
     now: Same, and every player remembers where it entered.
     so: Falling in a hole puts you back at that room's door.
+    tag: intended
   Player.Died:
+    when: HP hits 0.
     before: Refill HP, go to (0, 0), back to the first room.
     now: Same, and (0, 0) also becomes the room entry spot.
     so: After dying, a fall in the first room brings you back to (0, 0).
+    tag: intended
+    steps:
+      n1361d2: Move to (0, 0)
+  Hole.Awake:
+    when: The hole is created.
+    before: Nothing (the hole had no code).
+    now: Give the hole a kinematic body, because loot has none.
+    so: Loot falls in too, not only characters.
+    tag: intended
+  Hole.OnTriggerEnter2D:
+    when: Something touches the hole.
+    before: Nothing happened.
+    now: A character or loot starts to fall; fliers pass over.
+    so: Holes stop being decoration.
+    tag: intended
+  Hole.Fall:
+    when: Right after something touched the hole.
+    before: Nothing.
+    now: Freeze it, play its fall clip or shrink it away, then remove it - or respawn the player.
+    so: Enemies and loot can be lost; the player only loses its position.
+    tag: intended
+  Player.Respawn:
+    when: At the end of a player's fall.
+    before: Nothing (new function).
+    now: Moves the player back to where it entered the room.
+    so: A fall sends you back to the room's entrance.
+    tag: intended

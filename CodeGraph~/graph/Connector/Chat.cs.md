@@ -5,7 +5,9 @@
 
 🤖 Base of the chat readers - turns chat messages into game commands. *(Chat)*
 
-<sub>⚡ Unity calls it · 🔁 runs every frame · ⏳ can wait · blue box = calls another function · gray box = simple math · [code](../../../Connector/Chat.cs) · [all files](../index.md)</sub>
+<sub>[code](../../../Connector/Chat.cs) · [all files](../index.md)</sub>
+
+<details><summary><sub>key</sub></summary><sub>▶ green: start · gray: simple math · ƒ blue: another function (short ones drawn inside) · yellow ◇: question / 🔁 loop / ⏳ wait · ✚ ✖ engine action · 📦 outside library · ⏹ end · ⚡ Unity calls it · 🔁 in a title: runs every frame</sub></details>
 
 ## Map
 
@@ -63,16 +65,16 @@ flowchart TD
   linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
   classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
   classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calc fill:#f6f8fa,stroke:#d1d9e0,color:#59636e
   classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
-  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
-  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
-  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef ext fill:#f6f8fa,stroke:#59636e,stroke-width:1.5px,stroke-dasharray:5 5,color:#1f2328
+  classDef cond fill:#fff8c5,stroke:#9a6700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef wait fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef exit fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef fin fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef act fill:#ffffff,stroke:#59636e,stroke-width:1.5px,color:#1f2328
   classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
-  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
-  classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
   classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class nd74057 calc
@@ -118,9 +120,9 @@ flowchart TD
   n9fa4bc["Queue a summon of the named<br>enemy"]
   n73e618((" "))
   nd764ab{"ChatType.teleport ?"}
-  n4ca3f6[["If x and y are numbers,<br>teleport the player →<br>GameManager.TeleportSkill()<br><i>Chat teleport: moves the player to</i><br><i>(x, y) if free and in this room.</i>"]]
+  n4ca3f6[["ƒ If x and y are numbers,<br>teleport the player →<br>GameManager.TeleportSkill()<br><i>Chat teleport: moves the player to</i><br><i>(x, y) if free and in this room. · …</i>"]]
   n14d573((" "))
-  nE(["end"])
+  nE(["⏹ end"])
   nS --> n119429
   n119429 --> na6f1b7
   na6f1b7 --> n08d315
@@ -134,20 +136,20 @@ flowchart TD
   nd764ab -->|other| n14d573
   n14d573 --> nE
   linkStyle 3 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
-  linkStyle 6 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 6 stroke:#8c959f,stroke-width:1.5px,color:#59636e
   linkStyle 7 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
   classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
   classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calc fill:#f6f8fa,stroke:#d1d9e0,color:#59636e
   classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
-  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
-  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
-  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef ext fill:#f6f8fa,stroke:#59636e,stroke-width:1.5px,stroke-dasharray:5 5,color:#1f2328
+  classDef cond fill:#fff8c5,stroke:#9a6700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef wait fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef exit fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef fin fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef act fill:#ffffff,stroke:#59636e,stroke-width:1.5px,color:#1f2328
   classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
-  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
-  classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
   classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n119429,n9fa4bc calc

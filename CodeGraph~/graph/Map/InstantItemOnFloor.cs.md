@@ -3,7 +3,9 @@
 
 🤖 An item on the floor that the player uses on touch.
 
-<sub>⚡ Unity calls it · 🔁 runs every frame · ⏳ can wait · blue box = calls another function · gray box = simple math · [code](../../../Map/InstantItemOnFloor.cs) · [all files](../index.md)</sub>
+<sub>[code](../../../Map/InstantItemOnFloor.cs) · [all files](../index.md)</sub>
+
+<details><summary><sub>key</sub></summary><sub>▶ green: start · gray: simple math · ƒ blue: another function (short ones drawn inside) · yellow ◇: question / 🔁 loop / ⏳ wait · ✚ ✖ engine action · 📦 outside library · ⏹ end · ⚡ Unity calls it · 🔁 in a title: runs every frame</sub></details>
 
 ## Map
 
@@ -52,33 +54,47 @@ config:
 flowchart TD
   nS(["▶ OnTriggerEnter2D<br><i>something enters its trigger</i>"])
   n6c7ca3{"Player touched it, with no<br>Loot here?"}
-  nc0ad2a[["Use the item on the player →<br>Player.InstantItemUse()<br><i>Uses an item it walked into (heal</i><br><i>items heal).</i>"]]
-  nbee12d[["✖ Remove it → Destroy()"]]
-  nE(["end"])
+  nc0ad2a_h["↪ Use the item on the player ·<br>Player.InstantItemUse"]
+  nc0ad2a_n4f24dc{"No item?"}
+  nc0ad2a_n356f82[["ƒ If it is a heal item, heal →<br>Character.HealWithEffect()<br><i>Heals and shows the heal</i><br><i>animation. · 2 steps</i>"]]
+  nbee12d[/"✖ Remove it → Destroy()"/]
+  nE(["⏹ end"])
+  subgraph nc0ad2a_g[" "]
+    nc0ad2a_h
+    nc0ad2a_n4f24dc
+    nc0ad2a_n356f82
+  end
+  style nc0ad2a_g fill:#f5f9ff,stroke:#8cb4e8,stroke-dasharray:4 3,color:#0a3069
   nS --> n6c7ca3
-  n6c7ca3 -->|yes| nc0ad2a
-  nc0ad2a --> nbee12d
+  n6c7ca3 -->|yes| nc0ad2a_h
   nbee12d --> nE
   n6c7ca3 -->|no| nE
+  nc0ad2a_h --> nc0ad2a_n4f24dc
+  nc0ad2a_n4f24dc -->|no| nc0ad2a_n356f82
+  nc0ad2a_n4f24dc -->|yes| nbee12d
+  nc0ad2a_n356f82 --> nbee12d
   linkStyle 1 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
-  linkStyle 4 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 3 stroke:#8c959f,stroke-width:1.5px,color:#59636e
+  linkStyle 5 stroke:#8c959f,stroke-width:1.5px,color:#59636e
+  linkStyle 6 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
   classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
   classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calc fill:#f6f8fa,stroke:#d1d9e0,color:#59636e
   classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
-  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
-  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
-  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef ext fill:#f6f8fa,stroke:#59636e,stroke-width:1.5px,stroke-dasharray:5 5,color:#1f2328
+  classDef cond fill:#fff8c5,stroke:#9a6700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef wait fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef exit fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef fin fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef act fill:#ffffff,stroke:#59636e,stroke-width:1.5px,color:#1f2328
   classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
-  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
-  classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
   classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
-  class nc0ad2a calls
-  class n6c7ca3 cond
+  class nc0ad2a_n356f82 calls
+  class n6c7ca3,nc0ad2a_n4f24dc cond
   class nE fin
+  class nc0ad2a_h ghdr
   class nbee12d kill
   class nS unity
 ```

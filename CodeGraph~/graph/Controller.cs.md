@@ -5,7 +5,9 @@
 
 🤖 Reads gamepad, keyboard and mouse into movement, aim and attack buttons. *(Controller)*
 
-<sub>⚡ Unity calls it · 🔁 runs every frame · ⏳ can wait · blue box = calls another function · gray box = simple math · [code](../../Controller.cs) · [all files](index.md)</sub>
+<sub>[code](../../Controller.cs) · [all files](index.md)</sub>
+
+<details><summary><sub>key</sub></summary><sub>▶ green: start · gray: simple math · ƒ blue: another function (short ones drawn inside) · yellow ◇: question / 🔁 loop / ⏳ wait · ✚ ✖ engine action · 📦 outside library · ⏹ end · ⚡ Unity calls it · 🔁 in a title: runs every frame</sub></details>
 
 ## Map · ControllerButton
 
@@ -82,20 +84,20 @@ flowchart TD
   nS --> n6b18f3
   n6b18f3 -->|no| n47aeb3
   n6b18f3 -->|yes| n1902d3
-  linkStyle 1 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 1 stroke:#8c959f,stroke-width:1.5px,color:#59636e
   linkStyle 2 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
   classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
   classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calc fill:#f6f8fa,stroke:#d1d9e0,color:#59636e
   classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
-  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
-  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
-  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef ext fill:#f6f8fa,stroke:#59636e,stroke-width:1.5px,stroke-dasharray:5 5,color:#1f2328
+  classDef cond fill:#fff8c5,stroke:#9a6700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef wait fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef exit fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef fin fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef act fill:#ffffff,stroke:#59636e,stroke-width:1.5px,color:#1f2328
   classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
-  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
-  classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
   classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n6b18f3 cond
@@ -132,25 +134,25 @@ config:
 flowchart TD
   nS(["▶ Update<br><i>every frame</i>"])
   n079405["Read the old input axes; clear<br>the aim"]
-  n1926a8[["Read gamepad, keyboard and<br>mouse → UpdateInput()<br><i>A gamepad replaces everything;</i><br><i>else keyboard, then mouse aim if …</i>"]]
+  n1926a8[["ƒ Read gamepad, keyboard and<br>mouse → UpdateInput()<br><i>A gamepad replaces everything;</i><br><i>else keyboard, then mouse aim if …</i>"]]
   nf1f1a2["Show the cursor only while the<br>mouse is used"]
-  nE(["end"])
+  nE(["⏹ end"])
   nS --> n079405
   n079405 --> n1926a8
   n1926a8 --> nf1f1a2
   nf1f1a2 --> nE
   classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
   classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calc fill:#f6f8fa,stroke:#d1d9e0,color:#59636e
   classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
-  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
-  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
-  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef ext fill:#f6f8fa,stroke:#59636e,stroke-width:1.5px,stroke-dasharray:5 5,color:#1f2328
+  classDef cond fill:#fff8c5,stroke:#9a6700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef wait fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef exit fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef fin fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef act fill:#ffffff,stroke:#59636e,stroke-width:1.5px,color:#1f2328
   classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
-  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
-  classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
   classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n079405,nf1f1a2 calc
@@ -190,14 +192,14 @@ flowchart TD
   n539747["Get the connected devices"]
   n590607{"Gamepad connected?"}
   n950fae["Sticks move and aim; bumpers<br>or A/B attack"]
-  n9c3ff5["Keyboard: WASD move, arrows<br>aim, O/P attack"]
+  n9c3ff5["Keyboard: WASD move, arrows<br>aim, K/O/P attack, Q switch"]
   n2ca3df{"No mouse, or mouse turned off?"}
   n75ebd0["Mouse aim off"]
   na08b7c["Read the mouse position"]
   n9f6c98_h["↪ Turn mouse aim on or off ·<br>CheckMouseEnable"]
   n9f6c98_n49a6a6["set mouseActive,<br>mouseLastTime, mouseLastPos"]
   n3a4432["If mouse aim is on, aim at it;<br>clicks attack"]
-  nE(["end"])
+  nE(["⏹ end"])
   nb2e4fc(["⏹ Stop (the gamepad replaces<br>the rest)"])
   n8ac8b5(["⏹ Stop"])
   subgraph n9f6c98_g[" "]
@@ -218,22 +220,22 @@ flowchart TD
   n3a4432 --> nE
   n9f6c98_h --> n9f6c98_n49a6a6
   n9f6c98_n49a6a6 --> n3a4432
-  linkStyle 3 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 3 stroke:#8c959f,stroke-width:1.5px,color:#59636e
   linkStyle 4 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
-  linkStyle 7 stroke:#cf222e,stroke-width:1.5px,color:#cf222e
+  linkStyle 7 stroke:#8c959f,stroke-width:1.5px,color:#59636e
   linkStyle 8 stroke:#1a7f37,stroke-width:2px,color:#1a7f37
   classDef unity fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
   classDef start fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef calc fill:#ffffff,stroke:#d0d7de,color:#57606a
+  classDef calc fill:#f6f8fa,stroke:#d1d9e0,color:#59636e
   classDef calls fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-  classDef ext fill:#ddf4ff,stroke:#0969da,stroke-width:2px,stroke-dasharray:5 3,color:#0a3069
-  classDef cond fill:#fff8c5,stroke:#bf8700,stroke-width:1.5px,color:#3d2a00
-  classDef loop fill:#f6f8fa,stroke:#57606a,color:#1f2328
-  classDef exit fill:#ffebe9,stroke:#cf222e,color:#82071e
+  classDef ext fill:#f6f8fa,stroke:#59636e,stroke-width:1.5px,stroke-dasharray:5 5,color:#1f2328
+  classDef cond fill:#fff8c5,stroke:#9a6700,stroke-width:1.5px,color:#3d2a00
+  classDef loop fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef wait fill:#fff8c5,stroke:#9a6700,color:#3d2a00
+  classDef exit fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef fin fill:#59636e,stroke:#424a53,color:#ffffff
+  classDef act fill:#ffffff,stroke:#59636e,stroke-width:1.5px,color:#1f2328
   classDef kill fill:#ffebe9,stroke:#cf222e,stroke-width:2px,color:#82071e
-  classDef spawn fill:#dafbe1,stroke:#1a7f37,stroke-width:2px,color:#0f3d1d
-  classDef wait fill:#fff1e5,stroke:#bc4c00,color:#4d1d00
-  classDef fin fill:#eaeef2,stroke:#8c959f,color:#57606a
   classDef join fill:#d0d7de,stroke:#8c959f,color:#57606a
   classDef ghdr fill:#f5f9ff,stroke:#f5f9ff,color:#0a3069,font-weight:bold
   class n539747,n950fae,n9c3ff5,n75ebd0,na08b7c,n9f6c98_n49a6a6,n3a4432 calc
@@ -252,7 +254,7 @@ flowchart TD
 | Gamepad connected? | <code>gamepad != null</code> <sub>L42</sub> |
 | Sticks move and aim; bumpers or A/B attack | <code>movement = gamepad.leftStick.ReadValue()</code> <sub>L43</sub><br><code>looking = gamepad.rightStick.ReadValue()</code> <sub>L44</sub><br><code>attackLeft.isPressed = gamepad.leftShoulder.isPressed \|\| gamepad.buttonSouth.isPressed</code> <sub>L47</sub><br><code>attackRight.isPressed = gamepad.rightShoulder.isPressed \|\| gamepad.buttonEast.isPressed</code> <sub>L48</sub> |
 | Stop (the gamepad replaces the rest) | <code>return</code> <sub>L49</sub> |
-| Keyboard: WASD move, arrows aim, O/P attack | <code>if(keyboard != null){ var k = keyboard; movement = new Vector2(Axis(k.aKey.isPressed, k.dKey.isPressed), Axis(k.sKey.isPressed, k.wKey.isPressed)); looking = new Vector2(Axis(k.leftArrowKey.isPressed, k.rightArrowKey.isPressed), Axis(k.downArrowKey.isPressed, k.upArrowKey.isPressed)); attack = keyboard.kKey.isPressed; switchWeapon.isPressed = keyboard.qKey.isPressed; attackLeft.isPressed = keyboard.oKey.isPressed; attackRight.isPressed = keyboard.pKey.isPressed; }</code> <sub>L51</sub> |
+| Keyboard: WASD move, arrows aim, K/O/P attack, Q switch | <code>if(keyboard != null){ var k = keyboard; movement = new Vector2(Axis(k.aKey.isPressed, k.dKey.isPressed), Axis(k.sKey.isPressed, k.wKey.isPressed)); looking = new Vector2(Axis(k.leftArrowKey.isPressed, k.rightArrowKey.isPressed), Axis(k.downArrowKey.isPressed, k.upArrowKey.isPressed)); attack = keyboard.kKey.isPressed; switchWeapon.isPressed = keyboard.qKey.isPressed; attackLeft.isPressed = keyboard.oKey.isPressed; attackRight.isPressed = keyboard.pKey.isPressed; }</code> <sub>L51</sub> |
 | No mouse, or mouse turned off? | <code>mouse == null \|\| disableMouse</code> <sub>L60</sub> |
 | Mouse aim off | <code>mouseActive = false</code> <sub>L60</sub> |
 | Stop | <code>return</code> <sub>L60</sub> |

@@ -136,6 +136,35 @@ def cmd_notes(a):
             print("\n".join(todo))
 
 
+def cmd_dump(a):
+    """Every function's note and every box: id, kind, the AI's words, and the exact code (for reviewing the words)."""
+    repo = repo_root()
+    cfg = load_config(HOME)
+    model = build_model(load_sources(repo, cfg), cfg)
+    notes = all_notes(model)
+    for path in sorted(model.files):
+        if a.files and path not in a.files:
+            continue
+        if model.files[path].external:
+            continue
+        have = {n.target: n for n in notes.get(path, [])}
+        print(f"=== {path}")
+        for t in model.files[path].types:
+            n = have.get(t.full)
+            print(f"[type] {t.full}: {n.text if n else '(no note)'}")
+        for mi in sorted(model.file_members(path), key=lambda m: m.member.line):
+            n = have.get(mi.id)
+            print(f"\n[function] {mi.id}  L{mi.member.line}-{mi.member.end}: {n.text if n and n.text else '(no note)'}")
+            steps = n.steps if n else {}
+            for x in mi.flow.steps:
+                if x.kind in ("case", "join"):
+                    continue
+                calls = (" calls " + ", ".join(x.calls)) if x.calls else ""
+                print(f"   box {x.id} [{x.kind}]{calls}: {steps.get(x.id, '(no label)')!r}")
+                for l in x.lines:
+                    print(f"        L{l.line}: {l.text}")
+
+
 def cmd_check(a):
     repo = repo_root()
     cfg = load_config(HOME)
@@ -172,6 +201,9 @@ def main(argv=None):
     n = sub.add_parser("notes", help="what needs a note / which notes drifted (the AI's to-do list)")
     n.add_argument("files", nargs="*")
     n.set_defaults(fn=cmd_notes)
+    du = sub.add_parser("dump", help="every box with its AI words and its code (for reviewing the words)")
+    du.add_argument("files", nargs="*")
+    du.set_defaults(fn=cmd_dump)
     c = sub.add_parser("check", help="exit 1 on orphaned notes, broken mentions or unmapped statements")
     c.set_defaults(fn=cmd_check)
     a = ap.parse_args(argv)

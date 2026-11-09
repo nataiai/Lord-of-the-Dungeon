@@ -30,7 +30,7 @@ HitBox.Update:
   anchor: 5e708e9e
 
 HitBox.OnTriggerEnter2D:
-  text: On touch, hurts and pushes each foe once, or breaks a prop.
+  text: On touch, hurts and pushes each foe once, or damages a prop.
   anchor: d50be542
   steps:
     n0d68c1: Touched a character it may hit?

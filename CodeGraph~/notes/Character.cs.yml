@@ -37,7 +37,7 @@ Character._setAnimFacing:
     nedd5df: "Otherwise: down (2)"
 
 Character.froze:
-  text: Stuns it for 1 second.
+  text: Stuns it for up to 1 second.
   anchor: 36084c31
 
 Character.StuntMech:
@@ -50,11 +50,11 @@ Character.StuntMech:
     nb1e3d6: Still stunned
 
 "Character.receiveKnockback(Vector2,float)":
-  text: Gets pushed back, with no resistance.
+  text: Knocked back and stunned, with no resistance.
   anchor: 67e3b1de
 
 "Character.receiveKnockback(Vector2,float,float)":
-  text: Pushes it away from a point (give or take 10°) and stuns it for 1 s.
+  text: Knocks it away from a point, less with resistance; stuns up to 1 s.
   anchor: caefad23
 
 Character.Heal:

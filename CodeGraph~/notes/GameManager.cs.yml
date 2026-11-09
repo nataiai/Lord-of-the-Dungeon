@@ -50,7 +50,7 @@ GameManager._Connect:
     n269a6d: Already joined?
     nb2e4fc: Stop
     nd9fac0: Mark as joined; remember the channel name
-    n08675a: Not testing, and unified chat didn't connect?
+    n08675a: Not testing, and unified chat not started?
     n011fcf: Join with Lexone Twitch chat instead
 
 GameManager._re:

@@ -5,7 +5,9 @@
 
 🤖 Data for an item used on pickup (only healing works so far). *(InstantItem)*
 
-<sub>⚡ Unity calls it · 🔁 runs every frame · ⏳ can wait · blue box = calls another function · gray box = simple math · [code](../../../Data%20Types/InstantItem.cs) · [all files](../index.md)</sub>
+<sub>[code](../../../Data%20Types/InstantItem.cs) · [all files](../index.md)</sub>
+
+<details><summary><sub>key</sub></summary><sub>▶ green: start · gray: simple math · ƒ blue: another function (short ones drawn inside) · yellow ◇: question / 🔁 loop / ⏳ wait · ✚ ✖ engine action · 📦 outside library · ⏹ end · ⚡ Unity calls it · 🔁 in a title: runs every frame</sub></details>
 
 <details><summary>Values · ItemType (3)</summary>
 

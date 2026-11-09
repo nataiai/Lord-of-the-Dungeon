@@ -106,7 +106,7 @@ class Classifier:
 
     def simple(self, st: Stmt) -> bool:
         """True when the whole statement (with its body) is only calculation."""
-        if st.kind in ("return", "yieldbreak", "throw", "yield", "break", "continue", "localfunc", "try", "do"):
+        if st.kind in ("return", "yieldbreak", "throw", "yield", "break", "continue", "localfunc", "try", "do", "stub"):
             return False
         if st.kind == "simple":
             return not self.is_call(st)
@@ -283,6 +283,11 @@ class FlowBuilder:
             g.brief = short_code(_summary(st))
             self._connect(pend, g)
             return [(g, "", "seq")]
+        if k == "stub":  # diff placeholder: where the other side has steps this side lacks
+            n = self._new("stub", [Line(st.text, "same")], None)
+            n.brief = st.text
+            self._connect(pend, n)
+            return [(n, "", "seq")]
         if k == "simple" or k == "localfunc":
             calls = self.cls.calls(st)
             n = self._new("call", [self._line(st)], st, calls)

@@ -11,7 +11,7 @@ BuffEffect:
   anchor: 6afd786c
 
 BuffEffect.Buff.CopyTo:
-  text: Puts this buff on an object, or restarts it if already there.
+  text: Puts this buff on an object; restarts an existing one unless stackable.
   anchor: 40c4b3d7
   steps:
     n38dff8: No effect (type none)?
@@ -39,7 +39,7 @@ BuffEffect.LateUpdate:
     nb2e4fc: Stop
     n08a28c: Character dead, or buff over?
     n0f111a: Remove the buff
-    nf0509f: Apply it
+    nf0509f: Run the buff's effect on the character
 
 BuffEffect.Apply:
   text: Slows or stuns every frame; burns or heals once a second.
@@ -50,4 +50,4 @@ BuffEffect.Apply:
     nb2e4fc: Stop
     nca6318: Next tick in 1 s
     n2294e9: If burn, deal its damage
-    nd05218: If heal, restore its HP
+    nd05218: If heal, heal it by its power
