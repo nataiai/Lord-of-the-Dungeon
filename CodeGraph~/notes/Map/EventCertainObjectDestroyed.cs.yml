@@ -1,0 +1,25 @@
+# AI notes for Map/EventCertainObjectDestroyed.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+EventCertainObjectDestroyed:
+  text: Fires an event once the sword pickup is gone (collected).
+  anchor: 74a87829
+
+EventCertainObjectDestroyed.Update:
+  text: "Each frame: once the sword is gone, fire once and remove itself."
+  anchor: 283021bd
+  steps:
+    n7e9c3f: Sword gone?
+    nd383b1: Fire the event
+    nd2f86b: Recheck walls for pathfinding
+    nee56c7: Log it
+    nbee12d: Remove this checker
+
+EventCertainObjectDestroyed.IsConditionTrue:
+  text: True when the sword object no longer exists.
+  anchor: 0dfdb664
+  steps:
+    nf672c7: Sword gone?
+    nb1e3d6: It's gone
+    n1902d3: Still there

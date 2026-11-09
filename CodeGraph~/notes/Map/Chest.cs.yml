@@ -1,0 +1,29 @@
+# AI notes for Map/Chest.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+Chest:
+  text: An enemy that is a chest; any hit opens it and drops its loot.
+  anchor: 9da2664e
+
+Chest.Died:
+  text: Opens it on the first hit; a chest is never removed.
+  anchor: 8062f8e4
+  steps:
+    n96f244: Already open, or only timed out?
+    nb2e4fc: Stop
+    nd415d4: Mark it open; play the open sound
+    nea5049: Drop its loot
+    n286996: Forget the loot; show the open sprite
+
+Chest.recieveDamage:
+  text: Any hit empties its HP, so it opens.
+  anchor: 7004105f
+
+Chest.HurtColor:
+  text: No red flash for a chest.
+  anchor: 9f491b3e
+
+Chest.OnTriggerStay2D:
+  text: No touch damage.
+  anchor: 224ebc98

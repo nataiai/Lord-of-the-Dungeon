@@ -1,0 +1,28 @@
+# AI notes for DestructableObj.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+Destructable:
+  text: A breakable object (like a crate) - breaks after some hits, drops loot.
+  anchor: 76b32ac1
+
+Destructable.Start:
+  text: Sets how many hits it takes to break.
+  anchor: af38ed75
+
+Destructable.Died:
+  text: Breaks - frees its spot for pathfinding, maybe vanishes, drops loot.
+  anchor: 6e1571ad
+  steps:
+    nd2f86b: Tell pathfinding the way may be free
+    na87e77: Remove it, if set to
+    nea5049: Drop its loot
+
+Destructable.recieveDamage:
+  text: Each non-magic hit counts once and shows the next damage sprite.
+  anchor: 094056d9
+  steps:
+    n129e7b: Magic hit?
+    nb2e4fc: Ignore it
+    n9ada94: Lose one hit; show the next sprite
+    n300dd8: Out of hits? Break

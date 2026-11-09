@@ -1,0 +1,71 @@
+# AI notes for GameManager.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+GameManager:
+  text: The game's hub - holds player, UI, map and chat, and spawns summons.
+  anchor: 2b2a106e
+
+GameManager.UpdateMusic:
+  text: Lets the sound player pick music for the current room.
+  anchor: 84b749cc
+
+GameManager.Awake:
+  text: Becomes the only game manager, finds or makes the UI, sets the frame rate.
+  anchor: 5f186836
+  steps:
+    n824e86: Another manager already exists?
+    n0f111a: Remove this duplicate manager
+    nb2e4fc: Stop
+    nbe6098: Become the manager; find the cameras and UI
+    nb42b42: If no UI in the scene, make one
+    nd2144a: Turn off vSync; set the frame rate
+
+GameManager.Start:
+  text: Shows the player's hearts and finds the sound player.
+  anchor: 1f3702cf
+  steps:
+    nfb15c5: Show the player's max hearts
+    nfdebc6: Show the player's current hearts
+    n6ae454: Find the sound player
+
+GameManager.Update:
+  text: Each frame, spawns a test enemy or whatever chat summoned.
+  anchor: 9fbde272
+  steps:
+    n3e5eab: Test mode, spawn timer up, L not pressed?
+    ne508c8: Spawn the test enemy
+    na1060f: Restart the test spawn timer
+    n9e886c: Take the next chat summon, if the cooldown allows
+    n0f2912: If chat summoned one (not test mode), spawn it
+
+GameManager.Spawn:
+  text: Spawns an enemy near the player in the current room.
+  anchor: d57a8e9d
+
+GameManager._Connect:
+  text: Joins chat once - unified chat first, Lexone Twitch chat as backup.
+  anchor: b7273fd1
+  steps:
+    n269a6d: Already joined?
+    nb2e4fc: Stop
+    nd9fac0: Mark as joined; remember the channel name
+    n08675a: Not testing, and unified chat didn't connect?
+    n011fcf: Join with Lexone Twitch chat instead
+
+GameManager._re:
+  text: Sends the map back to the first room.
+  anchor: 5bf751b3
+  steps:
+    ncb80a4: Hide the current room
+    n69c3da: Show the first room
+    ncd1439: Make it the current room
+
+GameManager.TeleportSkill:
+  text: "Chat teleport: moves the player to (x, y) if free and in this room."
+  anchor: 1dd4a291
+  steps:
+    n0b2551: Cooldown ready? (always yes for now)
+    nceed3c: Make the target point
+    n7d9437: Point in this room and not inside anything?
+    n2d48fa: Move the player there

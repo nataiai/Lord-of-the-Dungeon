@@ -52,6 +52,7 @@ class Stmt:
     uses: list = field(default_factory=list)  # filled by resolve.py: [(kind, target_id)]
     status: str = "same"  # diff: same|added|removed|modified
     old_text: str | None = None  # diff: previous text when modified
+    full: str = ""  # the whole statement on one line (compound statements include their body)
 
     @property
     def sig(self) -> str:  # what must be equal for two statements to be "the same"
@@ -485,6 +486,7 @@ def _stmts(src: Src, nodes) -> list:
         if isinstance(s, list):
             out.extend(s)
         else:
+            s.full = fmt(src, n).rstrip(";").strip() if s.kind != "simple" else s.text
             out.append(s)
     return out
 

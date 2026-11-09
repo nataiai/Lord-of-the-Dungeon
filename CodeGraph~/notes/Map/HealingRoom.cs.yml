@@ -1,0 +1,38 @@
+# AI notes for Map/HealingRoom.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+HealingRoom:
+  text: A healing zone; characters of the chosen teams inside regain HP.
+  anchor: 484e2171
+
+HealingRoom.Heals:
+  text: Whether this room heals that character's team.
+  anchor: 07db43f0
+
+HealingRoom.OnTriggerEnter2D:
+  text: Starts healing a character of a healed team that walks in.
+  anchor: 2da0b1d2
+  steps:
+    n23ba84: Not a character it heals?
+    nb2e4fc: Skip
+    nfaf01f: Start the heal timer if empty; add it; mark it healing
+
+HealingRoom.OnTriggerExit2D:
+  text: Stops healing a character that walks out.
+  anchor: 96d57053
+  steps:
+    n255dee: Not someone inside?
+    nb2e4fc: Skip
+    n32aa3e: Mark it not healing
+
+HealingRoom.Update:
+  text: Heals everyone inside 1 HP, HPHealPerSecond times a second.
+  anchor: b81c3c11
+  steps:
+    na40354: Nobody inside, or not time yet?
+    nb2e4fc: Stop
+    nc9e746: Set the next heal time; drop destroyed ones
+    n09e04f: For each one inside
+    n1d953d: If alive, heal 1 HP with the effect
+    nc3591d: Play the heal sound

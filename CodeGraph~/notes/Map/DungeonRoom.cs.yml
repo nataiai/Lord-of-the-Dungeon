@@ -1,0 +1,20 @@
+# AI notes for Map/DungeonRoom.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+RoomType:
+  text: Kinds of room; each kind picks its music.
+  anchor: 2bc1c93d
+
+DungeonRoom:
+  text: One room of the dungeon; summoned enemies spawn inside it.
+  anchor: 594ace6c
+
+DungeonRoom.Spawn:
+  text: Spawns an enemy near a point and keeps it under this room.
+  anchor: 4f291498
+  steps:
+    n31b928: Find or make the room's Enemies folder
+    nfa33b5: Spawn it at a free spot near the point
+    nf82de9: Put it in the Enemies folder
+    n6d3258: Switch it on (copies start hidden)

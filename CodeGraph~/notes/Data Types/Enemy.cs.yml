@@ -1,0 +1,7 @@
+# AI notes for Data Types/Enemy.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+EnemySO:
+  text: Enemy data asset - chat name, speed, HP, combat stats, knockback.
+  anchor: 7f35e819

@@ -17,11 +17,10 @@ MAX_LINES_PER_STMT = 3
 
 FLOW_CONFIG = """---
 config:
-  fontFamily: monospace
   flowchart:
-    wrappingWidth: 520
-    nodeSpacing: 28
-    rankSpacing: 34
+    wrappingWidth: 260
+    nodeSpacing: 26
+    rankSpacing: 30
 ---"""
 MAP_CONFIG = """---
 config:
@@ -56,10 +55,9 @@ PHASE_ORDER = ["start-up", "every frame", "physics", "teardown", "editor"]
 STYLE_BROWSE = """\
 classDef unity fill:#fff1c2,stroke:#9a6700,stroke-width:2px,color:#3b2300
 classDef start fill:#ddf4ff,stroke:#0969da,stroke-width:2px,color:#0a3069
-classDef step fill:#ffffff,stroke:#8c959f,color:#1f2328
-classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2px,color:#0a3069
-classDef guard fill:#ffffff,stroke:#6e7781,color:#1f2328
-classDef cond fill:#f6f8fa,stroke:#6e7781,color:#1f2328
+classDef calc fill:#f6f8fa,stroke:#d0d7de,color:#57606a
+classDef calls fill:#ffffff,stroke:#0969da,stroke-width:2.5px,color:#0a3069
+classDef cond fill:#ffffff,stroke:#6e7781,stroke-width:1.5px,color:#1f2328
 classDef loop fill:#fbefff,stroke:#8250df,color:#3e1f79
 classDef exit fill:#eaeef2,stroke:#57606a,color:#24292f
 classDef wait fill:#fff8f0,stroke:#bc4c00,color:#4d1d00
@@ -88,8 +86,8 @@ def esc(text: str) -> str:
             .replace("`", "#96;").replace("|", "#124;"))
 
 
-def wrap(text: str, width: int = WRAP, max_lines: int = MAX_LINES_PER_STMT) -> list:
-    """Break long code at spaces / after commas and dots, never inside a word."""
+def wrap(text: str, width: int = WRAP, max_lines: int = MAX_LINES_PER_STMT, indent: str = "  ") -> list:
+    """Break long text at spaces / after commas and dots, never inside a word."""
     if len(text) <= width:
         return [text]
     tokens = re.findall(r"[^ ,.(]+[ ,.(]?|[ ,.(]", text)
@@ -97,7 +95,7 @@ def wrap(text: str, width: int = WRAP, max_lines: int = MAX_LINES_PER_STMT) -> l
     for tok in tokens:
         if len(cur) + len(tok) > width and cur.strip():
             lines.append(cur.rstrip())
-            cur = "  " + tok.lstrip()
+            cur = indent + tok.lstrip()
         else:
             cur += tok
     if cur.strip():
@@ -110,24 +108,45 @@ def wrap(text: str, width: int = WRAP, max_lines: int = MAX_LINES_PER_STMT) -> l
 
 # ----------------------------------------------------------------------------- flowcharts
 
-def _label(node: FNode, diff: bool, comments: bool, subtitle: str = "") -> str:
-    out = []
-    for i, ln in enumerate(node.lines):
-        mark = MARK[ln.status] if diff else ""
-        text = ln.text
-        if node.kind in ("decision", "case") and not text.startswith("switch"):
-            text = text + " ?"
-        if node.kind == "loop":
-            text = "↻ " + text
-        if node.kind == "wait":
-            text = "⏳ " + text
-        for j, p in enumerate(wrap(text)):
-            out.append(esc((mark if j == 0 else ("  " if mark else "")) + p))
-        if diff and ln.status == "modified" and ln.old:
-            old = ln.old if len(ln.old) <= WRAP else ln.old[: WRAP - 2] + " …"
-            out.append("<i>was: " + esc(old) + "</i>")
-        if comments and ln.comment and (i == 0 or ln.comment != node.lines[i - 1].comment):
-            out.append("<i>// " + esc(wrap(ln.comment, WRAP + 4, 1)[0]) + "</i>")
+LABEL_WRAP = 30  # labels are short plain sentences (AI-written, or generated); code lives in the table below the chart
+
+
+def wrap_words(text: str, width: int, max_lines: int) -> list:
+    """Break a plain sentence at spaces only, so names like `PathFinding.Direction()` stay whole."""
+    lines, cur = [], ""
+    for word in text.split():
+        if cur and len(cur) + 1 + len(word) > width:
+            lines.append(cur)
+            cur = word
+        else:
+            cur = f"{cur} {word}" if cur else word
+    if cur:
+        lines.append(cur)
+    if len(lines) > max_lines:
+        lines = lines[:max_lines]
+        lines[-1] = lines[-1].rstrip() + " …"
+    return lines
+
+
+def node_text(node: FNode, short_name=lambda mid: mid.split(".")[-1]) -> str:
+    """What a box says: the AI label, else a generated summary (the code itself is in the table below the chart)."""
+    text = node.label or node.brief
+    if node.kind in ("call", "guard") and (node.calls or node.actions):  # a call box always names what it calls
+        names = list(dict.fromkeys([short_name(c) for c in node.calls] + list(node.actions)))
+        if not any(n in text for n in names):
+            text += " → " + ", ".join(n + "()" for n in names[:2])
+    return text
+
+
+def _label(node: FNode, diff: bool, subtitle: str = "", short_name=None) -> str:
+    text = node_text(node, short_name) if short_name else node_text(node)
+    if node.kind == "loop":
+        text = "↻ " + text
+    if node.kind == "wait" and not text.startswith("⏳"):
+        text = "⏳ " + text
+    if diff:
+        text = MARK[node.status] + text
+    out = [esc(p) for p in wrap_words(text, LABEL_WRAP, 3)]
     if subtitle:
         out.append("<i>" + esc(subtitle) + "</i>")
     return "<br>".join(out)
@@ -142,13 +161,11 @@ def _shape(node: FNode, label: str) -> str:
         return "{{" + q + "}}"
     if k == "loop":  # rounded boxes get little padding: pad with no-break spaces so the label isn't clipped
         return f'("\u00a0\u00a0{label}\u00a0\u00a0")'
-    if k == "guard":
-        return f">{q}]"
     if k == "wait":
         return f"[/{q}/]"
     if k == "join":  # a merge point on a switch rail
         return '((" "))'
-    if k in ("block", "ghost") and node.calls:
+    if k in ("call", "guard") and (node.calls or node.actions):
         return f"[[{q}]]"
     return f"[{q}]"
 
@@ -157,36 +174,21 @@ def _browse_class(node: FNode, unity: bool) -> str:
     k = node.kind
     if k == "start":
         return "unity" if unity else "start"
-    if k == "end":
-        return "fin"
-    if k in ("decision", "switch", "try", "case"):
-        return "cond"
-    if k == "loop":
-        return "loop"
-    if k == "exit":
-        return "exit"
-    if k == "wait":
-        return "wait"
-    if k == "join":
-        return "join"
-    if node.calls:
-        return "calls"
-    if k == "guard":
-        return "guard"
-    return "step"
+    return {"end": "fin", "decision": "cond", "switch": "cond", "try": "cond", "case": "cond", "loop": "loop",
+            "exit": "exit", "wait": "wait", "join": "join"}.get(k, "calls" if k in ("call", "guard") else "calc")
 
 
 def flow_to_mermaid(flow: Flow, *, unity_event: str | None = None, coroutine: bool = False, diff: bool = False,
-                    comments: bool = True, config: bool = True) -> str:
+                    config: bool = True, short_name=None) -> str:
     subtitle = ""
     if unity_event:
-        subtitle = "Unity: " + UNITY_WHEN.get(unity_event, "engine callback")
+        subtitle = UNITY_WHEN.get(unity_event, "engine callback")
     elif coroutine:
-        subtitle = "coroutine: can wait between frames"
+        subtitle = "coroutine: can wait"
     lines = ([FLOW_CONFIG] if config else []) + ["flowchart TD"]
-    # exits last: dagre then tends to place them right of the main path (DRAKON: the main path goes straight down)
+    # exits last: dagre then places them beside the main path, which stays straight (DRAKON)
     for n in [x for x in flow.nodes if x.kind != "exit"] + [x for x in flow.nodes if x.kind == "exit"]:
-        lines.append(f"  {n.id}{_shape(n, _label(n, diff, comments, subtitle if n.id == 'nS' else ''))}")
+        lines.append(f"  {n.id}{_shape(n, _label(n, diff, subtitle if n.id == 'nS' else '', short_name))}")
     link_styles = []
     for i, e in enumerate(flow.edges):
         arrow = {"back": "-.->", "invisible": "~~~"}.get(e.kind, "-->")

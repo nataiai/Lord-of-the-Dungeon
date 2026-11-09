@@ -1,34 +1,37 @@
-# AI / human notes for Map/Hole.cs. The generator reads this file and never rewrites it.
+# AI notes for Map/Hole.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
 
 Hole:
-  kind: summary
-  text: >
-    A pit. Characters and loot that touch it fall in, except enemies that fly (`ignoreCollide`).
-  mentions: [EnemySO.ignoreCollide]
-  by: ai
-  anchor: {hash: e5a1317d, commit: fee0cf8}
-  review: {status: unreviewed}
+  text: A pit; characters and loot that touch it fall in, except fliers.
+  anchor: e5a1317d
+
+Hole.Awake:
+  text: Gives the hole a kinematic body so loot can touch it too.
+  anchor: 863edb87
 
 Hole.OnTriggerEnter2D:
-  kind: summary
-  text: >
-    Starts a `Fall` for a `Character` or `Loot` that touches the hole, unless it is already
-    falling (switched off) or is a flying enemy.
-  mentions: [Hole.Fall]
-  by: ai
-  anchor: {hash: 8d56f78c, commit: fee0cf8}
-  review: {status: unreviewed}
+  text: Starts a fall for a character or loot that touches it.
+  anchor: 8d56f78c
+  steps:
+    nf75948: Get the character, or else the loot
+    n2d4641: Nothing to drop, already falling, or a flier?
+    nb2e4fc: Skip
+    nbbfd1f: Start the fall
 
 Hole.Fall:
-  kind: summary
-  text: >
-    Freezes the faller, then plays its fall clip if it has one, or shrinks it away in 0.5 s.
-    Enemies and loot are then destroyed; a player gets its size back and returns to where it
-    entered the room (`Player.Respawn`).
-  mentions: [Hole.fallShrinkTime, Player.Respawn, Player.roomEntryPos]
-  image:
-    path: images/hole-fall.svg
-    alt: "Three steps: something touches the hole, it falls (clip or shrink), then enemies and loot are gone and a player returns to the room entry."
-  by: ai
-  anchor: {hash: 854190ab, commit: fee0cf8}
-  review: {status: unreviewed}
+  text: Freezes it, plays its fall (or shrinks it), then removes or respawns it.
+  anchor: 854190ab
+  image: {path: images/hole-fall.svg, alt: "Three steps: something touches the hole, it falls (clip or shrink), then enemies and loot are gone and a player returns to the room entry."}
+  steps:
+    nfc587d: Freeze it; find its fall clip and animator
+    nbbdef8: Has a fall clip and an animator?
+    n8efc72: Play the fall clip
+    naa312b: Wait for the clip to end
+    n0f4e9e: For 0.5 s
+    nc1664e: Shrink it a little
+    nb3bf40: Wait a frame
+    n76f92d: Not a player?
+    n885d6b: Remove it
+    nb26d12: Stop
+    n3349eb: Restore its size, respawn at the room entry, unfreeze

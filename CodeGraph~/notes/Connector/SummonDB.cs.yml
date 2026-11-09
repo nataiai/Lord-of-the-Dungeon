@@ -1,0 +1,51 @@
+# AI notes for Connector/SummonDB.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+SummonCommand:
+  text: One chat summon request - who asked, which enemy, and where.
+  anchor: 28c6e22c
+
+SimpleSummonDB:
+  text: Chat's summon queue, with one shared cooldown for all of chat.
+  anchor: fcd6e4b7
+
+SummonCommand.SummonCommand:
+  text: Stores the enemy name, the user and the place of a request.
+  anchor: 6e8fcaed
+
+SimpleSummonDB.GetToSpawn:
+  text: Gives the next summoned enemy when the cooldown allows, else nothing.
+  anchor: 9ddc40d9
+  steps:
+    n6f665b: Cooldown not ready?
+    neebe27: Return nothing
+    n9803bb: Take the next request from the queue
+    n295bb4: If it was a real enemy, start the cooldown
+    n06abba: Return it
+
+SimpleSummonDB.Reset:
+  text: Empties the summon queue.
+  anchor: c38b6f03
+
+SimpleSummonDB.Add:
+  text: Queues a request (the queue is cleared once it passes 300).
+  anchor: 7e2d069c
+
+SimpleSummonDB._Pop:
+  text: Takes the next request and finds its enemy, or nothing.
+  anchor: 6cb78bab
+
+SimpleSummonDB.Unlock:
+  text: Lets chat summon this enemy type (once the streamer has killed one).
+  anchor: 1e8e2811
+
+SimpleSummonDB.getEnemy:
+  text: Finds the unlocked summon template with this name.
+  anchor: 94e843b0
+  steps:
+    n555459: Clean up the name
+    nc7ea8e: For each summonable enemy
+    nb287f9: Unlocked and the same name?
+    nb5db5c: Return it
+    neebe27: Return nothing

@@ -1,0 +1,50 @@
+# AI notes for Map/DungeonMap.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+DungeonMap:
+  text: All rooms and doors of the dungeon; only the current room is active.
+  anchor: 644596de
+
+DungeonMap.OnValidate:
+  text: Editor only - collects every room in the scene.
+  anchor: 8119b0ff
+
+DungeonMap.Start:
+  text: Pairs up the doors and finds the room the player starts in.
+  anchor: 30a34477
+  steps:
+    ne49582: Find every door trigger
+    n5e4bd1: Pair each door with its partner
+    nf6acd2: Pick the active room that holds the player
+
+DungeonMap.fillTriggerMap:
+  text: Pairs each door trigger with the nearest one in another room.
+  anchor: 9961c837
+
+DungeonMap.roomTriggerExit:
+  text: Switches room when the player leaves a door toward its partner.
+  anchor: f501cedd
+  steps:
+    n9424b1: Direction to the partner door
+    n909d77: If walking that way, switch room
+
+DungeonMap.switchRoom:
+  text: Moves to the room behind a door - shows it, hides the old one.
+  anchor: c9862d83
+  steps:
+    n345bc3: Find the room behind the partner door
+    n172da7: Show the new room
+    ne51c6e: Hide the old room
+    n6a49c0: Remember where each player entered
+    ncc9f0f: Play the new room's music
+    nd2f86b: Recheck walls for pathfinding
+
+DungeonMap._findRoom:
+  text: Finds the room that contains a point (the code says it is buggy).
+  anchor: c48cad68
+  steps:
+    n4bef88: For each room
+    n10579d: Point inside it?
+    nd48a61: Return that room
+    neebe27: None found

@@ -1,0 +1,53 @@
+# AI notes for BuffEffect.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+BuffType:
+  text: The kinds of buff - burn, heal, slow, stun, or none.
+  anchor: 445e0788
+
+BuffEffect:
+  text: A timed burn, heal, slow or stun, passed from hitboxes to characters.
+  anchor: 6afd786c
+
+BuffEffect.Buff.CopyTo:
+  text: Puts this buff on an object, or restarts it if already there.
+  anchor: 40c4b3d7
+  steps:
+    n38dff8: No effect (type none)?
+    nb2e4fc: Stop
+    naab257: Not stackable?
+    n472399: For each buff already on it
+    nf08f44: Same type?
+    n62d11e: Restart its timer
+    n8ac8b5: Stop
+    n85f581: Add a new copy, timed for its duration
+
+BuffEffect.Start:
+  text: Finds the character it sits on; first tick in 1 s.
+  anchor: c26ec3b9
+
+BuffEffect.OnTriggerEnter2D:
+  text: On a hitbox - copies the buff onto each character it can hit.
+  anchor: 358ce822
+
+BuffEffect.LateUpdate:
+  text: On a character, each frame after it moved - apply until the buff ends.
+  anchor: b00b0a32
+  steps:
+    n6ee3b6: Not on a character?
+    nb2e4fc: Stop
+    n08a28c: Character dead, or buff over?
+    n0f111a: Remove the buff
+    nf0509f: Apply it
+
+BuffEffect.Apply:
+  text: Slows or stuns every frame; burns or heals once a second.
+  anchor: 29a972d6
+  steps:
+    n66868f: Slow cuts speed 10%; stun freezes
+    n2354d9: Not a full second yet?
+    nb2e4fc: Stop
+    nca6318: Next tick in 1 s
+    n2294e9: If burn, deal its damage
+    nd05218: If heal, restore its HP

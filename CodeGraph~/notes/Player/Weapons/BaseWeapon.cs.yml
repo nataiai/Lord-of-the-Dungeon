@@ -1,0 +1,15 @@
+# AI notes for Player/Weapons/BaseWeapon.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+BaseWeapon:
+  text: A weapon's animation effect; it removes itself when the animation ends.
+  anchor: f7037b91
+
+BaseWeapon.Awake:
+  text: Finds its Animator if none is set.
+  anchor: fb820926
+
+BaseWeapon.Update:
+  text: Removes itself once the animation is 90% done.
+  anchor: 28a1b081

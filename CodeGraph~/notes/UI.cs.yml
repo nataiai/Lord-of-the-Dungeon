@@ -1,0 +1,79 @@
+# AI notes for UI.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+UI:
+  text: The on-screen HUD - hearts, weapon reloads, enemy names and dialogue.
+  anchor: d352c1a7
+
+UI.Awake:
+  text: Collects the heart, skill and weapon images it updates later.
+  anchor: bbb45a86
+
+UI.Start:
+  text: Draws on the UI camera and shows the held weapons.
+  anchor: 0b1089ff
+
+UI.Update:
+  text: Each frame - reload bars, then dialogue.
+  anchor: d8af7b27
+  steps:
+    n5d0fb2: Fill the weapon and summon reload bars
+    n1eca0c: Show dialogue, if any
+
+UI.ShowText:
+  text: Shows a text (an enemy's name) for 2 seconds.
+  anchor: 116f487d
+  steps:
+    nfb3807: Set the text
+    n585589: Cancel the previous hide timer
+    n20ff75: Show it, hide it in 2 s
+
+UI.d_foo:
+  text: Shows the name box for 2 seconds, then hides it.
+  anchor: c4a84dc1
+  steps:
+    neb879b: Show the name box
+    n577bf2: Wait 2 seconds
+    n282fc5: Hide it
+
+UI.UpdateMaxHP:
+  text: Makes enough heart images, and shows max HP of them.
+  anchor: a71d4229
+  steps:
+    ne88ca2: Get the row of hearts
+    n1f9ef8: While hearts are missing
+    n593eab: Copy the first heart
+    n8376d8: Show only max HP hearts
+
+UI.UpdateHP:
+  text: Full hearts for current HP, empty ones for the rest.
+  anchor: ee57a202
+
+UI.UpdateSkill:
+  text: Fills the summon reload bar.
+  anchor: 33a33347
+
+UI.UpdateWeap:
+  text: Shows the icon of the weapon in each hand.
+  anchor: f7dbc9b0
+
+UI.Dialogue:
+  text: Starts a dialogue; a held attack button won't skip its first line.
+  anchor: 412e9b4f
+
+UI.UpdateDialogue:
+  text: While dialogue shows - freeze the player, type it out, click to go on.
+  anchor: 334ff9e5
+  steps:
+    ndcc209: No dialogue?
+    n08b799: Hide the dialogue box
+    nb2e4fc: Done
+    nddaa24: Freeze the player; mark invincible; block attacks
+    n50711f: Show the dialogue box
+    ncbd7c9: Type out the current line
+    n52d4a9: Left attack just pressed?
+    n41cf43: Line still typing?
+    n9fe583: Show the whole line now
+    n8ac8b5: Done
+    n8e6eb7: Go to the next line, or end

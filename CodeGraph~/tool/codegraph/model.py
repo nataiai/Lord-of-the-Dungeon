@@ -8,13 +8,17 @@ import subprocess
 from dataclasses import dataclass, field
 
 from .csparse import FileInfo, Member, TypeDecl, parse_file
-from .flow import Flow, build_flow
+from .flow import Classifier, Flow, build_flow
 from .resolve import UNITY_EVENTS, Project, Resolver
 
 DEFAULT_CONFIG = {
     "external": ["AI/*"],
     "ignore": ["CodeGraph~/*"],
 }
+# engine calls that change the game world: always their own box, never folded into "simple math"
+NOTABLE = ("Destroy", "Instantiate", "StartCoroutine", "StopCoroutine", "SetActive", "LoadScene")
+MAX_SIMPLE_STEPS = 6  # more top-level steps than this: "complex" even without branches
+MAX_SIMPLE_TOTAL = 10  # more statements in total (nested included) than this: "complex"
 
 
 def load_config(tool_root: str) -> dict:
@@ -138,8 +142,12 @@ def build_model(sources: dict, cfg: dict) -> Model:
                 if acc in logic_acc and acc != mid and ("call", acc) not in uses:
                     uses.append(("call", acc))
         mi.uses = uses
-        start_kind = "start"
-        mi.flow = build_flow(mi.title, _with_accessor_calls(mi.member.stmts or [], logic_acc, mid), start_kind)
+        _with_accessor_calls(mi.member.stmts or [], logic_acc, mid)
+    complex_ids, complex_body = complex_members(members, project, _overrides(members, project))
+    classifier = Classifier(complex_ids, NOTABLE, complex_body)
+    for mid, mi in members.items():
+        mi.flow = build_flow(mi.title, mi.member.stmts or [], "start", classifier,
+                             lambda t: _short_callee(t, project))
 
     callers: dict[str, list] = {}
     for mid, mi in members.items():
@@ -199,7 +207,72 @@ def build_model(sources: dict, cfg: dict) -> Model:
             if tm.kind == "enum_member":
                 kind = "reads"
             dep(owner, tm.owner, kind)
-    return Model({f.path: f for f in files}, project, members, callers, deps, sources)
+    m = Model({f.path: f for f in files}, project, members, callers, deps, sources)
+    m.complex = complex_ids
+    m.complex_body = complex_body
+    return m
+
+
+def _short_callee(mid: str, project) -> str:
+    """Name shown for a call: `Died`, `PathFinding.Direction` (other class), `HP` for an accessor."""
+    name = mid.split("(")[0]
+    parts = name.split(".")
+    if parts[-1] in ("get", "set", "init"):
+        return parts[-2]
+    return parts[-1]
+
+
+def _overrides(members: dict, project) -> dict:
+    """base method id -> ids of the methods that override it (a call to the base may run any of them)."""
+    out: dict = {}
+    for mid, mi in members.items():
+        m = mi.member
+        if "override" not in m.mods:
+            continue
+        for base in project.base_chain(mi.type)[1:]:
+            bm = next((x for x in base.members if x.name == m.name and x.kind == m.kind and len(x.params) == len(m.params)), None)
+            if bm is not None:
+                out.setdefault(project.mid(bm), []).append(mid)
+                break
+    return out
+
+
+def complex_members(members: dict, project, overrides: dict | None = None) -> tuple:
+    """Functions that do real work: loops / switches, engine actions (Destroy, Instantiate ...), calls to other complex
+    functions, or many steps. Everything else is simple calculation, folded into the caller's gray boxes.
+
+    Returns (by_dispatch, by_body): a normal call `x.F()` may run any override of F, so it counts as complex when any
+    override is; `base.F()` runs only F's own body.
+    """
+    import re
+    notable = re.compile(r"\b(" + "|".join(NOTABLE) + r")\s*[(<]")
+    overrides = overrides or {}
+    body = {mid for mid, mi in members.items() if project.path_is_external(mi.type.file)}
+    dispatch = set(body)
+
+    def walk(stmts):
+        for x in stmts:
+            yield x
+            for _, sub in x.parts:
+                yield from walk(sub)
+
+    changed = True
+    while changed:
+        changed = False
+        for mid, mi in members.items():
+            if mid not in body:
+                st = mi.member.stmts or []
+                every = list(walk(st))
+                if (len(st) > MAX_SIMPLE_STEPS or len(every) > MAX_SIMPLE_TOTAL
+                        or any(x.kind in ("loop", "do", "switch") for x in every)
+                        or any(notable.search(x.full or x.text) for x in every if x.kind == "simple")
+                        or any((k == "call" and t in dispatch) or (k == "base" and t in body) for k, t in mi.uses)):
+                    body.add(mid)
+                    changed = True
+            if mid not in dispatch and (mid in body or any(o in dispatch for o in overrides.get(mid, []))):
+                dispatch.add(mid)
+                changed = True
+    return dispatch, body
 
 
 def _core_type(t: str) -> str:

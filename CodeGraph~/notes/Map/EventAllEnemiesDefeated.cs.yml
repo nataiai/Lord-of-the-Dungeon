@@ -1,0 +1,28 @@
+# AI notes for Map/EventAllEnemiesDefeated.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+EventAllEnemiesDefeated:
+  text: Fires an event once no enemy is left (e.g. to open doors).
+  anchor: 8254f087
+
+EventAllEnemiesDefeated.Update:
+  text: "Each frame: when no enemy is left, fire once and remove itself."
+  anchor: aea4201d
+  steps:
+    n7e9c3f: No enemies left?
+    nb913fd: Fire the event (e.g. open doors)
+    nd2f86b: Recheck walls for pathfinding
+    n12d231: Log it; play the door sound
+    nbee12d: Remove this checker
+
+EventAllEnemiesDefeated.IsConditionTrue:
+  text: True when no active enemy exists; it rescans only once the last one is gone.
+  anchor: 122ed4a6
+  steps:
+    n90e5b4: Last enemy found still active?
+    n1902d3: Not yet
+    n0f15f8: Look for any enemy
+    na7e2f6: Found one?
+    n6a19b2: Not yet
+    nb1e3d6: All defeated

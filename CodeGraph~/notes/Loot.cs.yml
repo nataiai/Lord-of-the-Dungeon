@@ -1,0 +1,81 @@
+# AI notes for Loot.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+LootType:
+  text: Kind of pickup - weapon, chat skill, instant item, or none.
+  anchor: f9610f37
+
+Loot:
+  text: A pickup on the floor that gives the player a weapon, skill or item.
+  anchor: 44c3f17e
+
+Loot.Start:
+  text: Makes sure it has a sprite and a trigger, then shows its icon.
+  anchor: 3f478567
+
+Loot.Yoink:
+  text: Does nothing yet (meant to pop the loot away from where it dropped).
+  anchor: 80b4664d
+
+Loot.UpdateImage:
+  text: Shows the weapon's icon, if this loot is a weapon.
+  anchor: 83b2cada
+
+Loot.OnTriggerEnter2D:
+  text: When the player steps on it, gives what it holds.
+  anchor: 59c78413
+  steps:
+    n6c3ff2: Touched by the player?
+    nf58834: If a weapon, pick it up
+    nd2bf6e: If a chat skill, learn it
+    naa23c7: If an instant item, use it
+    n915fec: Refresh the weapon icons
+
+Loot.InstantItemUse:
+  text: Uses the instant item on the player, then disappears.
+  anchor: 4bc7b7cc
+  steps:
+    n443899: Use the item on the player
+    nbee12d: Remove this pickup
+
+Loot.PickWeaponHandle:
+  text: Puts the weapon in a free hand, or swaps it while a hand's button is held.
+  anchor: 32e05cda
+  steps:
+    n089197: Left hand took it?
+    n5aa3bd: Join chat (only the first time in the game)
+    nb2e4fc: Stop
+    n58220d: Right hand took it?
+    n8ac8b5: Stop
+    n4922ac: Both hands full - swap with the hand whose button is held
+
+Loot.TryFill:
+  text: Puts the weapon in an empty or bare-fists hand and removes the pickup.
+  anchor: 263980ab
+  steps:
+    n6fc250: Hand holds a weapon (not bare fists)?
+    n1902d3: Return false
+    n247ddb: Put the weapon in that hand; play the pickup sound
+    nbee12d: Remove this pickup
+    nb1e3d6: Return true
+
+Loot.Swap:
+  text: Trades this weapon with the one in that hand, and updates its icon.
+  anchor: 9cc5dadc
+
+Loot.PickChatSkillHandle:
+  text: Adds its chat skill to the available list (once), then disappears.
+  anchor: 16bcbe69
+  steps:
+    n2dde9f: Add the chat skill if it's new
+    nbee12d: Remove this pickup
+
+Loot.Drop:
+  text: Drops a loot prefab and/or a weapon pickup where an object was.
+  anchor: c97a76a5
+  steps:
+    nb75b52: If there's a loot prefab, place a copy here
+    nc05090: No weapon to drop?
+    nb2e4fc: Stop
+    n86d921: Build a weapon pickup - icon, trigger, loot data

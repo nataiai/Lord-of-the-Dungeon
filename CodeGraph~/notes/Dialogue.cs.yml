@@ -1,0 +1,31 @@
+# AI notes for Dialogue.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+DialogueSequence:
+  text: Names of the story dialogues.
+  anchor: bb9f6cc6
+
+Dialogues:
+  text: All story dialogue lines, in one place.
+  anchor: 108f70eb
+
+TriggerType:
+  text: When a dialogue starts - at scene start, or when called.
+  anchor: fb8f35b8
+
+Dialogue:
+  text: Shows a dialogue, at scene start or when something calls it.
+  anchor: a094b5fd
+
+Dialogue.Start:
+  text: Shows its dialogue right away if set to start on its own.
+  anchor: 848a394d
+
+Dialogue.Call:
+  text: Shows its own lines, or the chosen story sequence.
+  anchor: 2955f1cb
+
+Dialogue.Update:
+  text: Does nothing (empty).
+  anchor: 14c33292

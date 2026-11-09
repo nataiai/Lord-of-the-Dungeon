@@ -1,58 +1,88 @@
-# AI / human notes for Enemy.cs. The generator reads this file and never rewrites it.
-# Keys are ids shown on the graph page. `anchor.hash` is the code the note was written for:
-# when the code changes, the page shows the note as "code changed since this note" until it is re-checked.
+# AI notes for Enemy.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
 
 Enemy:
-  kind: summary
-  text: >
-    A monster that chases the player and hurts it on touch. Any death (killed, or 360 s of
-    `lifeSpan` running out) drops its loot; only a kill also unlocks its type for chat summons.
-  mentions: [Enemy.lifeSpan, Enemy.Died, SimpleSummonDB.Unlock]
-  by: ai
-  anchor: {hash: 10b1665a, commit: fee0cf8}
-  review: {status: unreviewed}
+  text: A monster that chases the player and hurts it on touch.
+  anchor: 10b1665a
+
+Enemy.Start:
+  text: Sets up stats and parts; starts as a trigger so it never spawns stuck.
+  anchor: 0f20c722
 
 Enemy.Update:
-  kind: summary
-  text: >
-    It spawns as a trigger and turns solid once nothing overlaps it (fliers with `ignoreCollide`
-    stay passable). Unless stunned, it faces the player and walks to it around walls with
-    `PathFinding.Direction` (fliers go straight), kept apart from other enemies by `PathFinding.Separation`.
-  mentions: [EnemySO.ignoreCollide, Character.StuntMech, PathFinding.Direction, PathFinding.Separation]
-  image:
-    path: images/enemy-update.svg
-    alt: "Top-down sketch: an enemy walks around a rock to reach the player, a second enemy is pushed apart, a ghost flies straight through."
-  by: ai
-  anchor: {hash: d1033f11, commit: fee0cf8}
-  review: {status: unreviewed}
+  text: Each frame, walk to the player around walls.
+  anchor: d1033f11
+  image: {path: images/enemy-update.svg, alt: "An enemy walks around a rock to the player, another enemy is pushed apart, a ghost flies straight through."}
+  steps:
+    nd92fc0: Turn solid once free; end the hurt flash
+    n5dc508: If its time is up, die
+    na64b22: If dead, die
+    nf2b12c: Stunned?
+    nb2e4fc: Stop for this frame
+    n44ab9d: Aim at the player, face them, notice them if close
+    n5a53b0: Noticed the player?
+    n96b99c: Find the way around walls (fliers go straight)
+    n37145c: Move, keeping apart from other enemies
+    n627e46: Turn to face that way
+
+Enemy.OnDrawGizmosSelected:
+  text: Editor only, when selected - shows the cells it avoids and where it walks.
+  anchor: 7b30d83c
+  steps:
+    nd4aec9: Draw the cells it avoids, in red
+    ndfcd03: Draw where it walks, in yellow
 
 Enemy.Died:
-  kind: summary
-  text: >
-    Runs every frame while the enemy is dying. The first call drops loot and, for a kill only,
-    unlocks the type for chat and keeps a hidden copy as the summon template. It flashes white
-    and is destroyed 0.5 s later.
-  mentions: [Loot.Drop, SimpleSummonDB.Unlock, Enemy.AddSummonTemplate]
-  by: ai
-  anchor: {hash: 5812bd4c, commit: fee0cf8}
-  review: {status: unreviewed}
+  text: Runs every frame while dying - drops loot once, then vanishes after 0.5 s.
+  anchor: 5812bd4c
+  steps:
+    n5aa3bd: Join chat (only the first time in the game)
+    nc3b092: Flash white
+    nb8c209: First frame of dying?
+    nea5049: Drop its loot
+    neefeeb: Killed, not timed out?
+    n49cef5: Unlock this type for chat summons
+    n4fe11b: Keep a copy for chat summons
+    n32efa2: Start the 0.5 s death timer
+    nf22dbd: When the timer ends, remove it
 
-Enemy.OnTriggerStay2D:
-  kind: summary
-  text: >
-    Touch damage: a `Character` of another team that overlaps it is knocked back and takes
-    `attackPhysic` damage, at most once per `cooldown`, and never while this enemy is dying.
-  mentions: [Character.IsEnemyOf, CombatStat.attackPhysic, EnemySO.cooldown]
-  by: ai
-  anchor: {hash: 504640ac, commit: fee0cf8}
-  review: {status: unreviewed}
+Enemy.AddSummonTemplate:
+  text: Keeps a hidden copy of this enemy as what chat summons, if its type has none yet.
+  anchor: 99131635
+  steps:
+    nca6752: Get the summon list
+    nec34b2: Type already has a copy?
+    nb2e4fc: Stop
+    n9e2a68: Reset its color
+    na4413f: Copy this enemy
+    nd7af5b: Hide the copy
+    n9dc6c6: Name it, drop its loot, add it to the list
 
 Enemy.recieveDamage:
-  kind: usage
-  text: >
-    Shows the enemy's name first (that is how viewers learn what to type to summon it), then takes
-    `dmg` minus its defense, at least 1, and flashes red. Once dead it only shows the name.
-  mentions: [UI.ShowText, Enemy.HurtColor]
-  by: ai
-  anchor: {hash: 4e5654e0, commit: fee0cf8}
-  review: {status: unreviewed}
+  text: Shows its name, then takes damage minus defense (at least 1).
+  anchor: 4e5654e0
+  steps:
+    nbf19ee: Run the base version (it does nothing)
+    n8ee15d: Show its name (chat learns what to type)
+    neefeeb: Already dead?
+    nb2e4fc: Stop
+    n159aaa: Flash red; lose damage minus defense, at least 1
+
+Enemy.HurtColor:
+  text: Flashes red for 0.1 s.
+  anchor: 4719a130
+
+Enemy.receiveKnockback:
+  text: Gets pushed back, less if it resists knockback.
+  anchor: cb0f4003
+
+Enemy.OnTriggerStay2D:
+  text: Touch damage - hurts characters of other teams, once per cooldown.
+  anchor: 504640ac
+  steps:
+    nbd9b75: Cooling down, dying, or not a foe?
+    nb2e4fc: Skip
+    n407dd7: Knock the victim back
+    nb9a202: Hurt the victim
+    n64f06b: Start the hit cooldown

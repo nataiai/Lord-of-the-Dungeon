@@ -1,0 +1,11 @@
+# AI notes for Data Types/UsableItem.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+UsableItemType:
+  text: Kinds of usable item - heal, mute, enhance, explode.
+  anchor: 3442777b
+
+UsableItem:
+  text: Usable item data asset (no code uses it yet).
+  anchor: 10bf9a3f

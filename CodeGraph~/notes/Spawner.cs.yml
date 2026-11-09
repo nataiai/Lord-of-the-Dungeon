@@ -1,0 +1,38 @@
+# AI notes for Spawner.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+Spawner:
+  text: Spawns enemies on a room's floor, in free spots.
+  anchor: 4d1e0631
+
+Spawner.Awake:
+  text: Measures the floor's area from its tilemap.
+  anchor: a9180da0
+
+Spawner.Rand:
+  text: Picks a random point inside an area.
+  anchor: a578b035
+
+"Spawner.Spawn(Enemy,Vector2)":
+  text: Creates the enemy at a position.
+  anchor: 88c8fd34
+
+"Spawner.Spawn(Enemy,Bounds)":
+  text: Creates the enemy at a random point in an area.
+  anchor: 0026d4ce
+
+"Spawner.Spawn(Enemy)":
+  text: Creates the enemy at a random point on the floor.
+  anchor: da29185c
+
+"Spawner.Spawn(Enemy,Vector2,float)":
+  text: Creates the enemy on a random free spot near a point.
+  anchor: 3a3ad582
+  steps:
+    ne5ad4d: Start searching from the point
+    n24c09b: While spots are left to check
+    n166dd3: Take the next spot; measure its distance
+    n69528d: Too far away?
+    n95aac3: Keep it unless too close; queue free neighbors
+    nfa94f7: Create it on a random kept spot, else on the point

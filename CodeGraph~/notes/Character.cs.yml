@@ -1,0 +1,73 @@
+# AI notes for Character.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+CombatStat:
+  text: Attack and defense numbers, physical and magic.
+  anchor: 2c9c0567
+
+Team:
+  text: Which side a character is on; hits only hurt other teams.
+  anchor: a4ec1afe
+
+Character:
+  text: Base of the player and enemies - HP, facing, stun, knockback, healing.
+  anchor: 4b94fcef
+
+Character.IsEnemyOf:
+  text: True if the other character is on another team.
+  anchor: e9edcb81
+
+Character.setAnimFacing:
+  text: Stores which way to face (0 up, 1 right, 2 down, 3 left).
+  anchor: 5524c78f
+
+Character._setAnimFacing:
+  text: Turns a look direction into up, right, down or left.
+  anchor: 87638d8f
+  steps:
+    n101c2e: Looking mostly right?
+    nc156ab: Right (1)
+    na410f9: Looking mostly left?
+    n4cc99d: Left (3)
+    n48213b: Looking up?
+    nd1011c: Up (0)
+    nc9de5c: Looking down?
+    n4674d1: Down (2)
+    nedd5df: "Otherwise: down (2)"
+
+Character.froze:
+  text: Stuns it for 1 second.
+  anchor: 36084c31
+
+Character.StuntMech:
+  text: While stunned, slows it down and returns true.
+  anchor: 4cc5a2eb
+  steps:
+    n3f9574: Stun time over?
+    n1902d3: Not stunned
+    n471a06: Slow down; end the stun once nearly still
+    nb1e3d6: Still stunned
+
+"Character.receiveKnockback(Vector2,float)":
+  text: Gets pushed back, with no resistance.
+  anchor: 67e3b1de
+
+"Character.receiveKnockback(Vector2,float,float)":
+  text: Pushes it away from a point (give or take 10°) and stuns it for 1 s.
+  anchor: caefad23
+
+Character.Heal:
+  text: Adds HP, up to max HP.
+  anchor: fd16e7e3
+
+Character.HealWithEffect:
+  text: Heals and shows the heal animation.
+  anchor: ee15f8e3
+  steps:
+    n5172e2: Heal; get the heal effect
+    n42f111: If there is one, show it for 0.5 s
+
+Character.recieveDamage:
+  text: Does nothing here; Player and Enemy handle damage themselves.
+  anchor: 3b39b80d

@@ -1,0 +1,51 @@
+# AI notes for Controller.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+ControllerButton:
+  text: One button's state, with a "seen once per press" check.
+  anchor: 9d048cd8
+
+Controller:
+  text: Reads gamepad, keyboard and mouse into movement, aim and attack buttons.
+  anchor: 77a14368
+
+ControllerButton.isPressedOnce:
+  text: True only the first time each caller asks during one press.
+  anchor: 612c582b
+  steps:
+    n6b18f3: Not pressed?
+    n1902d3: Return false
+    n47aeb3: True if this caller hasn't seen this press
+
+Controller.Update:
+  text: Each frame - read all devices, show the cursor only for mouse use.
+  anchor: ee9da1e0
+  steps:
+    n079405: Read the old input axes; clear the aim
+    n1926a8: Read gamepad, keyboard and mouse
+    nf1f1a2: Show the cursor only while the mouse is used
+
+Controller.UpdateInput:
+  text: A gamepad replaces everything; else keyboard, then mouse aim if active.
+  anchor: 53706839
+  steps:
+    n539747: Get the connected devices
+    n590607: Gamepad connected?
+    n950fae: Sticks move and aim; bumpers or A/B attack
+    nb2e4fc: Stop (the gamepad replaces the rest)
+    n9c3ff5: "Keyboard: WASD move, arrows aim, O/P attack"
+    n2ca3df: No mouse, or mouse turned off?
+    n75ebd0: Mouse aim off
+    n8ac8b5: Stop
+    na08b7c: Read the mouse position
+    n9f6c98: Turn mouse aim on or off
+    n3a4432: If mouse aim is on, aim at it; clicks attack
+
+Controller.Axis:
+  text: Turns two keys into -1, 0 or 1.
+  anchor: 4a366bf3
+
+Controller.CheckMouseEnable:
+  text: Mouse aim turns on when it moves far, off after a still pause.
+  anchor: 04726bee

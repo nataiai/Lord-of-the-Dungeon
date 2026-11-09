@@ -1,22 +1,143 @@
-# AI / human notes for Player.cs. The generator reads this file and never rewrites it.
+# AI notes for Player.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+Direction:
+  text: The four facing directions, as names and as vectors.
+  anchor: 4532f6b1
+
+HoldingWeapons:
+  text: One hand - the weapon it holds and its cooldown.
+  anchor: 16231904
+
+Player:
+  text: The player - moves with input, attacks with two hands, has HP hearts.
+  anchor: eb1ccc86
+
+HoldingWeapons.Use:
+  text: Uses the weapon if it is ready.
+  anchor: aac98be2
+
+HoldingWeapons.getReloadPercent:
+  text: How reloaded the weapon is, from 0 to 1 (for the UI).
+  anchor: 9c542f80
+
+HoldingWeapons.ForceUse:
+  text: Attacks now - spawns the swing animation and the hitbox.
+  anchor: 388eb2e1
+  steps:
+    n59933a: Restart the cooldown; find where the hitbox goes
+    n184ee8: Weapon has a swing animation?
+    n5f085a: Spawn the swing animation on the user
+    n591cb1: Play it for the user's facing, fit to the cooldown
+    n40e0cc: Play the use sound, if any
+    n7d38b4: Spawn the hitbox in front of the user
+    nfb7e5e: Tell it its weapon and owner
+    n5cabe4: If the weapon has a buff, give it to the hitbox
+    n8020f5: Set damage from the attack stat, push origin, speed
+
+HoldingWeapons.StopAnim:
+  text: Removes the swing animation, if one is playing.
+  anchor: c2bd49a3
+  steps:
+    n4c712a: If an animation is playing, remove it
+    naa5f85: Forget it
+
+Player.maxHP.set:
+  text: Setting max HP also redraws the heart slots.
+  anchor: c2c5e62f
+  steps:
+    ncafc6a: Store the new max
+    nfc32bd: Redraw the heart slots
+
+Player.HP.set:
+  text: Setting HP also refills the hearts on screen.
+  anchor: 6c655382
+  steps:
+    n4250c3: Store the new HP
+    n737072: Refill the hearts on screen
+
+Player.Start:
+  text: Starts at full HP and remembers where it entered.
+  anchor: 87b1b389
+  steps:
+    n104384: Fill HP to max (redraws the hearts)
+    n8c2866: Get the controller; remember the start spot
+
+Player.Update:
+  text: Each frame - die at 0 HP, move, attack with each hand, animate.
+  anchor: 32124683
+  steps:
+    ne77943: If out of HP, die
+    ndbd064: Read input, pick facing, move unless stunned
+    n5070fd: Attack with the left hand
+    n1bd7f4: Attack with the right hand
+    n640727: Update the animation
+
+Player.TryAttack:
+  text: Attacks with one hand if its button is held and it is ready.
+  anchor: 45b2fee2
+  steps:
+    n441299: Weapon not ready, or button not held?
+    nb2e4fc: Stop
+    nc39e71: Force the attack animation
+    n3a92de: Use the weapon
+    na7960c: Note the cooldown and attack type
+
+Player.InstantItemUse:
+  text: Uses an item it walked into (heal items heal).
+  anchor: 319e894e
+  steps:
+    n4f24dc: No item?
+    nb2e4fc: Stop
+    n356f82: If it is a heal item, heal
 
 Player.Respawn:
-  kind: usage
-  text: >
-    Puts the player back where it entered the current room. Called by `Hole.Fall`;
-    `DungeonMap.switchRoom` sets that spot whenever the player changes room.
-  mentions: [Player.roomEntryPos, Hole.Fall, DungeonMap.switchRoom]
-  by: ai
-  anchor: {hash: aa101b78, commit: fee0cf8}
-  review: {status: unreviewed}
+  text: Goes back to where it entered the room (after a fall).
+  anchor: aa101b78
 
-# DEMO of drift detection: this note was written for the code *before* commit b47c315
-# (anchor 5188fa45). That commit changed Died(), so the page shows it as "code changed since this note".
 Player.Died:
-  kind: summary
-  text: >
-    Test respawn: refills HP, moves the player to (0, 0) and sends the map back to the first room.
-  mentions: [GameManager._re]
-  by: ai
-  anchor: {hash: 5188fa45, commit: b47c315~1}
-  review: {status: unreviewed}
+  text: "Test respawn: full HP, back to (0, 0) and the first room."
+  anchor: f9ae8084
+  steps:
+    n104384: Refill HP (redraws the hearts)
+    nbe62ae: Move to (0, 0) and make it the entry spot
+    nbdc250: Go back to the first room
+
+Player.UpdateAnim:
+  text: Each frame, plays the clip for idle, walking or the attack.
+  anchor: 6cfa72ae
+  steps:
+    nd104f0: Attack clip still playing (under 90%)?
+    nb2e4fc: Let it finish
+    n019d10: Face, play the clip for the state, reset to idle or walk
+
+"Player.ChangeAnimation(AnimationClip[],int)":
+  text: Plays the clip for a facing, if the list has one.
+  anchor: 26500cb4
+
+"Player.ChangeAnimation(AnimationClip)":
+  text: Plays a clip, unless it is already playing.
+  anchor: c332df46
+  steps:
+    n43e2bd: Already playing, and not forced?
+    nb2e4fc: Stop
+    ncc1dab: Play from the start; fit attacks to the cooldown
+
+Player.recieveDamage:
+  text: Plays the hit sound, then loses HP unless invincible.
+  anchor: dde55018
+  steps:
+    n699817: Play the hit sound
+    nae1302: Invincible right now?
+    nb2e4fc: Ignore the hit
+    nd5bc76: Lose HP (redraws the hearts)
+    na3ae39: Start the invincible time
+
+Player.receiveKnockback:
+  text: Gets pushed back unless invincible, less with resistance.
+  anchor: 610850d2
+  steps:
+    nae1302: Invincible right now?
+    nb2e4fc: Ignore it
+    ndd2306: Get pushed, reduced by resistance

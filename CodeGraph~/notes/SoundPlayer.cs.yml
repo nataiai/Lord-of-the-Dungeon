@@ -1,0 +1,37 @@
+# AI notes for SoundPlayer.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+SoundPlayer:
+  text: Plays sound effects, and each room type's music.
+  anchor: 70268a72
+
+SoundPlayer.Awake:
+  text: Becomes the one sound player everyone uses (ready before any Start).
+  anchor: f75deb8f
+
+SoundPlayer.PlaySound:
+  text: Plays a sound effect once.
+  anchor: 0de3facf
+
+SoundPlayer.UpdateMusic:
+  text: Switches to the current room type's music, or stops it.
+  anchor: 63511e25
+  steps:
+    n36f7de: Find this room type's music
+    naa39bd: Already playing it?
+    nb2e4fc: Done
+    n2859ea: Switch to it
+    nf64e6c: No music for this room type?
+    n0bb8b6: Stop the music
+    n8ac8b5: Done
+    nd3e7d9: Play it (and log its name)
+
+SoundPlayer.getClip:
+  text: Finds the music listed for a room type.
+  anchor: 27d316af
+  steps:
+    nb5242a: For each listed music
+    n27f4de: Listed for this room type?
+    nc3efce: Return that music
+    neebe27: None found - return nothing

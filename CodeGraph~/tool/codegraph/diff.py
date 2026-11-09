@@ -13,10 +13,11 @@ import os
 import subprocess
 
 from .csparse import Stmt
-from .flow import build_flow
+from .flow import Classifier, build_flow
 from .mermaid import MapBuilder, esc, flow_to_mermaid, mid_node, short
-from .model import Model, build_model, load_config, load_sources
-from .pages import CALLS, GENERATED, LEGEND, icon, per_frame
+from .model import NOTABLE, Model, build_model, load_config, load_sources
+from .notes import load_notes
+from .pages import CALLS, GENERATED, LEGEND, display_name, esc_md, icon, per_frame
 
 SIMILAR = 0.5  # text similarity for "the same statement, edited" (GumTree / git use 0.5 too)
 
@@ -307,15 +308,12 @@ def impact_map(d: dict, old: Model, new: Model) -> str:
             if model is None:
                 continue
             for k, t in model.uses:
-                if k not in CALLS and not (k in ("get", "set") and t in fields):
+                # only what changed: calls between changed functions, and changed fields they set (no reads,
+                # no unchanged context: that is what made the map busy)
+                if not (k in CALLS or (k == "set" and t in fields)):
                     continue
                 if t not in changed and t not in fields:
-                    if k in CALLS and side == "new":
-                        tm = new.members.get(t)
-                        if tm is not None:
-                            mb.node(mid_node(t), label(t, new), "own")
-                    else:
-                        continue
+                    continue
                 in_old = c.old is not None and (k, t) in c.old.uses
                 in_new = c.new is not None and (k, t) in c.new.uses
                 st = "same" if in_old and in_new else ("added" if in_new else "removed")
@@ -338,135 +336,110 @@ def impact_map(d: dict, old: Model, new: Model) -> str:
             u = mb.node("U_" + ph.replace(" ", "_").replace("-", "_"), f"Unity · {ph}", "engine", shape="stadium")
             mb.edge(u, mid_node(mid), "", "engine", "added" if c.status == "added" else
                     "removed" if c.status == "removed" else "same")
+    linked = {e[0] for e in mb.edges} | {e[1] for e in mb.edges}
+    for f in fields:  # a field nothing sets here is already in the list above: keep the map small
+        if mid_node(f) not in linked:
+            mb.nodes.pop(mid_node(f), None)
     return mb.render()
 
 
-def report(old: Model, new: Model, base: str, head: str, subject: str = "") -> str:
+def _what(c) -> str:
+    """A few words for the summary list."""
+    n_st = sum(1 for _ in _all(c.stmts))
+    if c.status == "added":
+        return "new" if n_st else "new, empty"
+    if c.status == "removed":
+        return "removed" if n_st else "removed (was empty)"
+    bits = []
+    cn = c.counts
+    for k, w in (("added", "added"), ("removed", "removed"), ("modified", "changed")):
+        if cn[k]:
+            bits.append(f"{cn[k]} {w}")
+    if c.note:
+        bits.append(c.note)
+    return ", ".join(bits) or "reformatted"
+
+
+def report(old: Model, new: Model, base: str, head: str, subject: str = "", notes: dict | None = None) -> str:
+    notes = notes or {}
     d = diff_models(old, new)
     frame = per_frame(new)
     own = [c for c in d["members"] if not _is_external(new, _file_of(new, old, c.id))]
     ext = [c for c in d["members"] if _is_external(new, _file_of(new, old, c.id))]
     own.sort(key=lambda c: (RANK[c.rank], c.id))
-    L = [GENERATED, f"# Graph diff · `{base}` → `{head}`", ""]
+    L = [GENERATED, f"# What changed · `{base}` → `{head}`", ""]
     if subject:
         L += [f"> {subject}", ""]
-    files = d["files"]
-    L.append(f"{len(files)} files · {len(own)} methods changed in your code"
-             + (f" · {len(ext)} in `AI/` (external, API only below)" if ext else "")
-             + f" · {len(d['fields'])} state members changed")
-    L.append("")
-    L.append("<sub>**Colors:** blue `+` added · vermilion dashed `−` removed · yellow `~` changed (with *was:*) · "
-             "gray = unchanged context · dotted outline = not changed but calls changed code. "
-             f"Ranks: {RANK_ICON['crucial']} signature / public API · {RANK_ICON['medium']} conditions, branches or "
-             f"calls · {RANK_ICON['low']} plain statements · {RANK_ICON['none']} comments / format. {LEGEND}</sub>")
-    L.append("")
-    # ---- text list first (also the fallback when diagrams don't render)
-    L.append("## What changed")
-    L.append("")
+    L += ["<sub>blue + added · orange − removed · yellow ~ changed · gray = same · "
+          f"{RANK_ICON['crucial']} breaks callers · {RANK_ICON['medium']} new logic · {RANK_ICON['low']} small edit</sub>", ""]
+    # ---- short list (also readable if a diagram doesn't render)
     for c in own:
         mi = c.new or c.old
-        bits = []
-        cn = c.counts
-        n_st = sum(1 for _ in _all(c.stmts))
-        if c.status == "added":
-            bits.append(f"new, {n_st} statements" if n_st else "new, empty")
-        elif c.status == "removed":
-            bits.append(f"removed ({n_st} statements)" if n_st else "removed (it was empty)")
-        else:
-            for k, w in (("added", "added"), ("removed", "removed"), ("modified", "changed")):
-                if cn[k]:
-                    bits.append(f"{cn[k]} {w}")
-            if cn["cond"]:
-                bits.append(f"{cn['cond']} condition{'s' if cn['cond'] > 1 else ''} changed")
-        if c.note:
-            bits.append(c.note)
-        if c.calls_added:
-            bits.append("now calls " + ", ".join(f"`{t}`" for t in c.calls_added))
-        if c.calls_removed:
-            bits.append("no longer calls " + ", ".join(f"`{t}`" for t in c.calls_removed))
-        if c.new is not None and (c.id in frame or c.new.unity_event and c.new.member.name in ("Update", "FixedUpdate", "LateUpdate")):
-            bits.append("🔁 runs every frame")
         sym = {"added": "+", "removed": "−", "modified": "~"}[c.status]
-        L.append(f"- {RANK_ICON[c.rank]} **{sym} `{c.id}`** {icon(mi, set()).strip()} — " + "; ".join(bits))
-    for t, n, st, m, o in d["fields"]:
-        if _is_external(new, _file_of(new, old, t)):
-            continue
-        sym = {"added": "+", "removed": "−", "modified": "~"}[st]
-        desc = ""
-        if st == "modified":
-            desc = f"`{o.type} {o.name}{(' = ' + o.init) if o.init else ''}` → `{m.type} {m.name}{(' = ' + m.init) if m.init else ''}`"
-            if o.init != m.init and m.kind == "field" and ("public" in m.mods or "SerializeField" in m.attrs):
-                desc += " ⚠️ *default changed: objects already saved in scenes / prefabs keep their old value*"
-        elif st == "added":
-            desc = f"`{m.type} {m.name}{(' = ' + m.init) if m.init else ''}`" + (f" — {m.tooltip or m.comment}" if (m.tooltip or m.comment) else "")
-        else:
-            desc = f"`{o.type} {o.name}`"
-        L.append(f"- {RANK_ICON['low']} **{sym} `{t}.{n}`** (state) — {desc}")
-    for path, st, f in files:
-        if st == "comments / format only":
-            L.append(f"- {RANK_ICON['none']} `{path}` — comments / formatting only")
+        extra = []
+        if c.calls_added:
+            extra.append("now calls " + ", ".join(f"`{short_call(t)}`" for t in c.calls_added))
+        if c.new is not None and c.id in frame:
+            extra.append("🔁")
+        L.append(f"- {RANK_ICON[c.rank]} {sym} **`{c.id}`** {icon(mi, set()).strip()} {_what(c)}"
+                 + (" · " + " · ".join(extra) if extra else ""))
+    fields = [f for f in d["fields"] if not _is_external(new, _file_of(new, old, f[0]))]
+    if fields:
+        bits = []
+        warn = []
+        for t, n, st, m, o in fields:
+            bits.append({"added": "+", "removed": "−", "modified": "~"}[st] + f"`{t.split('.')[-1]}.{n}`")
+            if st == "modified" and o.init != m.init and m.kind == "field" and ("public" in m.mods or "SerializeField" in m.attrs):
+                warn.append(f"`{n}` {o.init or '(none)'} → {m.init or '(none)'}")
+        L.append(f"- {RANK_ICON['low']} fields: " + ", ".join(bits))
+        if warn:
+            L.append("- ⚠️ new defaults don't reach objects already saved in scenes: " + ", ".join(warn))
+    if ext:
+        api = [c for c in ext if ("public" in (c.new or c.old).member.mods) and (c.status != "modified" or c.note)]
+        L.append(f"- `AI/` (external): {len(ext)} functions changed inside" +
+                 (" · API: " + ", ".join(f"`{c.id}`" for c in api) if api else ""))
     L.append("")
-    # ---- clusters
     cl = [g for g in clusters(d, old, new) if any(not _is_external(new, _file_of(new, old, x)) for x in g)]
     if len(cl) > 1:
-        L.append("## Separate parts of this change")
-        L.append("")
-        L.append("Changes that don't call or share state with each other. Check each part against the commit message:")
-        L.append("")
-        for i, g in enumerate(cl, 1):
-            L.append(f"{i}. " + ", ".join(f"`{x}`" for x in g))
-        L.append("")
-    # ---- impact map
-    L.append("## Impact map")
-    L.append("")
-    L.append("Changed methods and state, with one step of context. Edges: calls (solid), sets (dashed), reads (dotted).")
-    L.append("")
-    L.append("```mermaid")
-    L.append(impact_map({"members": own, "fields": [f for f in d["fields"] if not _is_external(new, _file_of(new, old, f[0]))]}, old, new))
-    L.append("```")
-    L.append("")
-    # ---- per method union flowcharts
-    L.append("## Changed methods")
-    L.append("")
+        L += [f"**{len(cl)} separate parts:** " + " · ".join("(" + ", ".join(f"`{short_call(x)}`" for x in g[:4])
+                                                           + (" …" if len(g) > 4 else "") + ")" for g in cl), ""]
+    L += ["## Map of the change", "", "```mermaid",
+          impact_map({"members": own, "fields": fields}, old, new), "```", ""]
+    cls = Classifier(old.complex | new.complex, NOTABLE, old.complex_body | new.complex_body)
     for c in own:
         if c.status == "removed" and not any(True for _ in _all(c.stmts)):
             continue
         mi = c.new or c.old
         sym = {"added": "+", "removed": "−", "modified": "~"}[c.status]
-        L.append(f"### {RANK_ICON[c.rank]} {sym} {icon(mi, frame)}{c.id}")
-        L.append("")
-        meta = []
-        if c.new is not None:
-            meta.append(f"now L{c.new.member.line}–{c.new.member.end}")
-        if c.old is not None:
-            meta.append(f"was L{c.old.member.line}–{c.old.member.end}")
-        if c.note:
-            meta.append(c.note)
-        L.append(" · ".join(meta))
-        L.append("")
-        flow = build_flow(mi.title, c.stmts)
-        L.append("```mermaid")
-        L.append(flow_to_mermaid(flow, unity_event=mi.member.name if mi.unity_event else None, coroutine=mi.coroutine,
-                                 diff=True))
-        L.append("```")
-        L.append("")
-    # ---- external API
-    if ext:
-        L.append("## `AI/` (external): API changes only")
-        L.append("")
-        for c in sorted(ext, key=lambda c: c.id):
-            mi = c.new or c.old
-            if not ("public" in mi.member.mods or "internal" in mi.member.mods):
-                continue
-            if c.status == "modified" and not c.note:
-                continue
-            sym = {"added": "+", "removed": "−", "modified": "~"}[c.status]
-            L.append(f"- **{sym} `{c.id}`** {c.note}")
-        hidden = sum(1 for c in ext if c.status == "modified" and not c.note)
-        if hidden:
-            L.append(f"- *{hidden} method bodies changed inside `AI/` (not shown: external)*")
-        L.append("")
+        name = display_name(new if c.new else old, mi.type.full)
+        flow = build_flow(mi.title, c.stmts, "start", cls, name)
+        note = notes.get(c.id)
+        steps = note.steps if note is not None else {}
+        for n in flow.nodes:
+            n.label = steps.get(n.id, "") if n.status == "same" and n.kind not in ("start", "end", "join") else ""
+        flow.nodes[0].label = icon(mi, set()) + mi.member.name
+        L += [f"## {RANK_ICON[c.rank]} {sym} {c.id}", ""]
+        if note is not None and note.text and c.status != "removed":
+            L += [f"🤖 {note.text.splitlines()[0]}", ""]
+        L += ["```mermaid", flow_to_mermaid(flow, unity_event=mi.member.name if mi.unity_event else None,
+                                            coroutine=mi.coroutine, diff=True, short_name=name), "```", ""]
+        changed = [n for n in flow.steps if n.status != "same" and n.kind not in ("case",)]
+        if changed:
+            L += ["<details><summary>Code that changed</summary>", "", "| | Code |", "|---|---|"]
+            for n in changed:
+                for l in n.lines:
+                    if l.status == "same":
+                        continue
+                    mark = {"added": "+", "removed": "−", "modified": "~"}[l.status]
+                    was = f"<br><sub>was:</sub> <code>{esc_md(l.old)}</code>" if l.old else ""
+                    L.append(f"| {mark} | <code>{esc_md(l.text)}</code>{was} |")
+            L += ["", "</details>", ""]
     return "\n".join(L) + "\n"
+
+
+def short_call(mid: str) -> str:
+    parts = mid.split("(")[0].split(".")
+    return ".".join(parts[-2:]) if len(parts) >= 2 else mid
 
 
 def cmd_diff(a, repo: str, home: str):
@@ -480,7 +453,11 @@ def cmd_diff(a, repo: str, home: str):
                                      capture_output=True, text=True).stdout.strip()
         except Exception:
             pass
-    text = report(old, new, a.base, a.head or "working tree", subject)
+    notes = {}
+    for path in new.files:
+        for n in load_notes(os.path.join(home, "notes"), path):
+            notes[n.target] = n
+    text = report(old, new, a.base, a.head or "working tree", subject, notes)
     if a.out:
         os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
         with open(a.out, "w", encoding="utf8", newline="\n") as f:

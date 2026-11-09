@@ -1,0 +1,11 @@
+# AI notes for FollowPlayer.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+FollowPlayer:
+  text: Makes the Cinemachine camera follow the player.
+  anchor: 769cb6e2
+
+FollowPlayer.Start:
+  text: Points the camera at the player.
+  anchor: b5bed1cf

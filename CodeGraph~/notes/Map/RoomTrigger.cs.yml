@@ -1,0 +1,11 @@
+# AI notes for Map/RoomTrigger.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+RoomTrigger:
+  text: A door trigger; leaving it may move the player to the next room.
+  anchor: 464bff39
+
+RoomTrigger.OnTriggerExit2D:
+  text: When the player leaves this door, the map decides whether to switch rooms.
+  anchor: 46091adb

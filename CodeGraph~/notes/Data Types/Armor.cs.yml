@@ -1,0 +1,7 @@
+# AI notes for Data Types/Armor.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+Armor:
+  text: Armor data asset with defense values (no code reads it yet).
+  anchor: 292c0c9e

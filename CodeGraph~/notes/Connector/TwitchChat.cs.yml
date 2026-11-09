@@ -1,0 +1,27 @@
+# AI notes for Connector/TwitchChat.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+TwitchChat:
+  text: Reads Twitch chat through the Lexone package (the backup reader).
+  anchor: 5466f357
+
+TwitchChat.Start:
+  text: Grabs the Lexone chat connection.
+  anchor: 4a5b7313
+
+"TwitchChat.Connect()":
+  text: Joins the saved channel.
+  anchor: d15ec805
+
+"TwitchChat.Connect(string)":
+  text: Joins a Twitch channel and starts listening to its messages.
+  anchor: 7f1ff177
+
+TwitchChat.OnChatMessage:
+  text: Passes each chat message on to the command reader.
+  anchor: 678e6b4f
+
+TwitchChat.addToDB:
+  text: Hands the chatter's name and message to the command reader.
+  anchor: df755988

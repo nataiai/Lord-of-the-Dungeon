@@ -1,0 +1,24 @@
+# AI notes for Skill.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+Skill:
+  text: A chat skill's cooldown timer.
+  anchor: 510db079
+
+Skill.getReloadPercent:
+  text: How recharged it is, from 0 to 1 (for the UI).
+  anchor: c823aa81
+
+Skill.Start:
+  text: Never runs - Skill isn't a MonoBehaviour, so Unity doesn't call it.
+  anchor: c34be6a7
+
+Skill.Call:
+  text: Uses the skill if it's ready, and restarts its cooldown.
+  anchor: d3c4942c
+  steps:
+    n44f644: Still cooling down?
+    n1902d3: Return false
+    n8e9cb7: Restart the cooldown
+    nb1e3d6: Return true

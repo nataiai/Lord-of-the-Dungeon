@@ -1,0 +1,30 @@
+# AI notes for Connector/Chat.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+ChatType:
+  text: Kinds of chat command - summon, teleport, vote, work, or not a command.
+  anchor: 4d8f39a2
+
+Chat:
+  text: Base of the chat readers - turns chat messages into game commands.
+  anchor: db0453a7
+
+Chat.Categorize:
+  text: Works out which command a chat message is, or none.
+  anchor: ce2a828f
+  steps:
+    nd74057: Split the message into lowercase words
+    n134586: For each known command
+    n83bb7a: Word count fits, and the first word starts the command?
+    n955055: Return that command
+    n258455: Return not a command
+
+Chat.addToDB:
+  text: Handles one chat message - queues a summon or does a teleport.
+  anchor: 64760a23
+  steps:
+    n119429: Split the message into words
+    na6f1b7: Which command?
+    n9fa4bc: Queue a summon of the named enemy
+    n4ca3f6: If x and y are numbers, teleport the player

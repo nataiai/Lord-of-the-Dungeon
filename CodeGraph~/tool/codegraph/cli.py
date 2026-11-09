@@ -49,16 +49,14 @@ def all_notes(model) -> dict:
 
 
 def coverage(model) -> tuple:
-    """(statements shown in a flowchart node, statements in the code) for your own (non-external) files."""
-    def count(stmts):
-        return sum((0 if s.kind in ("break", "continue") else 1) + sum(count(sub) for _, sub in s.parts) for s in stmts)
-
+    """(statements held by flowchart boxes, statements in the code) for your own (non-external) files."""
+    from .flow import count_statements, covered
     total = shown = 0
     for mi in model.members.values():
-        if mi.type.file in model.files and model.files[mi.type.file].external:
+        if model.files[mi.type.file].external:
             continue
-        total += count(mi.member.stmts or [])
-        shown += sum(len(n.lines) for n in mi.flow.nodes if n.kind not in ("start", "end", "case"))
+        total += count_statements(mi.member.stmts or [])
+        shown += covered(mi.flow)
     return shown, total
 
 
@@ -93,7 +91,8 @@ def cmd_build(a):
 
 
 def cmd_notes(a):
-    """The AI's to-do list: what needs a note, which notes drifted, which are orphaned (with current hashes)."""
+    """The AI's to-do list: one-line notes to write, boxes without a short label (with their code), stale notes."""
+    from .pages import is_chart
     repo = repo_root()
     cfg = load_config(HOME)
     model = build_model(load_sources(repo, cfg), cfg)
@@ -108,17 +107,29 @@ def cmd_notes(a):
         todo = []
         for t in fi.types:
             if t.outer is None and t.full not in have:
-                todo.append(f"  missing  {t.full:<40} code {t.fingerprint}")
+                todo.append(f"  note   {t.full}  (code {t.fingerprint}): one line, what it is")
         for mi in sorted(model.file_members(path), key=lambda m: m.member.line):
             n = have.get(mi.id)
-            complex_ = sum(1 for x in mi.flow.nodes if x.kind in ("decision", "switch", "loop", "guard")) >= 2
-            if n is None and complex_:
-                todo.append(f"  missing  {mi.id:<40} code {mi.member.fingerprint}  (branching method)")
-        for n in notes.get(path, []):
-            if n.status != "current":
-                todo.append(f"  {n.status:<8} {n.target:<40} note {n.anchor.get('hash')} -> code {n.current_hash}")
-            if n.broken_mentions:
-                todo.append(f"  broken   {n.target:<40} mentions {', '.join(n.broken_mentions)}")
+            trivial = mi.member.kind == "accessor" and not any(k in ("call", "base") and t in model.complex
+                                                                for k, t in mi.uses)
+            if trivial:
+                continue
+            if n is None or not n.text:
+                todo.append(f"  note   {mi.id}  (code {mi.member.fingerprint}): one line, what it does")
+            elif n.status != "current":
+                todo.append(f"  stale  {mi.id}  note {n.anchor.get('hash')} -> code {mi.member.fingerprint}")
+            if not is_chart(mi):
+                continue
+            steps = n.steps if n is not None else {}
+            ids = {x.id for x in mi.flow.nodes}
+            for x in mi.flow.steps:
+                if x.kind in ("case", "join") or x.id in steps:
+                    continue
+                code = " | ".join(l.text for l in x.lines)
+                todo.append(f"  label  {mi.id} {x.id} [{x.kind}]  {code[:150]}")
+            for sid in steps:
+                if sid not in ids:
+                    todo.append(f"  gone   {mi.id} {sid}  (label for code that changed: delete it)")
         if todo:
             print(path)
             print("\n".join(todo))

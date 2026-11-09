@@ -1,0 +1,46 @@
+# AI notes for HitBox.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+HitBox:
+  text: An attack's damage area - hurts what it touches, then disappears.
+  anchor: e3a26de6
+
+HitBox.CanHit:
+  text: True if it may hurt that character (the owner's foes, or anyone if no owner).
+  anchor: 1c147131
+
+HitBox.setVelocity:
+  text: Makes it fly at a speed (0 means it stays put).
+  anchor: ea5ab7f6
+  steps:
+    n107d06: No speed?
+    nb2e4fc: Stop (it stays put)
+    n241099: Fly at that speed
+
+HitBox.Start:
+  text: Notes when it appeared; instant hits remove themselves quickly.
+  anchor: 4b041169
+  steps:
+    n8c0d53: Note when it appeared
+    n29f8cd: If an instant hit, remove it 2 physics steps later
+
+HitBox.Update:
+  text: Removes itself when its timer runs out.
+  anchor: 5e708e9e
+
+HitBox.OnTriggerEnter2D:
+  text: On touch, hurts and pushes each foe once, or breaks a prop.
+  anchor: d50be542
+  steps:
+    n0d68c1: Touched a character it may hit?
+    ne2ac55: Already hit this one?
+    nb2e4fc: Skip
+    n87f62c: Play the hit sound
+    nb94866: Hurt it
+    na8b982: Push it away from the attacker
+    n4b577e: If out of hits, remove the hitbox
+    n7d1471: Non-magic hit on a breakable prop?
+    nefeac6: Damage the prop
+    nbee12d: Remove the hitbox
+    nc17712: No timer? Remove it on first touch

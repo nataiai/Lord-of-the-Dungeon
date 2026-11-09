@@ -1,0 +1,19 @@
+# AI notes for Map/InstantItemOnFloor.cs: one line per class / function, and a few words for each box of its chart.
+# Box ids are hashes of the box's code: if that code changes, the old words stop showing and `notes` lists the box.
+# `anchor` is the hash of the code the one-liner was written for.
+
+InstantItemOnFloor:
+  text: An item on the floor that the player uses on touch.
+  anchor: 5ea2a4e2
+
+InstantItemOnFloor.Start:
+  text: Plays the item's floor animation.
+  anchor: 73103920
+
+InstantItemOnFloor.OnTriggerEnter2D:
+  text: When the player touches it, uses the item and removes it.
+  anchor: 7fc9a949
+  steps:
+    n6c7ca3: Player touched it, with no Loot here?
+    nc0ad2a: Use the item on the player
+    nbee12d: Remove it
