@@ -1,0 +1,11 @@
+{
+  "_about": "Settings for codegraph.py. Paths are relative to this folder (CodeGraph~). Keys starting with _ are comments.",
+  "root": "..",
+  "_external": "Folders drawn as outside boxes only, like Unity itself: their classes appear where your code calls them, but get no pages or flowcharts. AI/ holds code written by the AI. Remove it from this list to graph it like the rest.",
+  "external": ["AI/"],
+  "_ignore": "Folders or files skipped completely.",
+  "ignore": [],
+  "graphs": "graphs",
+  "notes": "ai",
+  "out": "out"
+}
