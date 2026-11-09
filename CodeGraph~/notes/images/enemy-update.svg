@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="310" viewBox="0 0 680 310" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>Enemy.Update: how an enemy reaches the player</title>
+  <defs>
+    <marker id="arG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#009E73"/></marker>
+    <marker id="arP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#CC79A7"/></marker>
+    <marker id="arV" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8250df"/></marker>
+    <pattern id="grid" width="22" height="22" patternUnits="userSpaceOnUse"><path d="M22 0 L0 0 0 22" fill="none" stroke="#eef1f4" stroke-width="1"/></pattern>
+  </defs>
+  <rect x="0.5" y="0.5" width="679" height="309" rx="10" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="18" y="27" font-size="14" font-weight="600" fill="#1f2328">Enemy.Update · how an enemy reaches the player (top view)</text>
+  <rect x="18" y="40" width="644" height="252" fill="url(#grid)"/>
+
+  <!-- ghost: flies straight, through the rock (drawn under the rock, then dotted over it) -->
+  <line x1="168" y1="246" x2="552" y2="168" stroke="#8250df" stroke-width="2" stroke-dasharray="2 5" marker-end="url(#arV)"/>
+
+  <!-- rock / wall -->
+  <rect x="312" y="78" width="70" height="186" rx="8" fill="#8c959f"/>
+  <line x1="312" y1="216.8" x2="382" y2="202.5" stroke="#ffffff" stroke-width="2" stroke-dasharray="2 5"/>
+  <text x="347" y="176" font-size="12" font-weight="600" fill="#ffffff" text-anchor="middle">rock</text>
+
+  <!-- straight line is blocked -->
+  <line x1="122" y1="138" x2="306" y2="138" stroke="#8c959f" stroke-width="2" stroke-dasharray="6 5"/>
+  <text x="309" y="144" font-size="18" font-weight="700" fill="#D55E00" text-anchor="middle">✗</text>
+  <text x="214" y="130" font-size="11" fill="#57606a" text-anchor="middle">straight line: blocked</text>
+
+  <!-- the path around the rock -->
+  <path d="M122,128 C175,86 236,60 312,60 L382,60 C452,60 520,98 552,144" fill="none" stroke="#009E73" stroke-width="3" marker-end="url(#arG)"/>
+  <text x="347" y="51" font-size="12" font-weight="600" fill="#00694c" text-anchor="middle">PathFinding.Direction: steps around walls</text>
+
+  <!-- two enemies, pushed apart -->
+  <rect x="88" y="122" width="32" height="32" rx="5" fill="#D55E00"/>
+  <text x="80" y="143" font-size="12" fill="#1f2328" text-anchor="end">enemy</text>
+  <rect x="88" y="190" width="32" height="32" rx="5" fill="#D55E00" fill-opacity=".75"/>
+  <text x="80" y="211" font-size="12" fill="#1f2328" text-anchor="end">another</text>
+  <line x1="104" y1="160" x2="104" y2="184" stroke="#CC79A7" stroke-width="2.5" marker-start="url(#arP)" marker-end="url(#arP)"/>
+  <text x="130" y="176" font-size="11" fill="#8a3d6b">Separation: keeps enemies apart</text>
+
+  <!-- player -->
+  <circle cx="570" cy="160" r="17" fill="#0072B2"/>
+  <text x="570" y="196" font-size="12" fill="#1f2328" text-anchor="middle">player</text>
+
+  <!-- ghost -->
+  <path d="M146,262 L146,244 A14,14 0 0 1 174,244 L174,262 L169,257 L164,262 L160,257 L155,262 L151,257 Z" fill="#fbefff" stroke="#8250df" stroke-width="1.5" stroke-dasharray="3 2"/>
+  <circle cx="155" cy="246" r="1.8" fill="#8250df"/><circle cx="165" cy="246" r="1.8" fill="#8250df"/>
+  <text x="186" y="279" font-size="11" fill="#6639ba">ghost (ignoreCollide): flies straight through</text>
+</svg>

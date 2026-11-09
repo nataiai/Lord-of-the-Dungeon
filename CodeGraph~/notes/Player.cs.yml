@@ -1,0 +1,22 @@
+# AI / human notes for Player.cs. The generator reads this file and never rewrites it.
+
+Player.Respawn:
+  kind: usage
+  text: >
+    Puts the player back where it entered the current room. Called by `Hole.Fall`;
+    `DungeonMap.switchRoom` sets that spot whenever the player changes room.
+  mentions: [Player.roomEntryPos, Hole.Fall, DungeonMap.switchRoom]
+  by: ai
+  anchor: {hash: aa101b78, commit: fee0cf8}
+  review: {status: unreviewed}
+
+# DEMO of drift detection: this note was written for the code *before* commit b47c315
+# (anchor 5188fa45). That commit changed Died(), so the page shows it as "code changed since this note".
+Player.Died:
+  kind: summary
+  text: >
+    Test respawn: refills HP, moves the player to (0, 0) and sends the map back to the first room.
+  mentions: [GameManager._re]
+  by: ai
+  anchor: {hash: 5188fa45, commit: b47c315~1}
+  review: {status: unreviewed}

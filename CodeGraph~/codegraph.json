@@ -1,0 +1,4 @@
+{
+  "external": ["AI/*"],
+  "ignore": ["CodeGraph~/*"]
+}
