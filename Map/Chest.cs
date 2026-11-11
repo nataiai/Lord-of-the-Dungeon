@@ -2,8 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Chest : Enemy
+public class Chest : Enemy, ILock // a key opens it, like a Door (AI/Lock.cs)
 {
+    public bool hasLock;
+    [Tooltip("With hasLock: opens with a key weapon of the same keyId. Empty = any key")]
+    public string keyId;
+    [Tooltip("The key is used up when it opens this")]
+    public bool consumeKey = true;
+    public bool Fits(Weapon key) => Lock.KeyFits(hasLock, keyId, key);
+    public void Unlock() => hasLock = false; // the key's hit then opens it
+    public bool ConsumesKey => consumeKey;
     [SerializeField] Sprite openSprite, closedSprite;
     [SerializeField] SpriteRenderer myRender;
     [SerializeField] AudioClip sd_open_chest;
@@ -17,7 +25,7 @@ public class Chest : Enemy
         loot = null; weaponLoot = null;
         myRender.sprite = openSprite;
     }
-    public override void recieveDamage(int dmg,bool isMagical){if(TryGetComponent(out Lock l) && l.hasLock)return; HP=0;} // locked: a key opens it (AI/Lock.cs)
+    public override void recieveDamage(int dmg,bool isMagical){if(hasLock && Experimental.I.locks)return; HP=0;} // locked: only a key opens it
     protected override void HurtColor(){}
     protected override bool facesPlayer => false;
     public override void OnTriggerStay2D(Collider2D other){}

@@ -1,8 +1,14 @@
 using UnityEngine;
 
 // Something a key opens: swing a key weapon (isKey) at it, or throw it in (AI/ThrownWeapon.cs). ON/OFF: Experimental.locks
-// Door is a Lock (opens with OpenDoor). A Lock on a Chest: the chest ignores hits until a key opens it.
-public class Lock : MonoBehaviour
+// Door is a Lock (opens with OpenDoor). Chest is an ILock: with hasLock it ignores hits until a key opens it.
+public interface ILock{ // anything a key can open (Lock, Door, Chest)
+    bool Fits(Weapon key);
+    void Unlock();
+    bool ConsumesKey{get;}
+}
+
+public class Lock : MonoBehaviour, ILock
 {
     public bool hasLock;
     [Tooltip("With hasLock: opens with a key weapon of the same keyId. Empty = any key")]
@@ -13,7 +19,9 @@ public class Lock : MonoBehaviour
 
     protected virtual void Start(){if(!Experimental.I.locks && hasLock)Unlock();} // off in Experimental: no keys needed
 
-    public bool Fits(Weapon key) => hasLock && key!=null && key.isKey && (string.IsNullOrEmpty(keyId) || keyId==key.keyId);
+    public bool Fits(Weapon key) => KeyFits(hasLock, keyId, key);
+    public bool ConsumesKey => consumeKey;
+    public static bool KeyFits(bool hasLock, string keyId, Weapon key) => hasLock && key!=null && key.isKey && (string.IsNullOrEmpty(keyId) || keyId==key.keyId);
     public virtual void Unlock(){ // Door: also opens
         hasLock = false;
         PathFinding.Invalidate(); // a door may be open now
@@ -22,10 +30,10 @@ public class Lock : MonoBehaviour
     // opens the Lock on `other` if this key fits. usedUp: the key is gone
     public static bool TryOpen(Collider2D other, Weapon key, out bool usedUp){
         usedUp = false;
-        var lk = other.GetComponentInParent<Lock>();
+        var lk = other.GetComponentInParent<ILock>();
         if(lk==null || !lk.Fits(key))return false;
         lk.Unlock();
-        usedUp = lk.consumeKey;
+        usedUp = lk.ConsumesKey;
         return true;
     }
     // a key's swing (HoldingWeapons.ForceUse): opens a Lock its hitbox touches. Checked here because a static door sends no trigger event

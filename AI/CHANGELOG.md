@@ -13,7 +13,7 @@ Boomerang type Boomerang: its attack comes back through walls.
           boomerangDeceleration  slow-down going out
 
 Keys      weapon with isKey opens a Lock it hits, swung or thrown. Door is a Lock.
-          hasLock / keyId / consumeKey on the Door (or a Lock on a Chest)
+          hasLock / keyId / consumeKey on the Door or Chest
           keyId  must match the key's keyId (empty on the Door / Lock = any key)
 
 Loot      dropped loot slides and bounces. Tweak LootYoink.speed / deceleration / bounciness.
