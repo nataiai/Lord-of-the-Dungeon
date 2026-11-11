@@ -1,7 +1,7 @@
 using UnityEngine;
 
-// Something a key opens: swing a key weapon (isKey) at it, or throw it in (AI/ThrownWeapon.cs). ON/OFF: Experimental.locks
-// Door is a Lock (opens with OpenDoor). Chest is an ILock: with hasLock it ignores hits until a key opens it.
+// Something a key opens: swing a key weapon (one with a keyId) at it, or throw it in (AI/ThrownWeapon.cs). ON/OFF: Experimental.locks
+// Locked = keyId is not empty. Door is a Lock (opens with OpenDoor). Chest is an ILock: locked, it ignores hits until its key opens it.
 public interface ILock{ // anything a key can open (Lock, Door, Chest)
     bool Fits(Weapon key);
     void Unlock();
@@ -10,20 +10,20 @@ public interface ILock{ // anything a key can open (Lock, Door, Chest)
 
 public class Lock : MonoBehaviour, ILock
 {
-    public bool hasLock;
-    [Tooltip("With hasLock: opens with a key weapon of the same keyId. Empty = any key")]
+    [Tooltip("Not empty: locked, opens with the key weapon of the same keyId")]
     public string keyId;
     [Tooltip("The key is used up when it opens this")]
-    public bool consumeKey = true;
+    public bool consumeKey;
     static readonly Collider2D[] touching = new Collider2D[8];
 
-    protected virtual void Start(){if(!Experimental.I.locks && hasLock)Unlock();} // off in Experimental: no keys needed
+    protected virtual void Start(){if(!Experimental.I.locks && IsLocked(keyId))Unlock();} // off in Experimental: no keys needed
 
-    public bool Fits(Weapon key) => KeyFits(hasLock, keyId, key);
+    public bool Fits(Weapon key) => KeyFits(keyId, key);
     public bool ConsumesKey => consumeKey;
-    public static bool KeyFits(bool hasLock, string keyId, Weapon key) => hasLock && key!=null && key.isKey && (string.IsNullOrEmpty(keyId) || keyId==key.keyId);
+    public static bool IsLocked(string keyId) => !string.IsNullOrEmpty(keyId);
+    public static bool KeyFits(string keyId, Weapon key) => IsLocked(keyId) && key!=null && key.keyId==keyId;
     public virtual void Unlock(){ // Door: also opens
-        hasLock = false;
+        keyId = ""; // open now
         PathFinding.Invalidate(); // a door may be open now
     }
 

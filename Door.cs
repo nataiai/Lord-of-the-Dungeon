@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Door : Lock // hasLock, keyId, consumeKey: AI/Lock.cs
+public class Door : Lock // keyId (locked), consumeKey: AI/Lock.cs
 {
     [SerializeField] Animator anim;
     [SerializeField] BoxCollider2D coll;

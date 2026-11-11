@@ -23,10 +23,10 @@ public partial class Weapon{
     [Tooltip("Speed lost per second on the way out; at 0 (or at a wall) it flies back through walls, speeding up the same way")]
     public float boomerangDeceleration = 10;
 
-    [Header("Key (AI/Lock.cs): opens a Lock or Door it hits, swung or thrown")]
-    public bool isKey;
-    [Tooltip("Opens a Lock / Door with the same keyId, or one with an empty keyId (any key). One key weapon per id")]
+    [Header("Key (AI/Lock.cs)")]
+    [Tooltip("Not empty: this weapon is a key. It opens a Lock / Door / Chest with the same keyId, swung or thrown")]
     public string keyId;
+    public bool isKey => !string.IsNullOrEmpty(keyId);
 }
 
 [System.Serializable]

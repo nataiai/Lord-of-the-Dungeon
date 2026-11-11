@@ -25,7 +25,6 @@ MonoBehaviour:
     spinSpeed: 0
     spriteAngle: 45
   boomerangDeceleration: 10
-  isKey: 0
   keyId: 
   type: 905
   useSound: {fileID: 8300000, guid: 66bd0cbdf7e484a41b698ff2f3d4bfa0, type: 3}
