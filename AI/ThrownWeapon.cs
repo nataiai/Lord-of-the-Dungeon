@@ -26,7 +26,7 @@ public class ThrownWeapon : MonoBehaviour
     }
     static void TryThrow(Player p, HoldingWeapons hand, ControllerButton button){
         var w = hand.weapon;
-        if(w==null || !w.canThrow || hand.isOnCooldown || w==PrefabDatabase.Instance.fist || w.type==WeaponType.CQC || !button.isPressedOnce("throw"))return; // fist can't be thrown; a boomerang still out can't either
+        if(w==null || !w.throwSettings.canThrow || hand.isOnCooldown || w==PrefabDatabase.Instance.fist || w.type==WeaponType.CQC || !button.isPressedOnce("throw"))return; // fist can't be thrown; a boomerang still out can't either
         Throw(w, p, p.isLooking ? p.looking : Direction.vec2MoveDict[p.animFacing], hand.lootScale);
         hand.Unequip(); // an empty hand is a fist
         hand.lastUse = Time.time; // no swing straight after
@@ -38,37 +38,37 @@ public class ThrownWeapon : MonoBehaviour
         var go = new GameObject(weapon.name+" (thrown)");
         go.transform.position = by.center;
         if(GameManager.Instance.currentRoom!=null)go.transform.parent = GameManager.Instance.currentRoom.transform; // pauses with its room
-        go.transform.rotation = Quaternion.Euler(0,0,Slide.PointAngle(dir, weapon.spriteAngle));
+        go.transform.rotation = Quaternion.Euler(0,0,Slide.PointAngle(dir, weapon.throwSettings.spriteAngle));
         go.transform.localScale = scale==Vector3.zero ? Vector3.one : scale;
         var sr = go.AddComponent<SpriteRenderer>();
         sr.sprite = weapon.uiWep;
         var bySr = by.GetComponentInChildren<SpriteRenderer>();
         if(bySr!=null){sr.sortingLayerID = bySr.sortingLayerID; sr.sortingOrder = bySr.sortingOrder+1;}
         var t = go.AddComponent<ThrownWeapon>();
-        t.radius = Mathf.Max(weapon.throwSize,0.05f);
+        t.radius = Mathf.Max(weapon.throwSettings.size,0.05f);
         var col = go.AddComponent<CircleCollider2D>();
-        col.radius = t.radius/Mathf.Max(go.transform.lossyScale.x,0.01f); col.isTrigger = true; // throwSize stays its real size
+        col.radius = t.radius/Mathf.Max(go.transform.lossyScale.x,0.01f); col.isTrigger = true; // throwSettings.size stays its real size
         t.rb = Slide.Body(go);
         t.weapon = weapon; t.thrower = by;
-        t.damage = weapon.throwDamage * (weapon.isMagical ? by.combatStat.attackMagic : by.combatStat.attackPhysic);
-        t.velocity = dir.normalized*weapon.throwInitSpeed;
+        t.damage = weapon.throwSettings.damage * (weapon.isMagical ? by.combatStat.attackMagic : by.combatStat.attackPhysic);
+        t.velocity = dir.normalized*weapon.throwSettings.initSpeed;
         if(weapon.useSound!=null)SoundPlayer.PlaySound(weapon.useSound);
         return t;
     }
 
     void FixedUpdate(){
         if(done)return;
-        Slide.Step(rb, ref velocity, radius, weapon.throwDeceleration, weapon.bounciness, weapon.isBounce, Touch);
+        Slide.Step(rb, ref velocity, radius, weapon.throwSettings.deceleration, weapon.throwSettings.bounciness, weapon.throwSettings.isBounce, Touch);
         if(done)return;
         if(velocity==Vector2.zero){Land(); return;} // a wall, or out of speed
-        Slide.Turn(rb, velocity, weapon.spinSpeed, weapon.throwInitSpeed, weapon.spriteAngle);
+        Slide.Turn(rb, velocity, weapon.throwSettings.spinSpeed, weapon.throwSettings.initSpeed, weapon.throwSettings.spriteAngle);
     }
     void OnTriggerEnter2D(Collider2D other){if(!done)Touch(other);} // enemies it passes
 
     bool Touch(Collider2D other){ // what it does to `other`. false = stop right here
         if(weapon.isKey && Lock.TryOpen(other, weapon, out bool usedUp) && usedUp){done = true; Destroy(gameObject); return false;} // key used up
-        var touched = AIHooks.Hit(other, thrower, weapon, damage, weapon.throwKnockback, rb.position, hit);
-        if(touched==AIHooks.Touched.Crate || touched==AIHooks.Touched.Enemy && weapon.throwMaxHits>0 && weapon.throwMaxHits<=++hitCount){Land(); return false;}
+        var touched = AIHooks.Hit(other, thrower, weapon, damage, weapon.throwSettings.knockback, rb.position, hit);
+        if(touched==AIHooks.Touched.Crate || touched==AIHooks.Touched.Enemy && weapon.throwSettings.maxHits>0 && weapon.throwSettings.maxHits<=++hitCount){Land(); return false;}
         return true;
     }
     void Land(){

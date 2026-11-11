@@ -12,17 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 330774034f9cd62049988ff75ad5d5bc, type: 3}
   m_Name: Fist
   m_EditorClassIdentifier: 
-  canThrow: 1
-  throwDamage: 1
-  throwInitSpeed: 10
-  throwDeceleration: 8
-  throwSize: 0.25
-  throwKnockback: 3
-  throwMaxHits: 0
-  isBounce: 0
-  bounciness: 0.6
-  spinSpeed: 0
-  spriteAngle: 45
+  throwSettings:
+    canThrow: 1
+    damage: 1
+    initSpeed: 10
+    deceleration: 8
+    size: 0.25
+    knockback: 3
+    maxHits: 0
+    isBounce: 0
+    bounciness: 0.6
+    spinSpeed: 0
+    spriteAngle: 45
   boomerangDeceleration: 10
   isKey: 0
   keyId: 

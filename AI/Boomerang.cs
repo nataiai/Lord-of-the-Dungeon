@@ -38,7 +38,8 @@ public class Boomerang : MonoBehaviour
             Slide.Step(rb, ref velocity, radius, weapon.boomerangDeceleration, 0, false); // stops at a wall
             if(velocity==Vector2.zero){returning = true; hit.Clear();} // turn back; it can hit the same enemies again
         }else if(Slide.Toward(rb, ref velocity, owner.center, weapon.boomerangDeceleration, Mathf.Max(weapon.velocity,1)) < radius+0.4f){Destroy(gameObject); return;} // caught
-        if(weapon.spinSpeed!=0)Slide.Turn(rb, velocity, weapon.spinSpeed, weapon.velocity, weapon.spriteAngle);
+        var ts = weapon.throwSettings; // spins like its throw
+        if(ts.spinSpeed!=0)Slide.Turn(rb, velocity, ts.spinSpeed, weapon.velocity, ts.spriteAngle);
     }
     void OnTriggerEnter2D(Collider2D other)=>AIHooks.Hit(other, owner, weapon, damage, weapon.knocback, from, hit);
     void OnDestroy(){if(hand!=null && hand.weapon!=null)hand.lastUse = Time.time - hand.cooldown;} // back (or gone some other way): ready again

@@ -16,25 +16,8 @@ public partial class Experimental{
 }
 
 public partial class Weapon{
-    [Header("Throw (AI/ThrownWeapon.cs): hold Throw (Q / gamepad X) + this weapon's button. Fist can't be thrown")]
-    [Tooltip("Untick to keep this weapon from being thrown")]
-    public bool canThrow = true;
-    public int throwDamage = 1;          // per enemy hit, x the thrower's attack stat (like a swing)
-    public float throwInitSpeed = 10;    // starting speed
-    [Tooltip("Speed lost per second. 0 = flies until it hits something solid")]
-    public float throwDeceleration = 8;
-    [Tooltip("Radius of the thrown weapon: what it hits and bumps into")]
-    public float throwSize = 0.25f;
-    public float throwKnockback = 3;
-    [Tooltip("Enemies it can hit before it stops. 0 = no limit")]
-    public int throwMaxHits;
-    [Tooltip("Bounces off solid things instead of stopping there")]
-    public bool isBounce;
-    [Range(0,1)] public float bounciness = 0.6f; // speed kept per bounce
-    [Tooltip("Sprite spin, degrees per second at full speed (slows with it). 0 = flies point first")]
-    public float spinSpeed;
-    [Tooltip("Which way the sprite art points (0 = right, 90 = up), so a non-spinning throw flies point first")]
-    public float spriteAngle = 45;
+    [Tooltip("Throw (AI/ThrownWeapon.cs): hold Throw (Q / gamepad X) + this weapon's button. Fist can't be thrown")]
+    public ThrowSettings throwSettings = new();
 
     [Header("Boomerang (AI/Boomerang.cs): type Boomerang. Its attack flies out at `velocity` and comes back")]
     [Tooltip("Speed lost per second on the way out; at 0 (or at a wall) it flies back through walls, speeding up the same way")]
@@ -44,6 +27,28 @@ public partial class Weapon{
     public bool isKey;
     [Tooltip("Which Locks this key opens: a Lock with the same keyId, or a Lock with an empty keyId (any key). One key weapon per id")]
     public string keyId;
+}
+
+[System.Serializable]
+public class ThrowSettings{ // Weapon.throwSettings: a foldout in the weapon's Inspector
+    [Tooltip("Untick to keep this weapon from being thrown")]
+    public bool canThrow = true;
+    public int damage = 1;          // per enemy hit, x the thrower's attack stat (like a swing)
+    public float initSpeed = 10;    // starting speed
+    [Tooltip("Speed lost per second. 0 = flies until it hits something solid")]
+    public float deceleration = 8;
+    [Tooltip("Radius of the thrown weapon: what it hits and bumps into")]
+    public float size = 0.25f;
+    public float knockback = 3;
+    [Tooltip("Enemies it can hit before it stops. 0 = no limit")]
+    public int maxHits;
+    [Tooltip("Bounces off solid things instead of stopping there")]
+    public bool isBounce;
+    [Range(0,1)] public float bounciness = 0.6f; // speed kept per bounce
+    [Tooltip("Sprite spin, degrees per second at full speed (slows with it). 0 = flies point first. A boomerang spins with this too")]
+    public float spinSpeed;
+    [Tooltip("Which way the sprite art points (0 = right, 90 = up), so a non-spinning throw flies point first")]
+    public float spriteAngle = 45;
 }
 
 public partial class Door{
