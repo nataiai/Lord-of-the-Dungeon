@@ -11,7 +11,7 @@ public partial class Experimental{
     public bool boomerangReturns = true;
     [Tooltip("Off: dropped loot stays where it falls instead of sliding away (AI/Yoink.cs)")]
     public bool yoink = true;
-    [Tooltip("Off: every Lock starts unlocked, no keys needed (AI/Lock.cs)")]
+    [Tooltip("Off: every Lock (doors too) starts unlocked, no keys needed (AI/Lock.cs)")]
     public bool locks = true;
 }
 
@@ -23,9 +23,9 @@ public partial class Weapon{
     [Tooltip("Speed lost per second on the way out; at 0 (or at a wall) it flies back through walls, speeding up the same way")]
     public float boomerangDeceleration = 10;
 
-    [Header("Key (AI/Lock.cs): opens a Lock it hits, swung or thrown")]
+    [Header("Key (AI/Lock.cs): opens a Lock or Door it hits, swung or thrown")]
     public bool isKey;
-    [Tooltip("Which Locks this key opens: a Lock with the same keyId, or a Lock with an empty keyId (any key). One key weapon per id")]
+    [Tooltip("Opens a Lock / Door with the same keyId, or one with an empty keyId (any key). One key weapon per id")]
     public string keyId;
 }
 

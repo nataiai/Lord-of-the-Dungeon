@@ -1,46 +1,29 @@
 using UnityEngine;
-using UnityEngine.Events;
 
-// On a locked door or chest. A key (a weapon with isKey) opens it: swing the key at it up close, or throw it in (AI/ThrownWeapon.cs).
-//   door:  put the closed door object in hideOnUnlock (it can be this object)
-//   chest: a locked Chest ignores hits; once unlocked, the key's hit also opens it
-// Which key: Lock.keyId must match the key weapon's keyId (one key weapon per id). Empty = any key.
+// Something a key opens: swing a key weapon (isKey) at it, or throw it in (AI/ThrownWeapon.cs). ON/OFF: Experimental.locks
+// Door is a Lock (opens with OpenDoor). A Lock on a Chest: the chest ignores hits until a key opens it.
 public class Lock : MonoBehaviour
 {
-    public bool isLocked = true;
-    [Tooltip("Empty = any key opens it. Otherwise only keys with the same id")]
+    public bool hasLock;
+    [Tooltip("With hasLock: opens with a key weapon of the same keyId. Empty = any key")]
     public string keyId;
     [Tooltip("The key is used up when it opens this")]
     public bool consumeKey = true;
-    [Tooltip("Hidden when unlocked, e.g. the closed door")]
-    public GameObject[] hideOnUnlock;
-    public AudioClip unlockSound;
-    public UnityEvent onUnlock;
     static readonly Collider2D[] touching = new Collider2D[8];
 
-    void Start(){if(!Experimental.I.locks && isLocked)Unlock();} // ON/OFF in Experimental: off = no keys needed
+    protected virtual void Start(){if(!Experimental.I.locks && hasLock)Unlock();} // off in Experimental: no keys needed
 
-    public bool Fits(Weapon key) => isLocked && key!=null && key.isKey && (string.IsNullOrEmpty(keyId) || keyId==key.keyId);
-    public void Unlock(){
-        isLocked = false;
-        if(unlockSound!=null)SoundPlayer.PlaySound(unlockSound);
-        foreach(var go in hideOnUnlock)if(go!=null)go.SetActive(false);
-        onUnlock?.Invoke();
-        PathFinding.Invalidate(); // a door may be gone
+    public bool Fits(Weapon key) => hasLock && key!=null && key.isKey && (string.IsNullOrEmpty(keyId) || keyId==key.keyId);
+    public virtual void Unlock(){ // Door: also opens
+        hasLock = false;
+        PathFinding.Invalidate(); // a door may be open now
     }
 
     // opens the Lock on `other` if this key fits. usedUp: the key is gone
     public static bool TryOpen(Collider2D other, Weapon key, out bool usedUp){
         usedUp = false;
-        if(key==null || !key.isKey)return false;
-        if(other.GetComponentInParent<Door>() is Door d && d.hasLock && (string.IsNullOrEmpty(d.keyId) || d.keyId==key.keyId)){ // a locked Door (Door.cs)
-            d.hasLock = false;
-            d.OpenDoor();
-            PathFinding.Invalidate(); // its collider is off now
-            usedUp = d.consumeKey;
-            return true;
-        }
-        if(!other.TryGetComponent(out Lock lk) || !lk.Fits(key))return false;
+        var lk = other.GetComponentInParent<Lock>();
+        if(lk==null || !lk.Fits(key))return false;
         lk.Unlock();
         usedUp = lk.consumeKey;
         return true;

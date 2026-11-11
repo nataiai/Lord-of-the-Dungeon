@@ -12,9 +12,8 @@ Throw     hold Q / pad X + weapon button. Lands as loot, hand goes back to Fist.
 Boomerang type Boomerang: its attack comes back through walls.
           boomerangDeceleration  slow-down going out
 
-Keys      weapon with isKey opens a Door (hasLock) or Lock it hits, swung or thrown.
-          keyId       on the key and on the Door / Lock: must match (empty on Door / Lock = any key)
-          consumeKey  key is used up
-          Lock only: hideOnUnlock (hide the closed door), onUnlock
+Keys      weapon with isKey opens a Lock it hits, swung or thrown. Door is a Lock.
+          hasLock / keyId / consumeKey on the Door (or a Lock on a Chest)
+          keyId  must match the key's keyId (empty on the Door / Lock = any key)
 
 Loot      dropped loot slides and bounces. Tweak LootYoink.speed / deceleration / bounciness.
