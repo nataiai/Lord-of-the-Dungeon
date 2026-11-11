@@ -45,12 +45,6 @@ public class ThrowSettings{ // Weapon.throwSettings: a foldout in the weapon's I
     [Tooltip("Bounces off solid things instead of stopping there")]
     public bool isBounce;
     [Range(0,1)] public float bounciness = 0.6f; // speed kept per bounce
-    [Tooltip("When it hits something (a wall, a crate, its last enemy) it bounces back once, at a random angle, then lands")]
-    public bool bounceBack;
-    [Tooltip("Bounce-back speed, as a share of initSpeed")]
-    [Range(0,1)] public float bounceBackSpeed = 0.3f;
-    [Tooltip("Largest random turn away from straight back, in degrees (45: e.g. thrown left into a wall, it comes back right and up to 45 degrees up or down)")]
-    [Range(0,90)] public float bounceBackAngle = 45;
     [Tooltip("Sprite spin, degrees per second at full speed (slows with it). 0 = flies point first. A boomerang spins with this too")]
     public float spinSpeed;
     [Tooltip("Which way the sprite art points (0 = right, 90 = up), so a non-spinning throw flies point first")]

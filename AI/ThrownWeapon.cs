@@ -13,7 +13,7 @@ public class ThrownWeapon : MonoBehaviour
     Rigidbody2D rb;
     float radius;
     int damage, hitCount;
-    bool done, bounced, inStep, hitStop; // hitStop: it stopped because it hit something
+    bool done;
     readonly HashSet<Character> hit = new();
 
     // Player.Update: true = Throw is held (it throws on a weapon button), so no attacks this frame
@@ -58,13 +58,9 @@ public class ThrownWeapon : MonoBehaviour
 
     void FixedUpdate(){
         if(done)return;
-        var ts = weapon.throwSettings;
-        Vector2 before = velocity;
-        hitStop = false; inStep = true;
-        Slide.Step(rb, ref velocity, radius, ts.deceleration, ts.bounciness, ts.isBounce, Touch);
-        inStep = false;
+        Slide.Step(rb, ref velocity, radius, weapon.throwSettings.deceleration, weapon.throwSettings.bounciness, weapon.throwSettings.isBounce, Touch);
         if(done)return;
-        if(velocity==Vector2.zero){Stop(before, hitStop || before.magnitude > ts.deceleration*Time.fixedDeltaTime+1e-4f); return;} // a wall (it still had speed), a hit, or out of speed
+        if(velocity==Vector2.zero){Land(); return;} // a wall, or out of speed
         Slide.Turn(rb, velocity, weapon.throwSettings.spinSpeed, weapon.throwSettings.initSpeed, weapon.throwSettings.spriteAngle);
     }
     void OnTriggerEnter2D(Collider2D other){if(!done)Touch(other);} // enemies it passes
@@ -72,20 +68,8 @@ public class ThrownWeapon : MonoBehaviour
     bool Touch(Collider2D other){ // what it does to `other`. false = stop right here
         if(weapon.isKey && Lock.TryOpen(other, weapon, out bool usedUp) && usedUp){done = true; Destroy(gameObject); return false;} // key used up
         var touched = AIHooks.Hit(other, thrower, weapon, damage, weapon.throwSettings.knockback, rb.position, hit);
-        if(touched==AIHooks.Touched.Crate || touched==AIHooks.Touched.Enemy && weapon.throwSettings.maxHits>0 && weapon.throwSettings.maxHits<=++hitCount){
-            if(inStep){hitStop = true; return false;} // stop right here; FixedUpdate decides: bounce back or land
-            Vector2 v = velocity; velocity = Vector2.zero; Stop(v, true); return false; // hit outside the sweep (a trigger)
-        }
+        if(touched==AIHooks.Touched.Crate || touched==AIHooks.Touched.Enemy && weapon.throwSettings.maxHits>0 && weapon.throwSettings.maxHits<=++hitCount){Land(); return false;}
         return true;
-    }
-    void Stop(Vector2 was, bool hitSomething){ // bounceBack: once, back the way it came at a random angle; otherwise it lands
-        var ts = weapon.throwSettings;
-        if(hitSomething && ts.bounceBack && !bounced && was!=Vector2.zero){
-            bounced = true;
-            velocity = (Vector2)(Quaternion.Euler(0,0,Random.Range(-ts.bounceBackAngle, ts.bounceBackAngle)) * -was.normalized) * ts.initSpeed*ts.bounceBackSpeed;
-            if(velocity!=Vector2.zero)return; // slides to a stop, then lands
-        }
-        Land();
     }
     void Land(){
         if(done)return;

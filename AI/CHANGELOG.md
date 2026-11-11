@@ -13,7 +13,6 @@ Throw      hold Q / pad X + weapon button. Lands as loot; the hand goes back to 
              size          radius it hits with
              maxHits       0 = no limit
              bounciness    speed kept per bounce
-             bounceBack    tick: on a hit it bounces back once at a random angle (bounceBackSpeed, bounceBackAngle)
              spinSpeed     0 = flies point first (a boomerang spins with this too)
              spriteAngle   which way the art points (0 = right)
 
