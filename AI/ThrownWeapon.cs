@@ -32,9 +32,9 @@ public class ThrownWeapon : MonoBehaviour
     }
     static void TryThrow(Player p, HoldingWeapons hand, ControllerButton button){
         var w = hand.weapon;
-        if(w==null || !w.canThrow || hand.isOnCooldown || w==GameManager.Instance.fist || w.type==WeaponType.CQC || !button.isPressedOnce("throw"))return; // fist can't be thrown; a boomerang still out can't either
+        if(w==null || !w.canThrow || hand.isOnCooldown || w==PrefabDatabase.Instance.fist || w.type==WeaponType.CQC || !button.isPressedOnce("throw"))return; // fist can't be thrown; a boomerang still out can't either
         Throw(w, p, hand.keyId, p.isLooking ? p.looking : Direction.vec2MoveDict[p.animFacing], hand.lootScale);
-        hand.weapon = GameManager.Instance.fist; // an empty hand is a fist
+        hand.weapon = PrefabDatabase.Instance.fist; // an empty hand is a fist
         hand.keyId = "";
         hand.lastUse = Time.time; // no swing straight after
         GameManager.Instance.ui.UpdateWeap();

@@ -16,6 +16,7 @@ public partial class HoldingWeapons{ // one hand
     public bool isUsable=>weapon!=null&&!isOnCooldown;
     public float cooldown=>weapon.cooldown;
     BaseWeapon anim;
+    public void Unequip(){weapon = PrefabDatabase.Instance.fist; }
     public void Use(Character user){if(isUsable)ForceUse(user);} // any Character can hold weapons
     public float getReloadPercent()=>weapon==null?1:Mathf.Min((Time.time-lastUse)/weapon.cooldown,1); // for ui
     public void ForceUse(Character player){

@@ -48,7 +48,7 @@ public class Lock : MonoBehaviour
         int n = col.OverlapCollider(new ContactFilter2D().NoFilter(), touching);
         for(int i=0;i<n;i++)
             if(TryOpen(touching[i], hitBox.weapon, hand.keyId, out bool usedUp) && usedUp && hand.weapon==hitBox.weapon){
-                hand.weapon = GameManager.Instance.fist; hand.keyId = ""; // the key leaves the hand
+                hand.weapon = PrefabDatabase.Instance.fist; hand.keyId = ""; // the key leaves the hand
                 GameManager.Instance.ui.UpdateWeap();
             }
     }

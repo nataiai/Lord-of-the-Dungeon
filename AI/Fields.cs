@@ -16,8 +16,6 @@ public partial class Experimental{
 }
 
 public partial class GameManager{
-    [Tooltip("Bare hands (Database/Weapons/Fist): what a hand holds after throwing its weapon. Can't be thrown (AI/ThrownWeapon.cs)")]
-    public Weapon fist;
 }
 
 public partial class Weapon{

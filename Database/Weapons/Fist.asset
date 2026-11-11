@@ -12,15 +12,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 330774034f9cd62049988ff75ad5d5bc, type: 3}
   m_Name: Fist
   m_EditorClassIdentifier: 
+  canThrow: 1
+  throwDamage: 1
+  throwInitSpeed: 10
+  throwDeceleration: 8
+  throwSize: 0.25
+  throwKnockback: 3
+  throwMaxHits: 0
+  isBounce: 0
+  bounciness: 0.6
+  spinSpeed: 0
+  spriteAngle: 45
+  boomerangDeceleration: 10
+  isKey: 0
+  keyId: 
   type: 905
   useSound: {fileID: 8300000, guid: 66bd0cbdf7e484a41b698ff2f3d4bfa0, type: 3}
   hitSound: {fileID: 8300000, guid: 700550a0e4c1c6049a58b89b38acf4c2, type: 3}
   isMagical: 0
   damage: 1
   cooldown: 0.2
-  knocback: 0.1
+  knocback: 3
   hitBoxDistance: 2
-  hitBox: {fileID: 7758261912273869097, guid: 1ef816cb10076439884880b8ebd19b4d, type: 3}
+  hitBox: {fileID: 7758261912273869097, guid: eec60627e805edf428365f855a8a4d2a, type: 3}
   upOffset: {x: 0, y: 0}
   rightOffset: {x: 0, y: 0}
   downOffset: {x: 0, y: 0}
