@@ -23,6 +23,7 @@ MonoBehaviour:
     defenseMagic: 1
   knockbackResistance: 0.01
   knocbackRecovery: 4
-  attackKnockback: 0
+  attackKnockback: 5
   ignoreCollide: 1
   noticeRange: 9999
+  fallClip: {fileID: 0}

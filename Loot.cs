@@ -17,13 +17,12 @@ public class Loot : MonoBehaviour
     SpriteRenderer sr;
 
     void Start(){
-        Yoink();
         sr = GetComponentInChildren<SpriteRenderer>();
         if(sr==null)sr = gameObject.AddComponent<SpriteRenderer>();
         UpdateImage();
         if(GetComponent<Collider2D>()==null)gameObject.AddComponent<BoxCollider2D>().isTrigger = true; // after the sprite, so it fits
     }
-    void Yoink(){} // to do: yoink away from origin pos
+    void Yoink()=>LootYoink.Push(gameObject); // slides away (AI/Yoink.cs)
     void UpdateImage(){if(lootType==LootType.weapon)sr.sprite = weaponLoot.uiWep;}
 
     void OnTriggerEnter2D(Collider2D other)
@@ -49,7 +48,7 @@ public class Loot : MonoBehaviour
     }
     bool TryFill(HoldingWeapons hand){ // an empty hand, or bare hands (CQC)
         if(hand.weapon!=null && hand.weapon.type!=WeaponType.CQC)return false;
-        hand.weapon = weaponLoot;
+        hand.weapon = weaponLoot; hand.lootScale = sr.transform.lossyScale;
         SoundPlayer.PlaySound(SoundPlayer.instance.sd_pickup_wep);
         Destroy(gameObject);
         return true;
@@ -62,7 +61,7 @@ public class Loot : MonoBehaviour
 
     // drop a Loot prefab and/or a weapon (its pickup is made in code); null = nothing
     public static void Drop(Loot prefab, Weapon weapon, Transform from){
-        if(prefab!=null)Instantiate(prefab, from.position, Quaternion.identity).transform.parent = from.parent;
+        if(prefab!=null){var p = Instantiate(prefab, from.position, Quaternion.identity); p.transform.parent = from.parent; AIHooks.OnDrop(p, from);}
         if(weapon==null)return;
         var go = new GameObject(weapon.name+" loot");
         go.transform.position = from.position;
@@ -75,5 +74,6 @@ public class Loot : MonoBehaviour
         var loot = go.AddComponent<Loot>();
         loot.lootType = LootType.weapon;
         loot.weaponLoot = weapon;
+        AIHooks.OnDrop(loot, from); // slides away, key id (AI/Hooks.cs)
     }
 }

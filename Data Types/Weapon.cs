@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 
 [CreateAssetMenu(fileName = "WeaponSO", menuName = "Weapon")]
-public class Weapon : ScriptableObject
+public partial class Weapon : ScriptableObject // Throw / Boomerang / Key settings: AI/Fields.cs
 {
     public WeaponType type;
     public AudioClip useSound;

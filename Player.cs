@@ -9,13 +9,14 @@ public class Direction{
 }
 
 [System.Serializable]
-public class HoldingWeapons{ // one hand
+public partial class HoldingWeapons{ // one hand
     public Weapon weapon;
     [PlayModeOnly] public float lastUse;
     public bool isOnCooldown=>lastUse+cooldown>Time.time;
     public bool isUsable=>weapon!=null&&!isOnCooldown;
     public float cooldown=>weapon.cooldown;
     BaseWeapon anim;
+    public void Unequip(){weapon = PrefabDatabase.Instance.fist; }
     public void Use(Character user){if(isUsable)ForceUse(user);} // any Character can hold weapons
     public float getReloadPercent()=>weapon==null?1:Mathf.Min((Time.time-lastUse)/weapon.cooldown,1); // for ui
     public void ForceUse(Character player){
@@ -39,6 +40,7 @@ public class HoldingWeapons{ // one hand
         hitBox.damage = weapon.damage * (weapon.isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
         hitBox.playerPos = playerPos;
         hitBox.setVelocity((Experimental.I.fourWayAttack ? looking4dir : player.looking) * weapon.velocity);
+        AIHooks.OnAttack(hitBox, this, player, Experimental.I.fourWayAttack ? looking4dir : player.looking); // keys, boomerang (AI/Hooks.cs)
     }
     public void StopAnim(){if(anim!=null)GameObject.Destroy(anim.gameObject);anim=null;}
 }
@@ -94,6 +96,7 @@ public class Player : Character
         else if(controller.looking.magnitude>0)looking = controller.looking; // no look input: keep the last direction it looked
         else if(!isLooking)looking = movement; // never looked yet: face where it walks
         if(!StuntMech(8))rb.velocity = movement * initSpeed;
+        if(ThrownWeapon.TryThrow(this)){UpdateAnim(); return;} // Throw held: no attacks (AI/ThrownWeapon.cs)
         TryAttack(lWeapon, controller.attackLeft);
         TryAttack(rWeapon, controller.attackRight);
         UpdateAnim();

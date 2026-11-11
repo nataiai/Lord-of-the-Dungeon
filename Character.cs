@@ -60,7 +60,7 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
     public void HealWithEffect(int amount){ // heal and show the heal animation
         Heal(amount);
         var healEffect = GameManager.Instance.healEffect;
-        if(healEffect!=null)Destroy(Instantiate(healEffect,transform.position,Quaternion.identity,transform),.5f);
+        if(healEffect!=null)PlayOnce.Spawn(healEffect, transform.position, transform); // plays once, then gone (AI/PlayOnce.cs)
     }
 
     public virtual void recieveDamage(int dmg,bool isMagical=false){

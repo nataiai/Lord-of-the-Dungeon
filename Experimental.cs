@@ -2,7 +2,7 @@ using UnityEngine;
 
 // All experimental and test features, on/off in one place. Editable in the Inspector while playing
 // (put it on any object in the scene, or it is made on first use: look for "Experimental" in the Hierarchy)
-public class Experimental : MonoBehaviour{
+public partial class Experimental : MonoBehaviour{ // Weapons switches: AI/Fields.cs
     static Experimental _i;
     public static Experimental I => _i ? _i : (_i = FindFirstObjectByType<Experimental>() ?? new GameObject("Experimental").AddComponent<Experimental>());
 
