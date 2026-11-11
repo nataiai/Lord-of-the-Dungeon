@@ -2,9 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// Throwing weapons: hold Throw (Q / gamepad X), then a weapon button. Settings are on each Weapon (Throw section). ON/OFF: Experimental.throwing
+// Throwing weapons: hold Throw (Q / gamepad X), then a weapon button. Settings: each Weapon's Throw Settings foldout. ON/OFF: Experimental.throwing
 // The weapon flies (AI/Slide.cs), hurts the thrower's enemies, opens a Lock if it's a key (AI/Lock.cs),
-// and lands as normal Loot where it stops. The hand left behind holds GameManager.fist; fist can't be thrown.
+// and lands as normal Loot where it stops. The hand calls Unequip() (back to PrefabDatabase.fist); fist can't be thrown.
 public class ThrownWeapon : MonoBehaviour
 {
     Weapon weapon;
