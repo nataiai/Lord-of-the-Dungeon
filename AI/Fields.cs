@@ -15,9 +15,6 @@ public partial class Experimental{
     public bool locks = true;
 }
 
-public partial class GameManager{
-}
-
 public partial class Weapon{
     [Header("Throw (AI/ThrownWeapon.cs): hold Throw (Q / gamepad X) + this weapon's button. Fist can't be thrown")]
     [Tooltip("Untick to keep this weapon from being thrown")]
@@ -45,22 +42,10 @@ public partial class Weapon{
 
     [Header("Key (AI/Lock.cs): opens a Lock it hits, swung or thrown")]
     public bool isKey;
-    [Tooltip("Default id for this key. Each key's Loot (or the enemy/chest dropping it) can set its own, so one key weapon makes many keys. A Lock with an empty keyId takes any key")]
+    [Tooltip("Which Locks this key opens: a Lock with the same keyId, or a Lock with an empty keyId (any key). One key weapon per id")]
     public string keyId;
 }
 
 public partial class HoldingWeapons{
-    [Tooltip("If the weapon is a key: which Locks it opens (AI/Lock.cs). Empty = the weapon's keyId")]
-    public string keyId;
     [System.NonSerialized] public Vector3 lootScale; // size of the loot it was picked up from: a throw keeps that size (zero = 1)
-}
-
-public partial class Loot{
-    [Tooltip("If the weapon is a key: which Locks it opens (AI/Lock.cs). Empty = the weapon's keyId")]
-    public string keyId;
-}
-
-public partial class Enemy{
-    [Tooltip("If weaponLoot is a key: which Locks it opens (AI/Lock.cs). Empty = the weapon's keyId")]
-    public string weaponLootKeyId;
 }

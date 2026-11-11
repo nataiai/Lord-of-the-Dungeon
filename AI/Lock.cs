@@ -4,7 +4,7 @@ using UnityEngine.Events;
 // On a locked door or chest. A key (a weapon with isKey) opens it: swing the key at it up close, or throw it in (AI/ThrownWeapon.cs).
 //   door:  put the closed door object in hideOnUnlock (it can be this object)
 //   chest: a locked Chest ignores hits; once unlocked, the key's hit also opens it
-// Which key: Lock.keyId must match the key's id (set on the key's Loot, or the weapon's keyId). Empty = any key.
+// Which key: Lock.keyId must match the key weapon's keyId (one key weapon per id). Empty = any key.
 public class Lock : MonoBehaviour
 {
     public bool isLocked = true;
@@ -20,12 +20,7 @@ public class Lock : MonoBehaviour
 
     void Start(){if(!Experimental.I.locks && isLocked)Unlock();} // ON/OFF in Experimental: off = no keys needed
 
-    // id: the key's own id (empty = the weapon's keyId)
-    public bool Fits(Weapon key, string id){
-        if(!isLocked || key==null || !key.isKey)return false;
-        string k = string.IsNullOrEmpty(id) ? key.keyId : id;
-        return string.IsNullOrEmpty(keyId) || keyId==k;
-    }
+    public bool Fits(Weapon key) => isLocked && key!=null && key.isKey && (string.IsNullOrEmpty(keyId) || keyId==key.keyId);
     public void Unlock(){
         isLocked = false;
         if(unlockSound!=null)SoundPlayer.PlaySound(unlockSound);
@@ -35,9 +30,9 @@ public class Lock : MonoBehaviour
     }
 
     // opens the Lock on `other` if this key fits. usedUp: the key is gone
-    public static bool TryOpen(Collider2D other, Weapon key, string id, out bool usedUp){
+    public static bool TryOpen(Collider2D other, Weapon key, out bool usedUp){
         usedUp = false;
-        if(!other.TryGetComponent(out Lock lk) || !lk.Fits(key,id))return false;
+        if(!other.TryGetComponent(out Lock lk) || !lk.Fits(key))return false;
         lk.Unlock();
         usedUp = lk.consumeKey;
         return true;
@@ -47,8 +42,8 @@ public class Lock : MonoBehaviour
         if(hitBox==null || hitBox.weapon==null || !hitBox.weapon.isKey || !hitBox.TryGetComponent(out Collider2D col))return;
         int n = col.OverlapCollider(new ContactFilter2D().NoFilter(), touching);
         for(int i=0;i<n;i++)
-            if(TryOpen(touching[i], hitBox.weapon, hand.keyId, out bool usedUp) && usedUp && hand.weapon==hitBox.weapon){
-                hand.weapon = PrefabDatabase.Instance.fist; hand.keyId = ""; // the key leaves the hand
+            if(TryOpen(touching[i], hitBox.weapon, out bool usedUp) && usedUp && hand.weapon==hitBox.weapon){
+                hand.Unequip(); // the key leaves the hand
                 GameManager.Instance.ui.UpdateWeap();
             }
     }

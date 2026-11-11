@@ -28,6 +28,7 @@ public class Controller : MonoBehaviour
     public float mouseTimeDeactivation=1f;
     [PlayModeOnly] public ControllerButton attackLeft;
     [PlayModeOnly] public ControllerButton attackRight;
+    [PlayModeOnly] public ControllerButton throwHold = new(); // hold, then a weapon button: throw that weapon (AI/ThrownWeapon.cs)
 
     void Update(){
         movement = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
@@ -46,6 +47,7 @@ public class Controller : MonoBehaviour
             // switchWeapon.isPressed = gamepad.buttonNorth.isPressed;
             attackLeft.isPressed = gamepad.leftShoulder.isPressed||gamepad.buttonSouth.isPressed;
             attackRight.isPressed = gamepad.rightShoulder.isPressed||gamepad.buttonEast.isPressed;
+            throwHold.isPressed = gamepad.xButton.isPressed;
             return;
         }
         if(keyboard!=null){
@@ -56,6 +58,7 @@ public class Controller : MonoBehaviour
             switchWeapon.isPressed = keyboard.qKey.isPressed;
             attackLeft.isPressed = keyboard.oKey.isPressed;
             attackRight.isPressed = keyboard.pKey.isPressed;
+            throwHold.isPressed = k.qKey.isPressed;
         }
         if(mouse==null||disableMouse){mouseActive = false;return;}
         Vector2 mousePos = mouse.position.ReadValue();

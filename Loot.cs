@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum LootType{weapon,chatSkill, instantItem,None}
 
-public partial class Loot : MonoBehaviour
+public class Loot : MonoBehaviour
 {
     public LootType lootType = LootType.None;
     public ChatType skill = ChatType.invalid;
@@ -48,12 +48,12 @@ public partial class Loot : MonoBehaviour
     }
     bool TryFill(HoldingWeapons hand){ // an empty hand, or bare hands (CQC)
         if(hand.weapon!=null && hand.weapon.type!=WeaponType.CQC)return false;
-        hand.weapon = weaponLoot; hand.keyId = keyId; hand.lootScale = sr.transform.lossyScale;
+        hand.weapon = weaponLoot; hand.lootScale = sr.transform.lossyScale;
         SoundPlayer.PlaySound(SoundPlayer.instance.sd_pickup_wep);
         Destroy(gameObject);
         return true;
     }
-    void Swap(HoldingWeapons hand){(hand.weapon,weaponLoot) = (weaponLoot,hand.weapon); (hand.keyId,keyId) = (keyId,hand.keyId);UpdateImage();Yoink();}
+    void Swap(HoldingWeapons hand){(hand.weapon,weaponLoot) = (weaponLoot,hand.weapon);UpdateImage();Yoink();}
     void PickChatSkillHandle(Player player){
         if(skill!=ChatType.invalid && !GameManager.Instance.availableSkill.Contains(skill))GameManager.Instance.availableSkill.Add(skill);
         Destroy(gameObject);
