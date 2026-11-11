@@ -17,3 +17,5 @@ Keys      a weapon with a keyId is a key. A Door / Chest / Lock with a keyId is 
           consumeKey  key is used up (default off)
 
 Loot      dropped loot slides and bounces. Tweak LootYoink.speed / deceleration / bounciness.
+
+PlayOnce  AI/PlayOnce.cs: play an animation once, then hide / destroy. Used by Door and the heal effect.
