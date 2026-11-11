@@ -2,11 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public partial class Door : MonoBehaviour // keyId: AI/Fields.cs
+public class Door : MonoBehaviour
 {
     [SerializeField] Animator anim;
     [SerializeField] BoxCollider2D coll;
     public bool hasLock;
+    [Tooltip("With hasLock: a key weapon with this keyId opens it, swung or thrown (AI/Lock.cs). Empty = any key")]
+    public string keyId;
+    [Tooltip("The key is used up when it opens this door")]
+    public bool consumeKey = true;
 
     public void OpenDoor()
     {
