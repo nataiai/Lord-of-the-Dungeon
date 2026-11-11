@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Door : MonoBehaviour
+public partial class Door : MonoBehaviour // keyId: AI/Fields.cs
 {
     [SerializeField] Animator anim;
     [SerializeField] BoxCollider2D coll;

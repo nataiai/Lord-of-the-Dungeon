@@ -46,6 +46,13 @@ public partial class Weapon{
     public string keyId;
 }
 
+public partial class Door{
+    [Tooltip("With hasLock: a key weapon with this keyId opens it, swung or thrown (AI/Lock.cs). Empty = any key")]
+    public string keyId;
+    [Tooltip("The key is used up when it opens this door")]
+    public bool consumeKey = true;
+}
+
 public partial class HoldingWeapons{
     [System.NonSerialized] public Vector3 lootScale; // size of the loot it was picked up from: a throw keeps that size (zero = 1)
 }

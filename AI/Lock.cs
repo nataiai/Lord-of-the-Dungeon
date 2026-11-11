@@ -32,6 +32,14 @@ public class Lock : MonoBehaviour
     // opens the Lock on `other` if this key fits. usedUp: the key is gone
     public static bool TryOpen(Collider2D other, Weapon key, out bool usedUp){
         usedUp = false;
+        if(key==null || !key.isKey)return false;
+        if(other.GetComponentInParent<Door>() is Door d && d.hasLock && (string.IsNullOrEmpty(d.keyId) || d.keyId==key.keyId)){ // a locked Door (Door.cs)
+            d.hasLock = false;
+            d.OpenDoor();
+            PathFinding.Invalidate(); // its collider is off now
+            usedUp = d.consumeKey;
+            return true;
+        }
         if(!other.TryGetComponent(out Lock lk) || !lk.Fits(key))return false;
         lk.Unlock();
         usedUp = lk.consumeKey;
