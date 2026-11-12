@@ -49,6 +49,8 @@ public class ThrowSettings{ // Weapon.throwSettings: a foldout in the weapon's I
     public float spinSpeed;
     [Tooltip("Which way the sprite art points (0 = right, 90 = up), so a non-spinning throw flies point first")]
     public float spriteAngle = 45;
+    [Tooltip("How high it flies above its shadow. 0 = no shadow")]
+    public float shadowHeight = 0.5f;
 }
 
 public partial class HoldingWeapons{

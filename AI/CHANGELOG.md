@@ -15,6 +15,7 @@ Throw      hold Q / pad X + weapon button. Lands as loot; the hand goes back to 
              bounciness    speed kept per bounce
              spinSpeed     0 = flies point first (a boomerang spins with this too)
              spriteAngle   which way the art points (0 = right)
+             shadowHeight  how high it flies above its shadow (0 = no shadow)
 
 Boomerang  a weapon of type Boomerang: its attack comes back through walls. The hand waits until it's back.
 [TWEAK]    Weapon > boomerangDeceleration  slow-down going out
