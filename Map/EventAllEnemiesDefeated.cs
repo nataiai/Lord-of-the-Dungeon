@@ -4,7 +4,7 @@ using UnityEngine.Events;
 public class EventAllEnemiesDefeated : MonoBehaviour
 {
     public UnityEvent onAllEnemiesDefeated;
-    Enemy alive; // checked first, so the scene is searched again only when it is gone
+    Enemy alive;
 
 
     void Update()

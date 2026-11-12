@@ -17,7 +17,7 @@ public class DungeonMap : MonoBehaviour // only currentRoom is active
         fillTriggerMap();
         foreach(var r in allRooms)if(r.bounds.Contains(GameManager.Instance.playerPos)&&r.gameObject.activeInHierarchy)currentRoom = r;
     }
-    void fillTriggerMap(){ // pair each door trigger with the nearest trigger of another room
+    void fillTriggerMap(){
         foreach(var a in roomTrigger){
             float m = float.MaxValue;
             RoomTrigger mr = null;
@@ -28,7 +28,7 @@ public class DungeonMap : MonoBehaviour // only currentRoom is active
             triggerMap[a] = mr;
         }
     }
-    public void roomTriggerExit(RoomTrigger trigger){ // switch when leaving a door trigger toward its partner
+    public void roomTriggerExit(RoomTrigger trigger){
         Vector2 toPartner = triggerMap[trigger].transform.position - trigger.transform.position;
         if(Vector2.Dot(toPartner,GameManager.Instance.player.rb.velocity)>0)switchRoom(trigger);
     }
@@ -36,7 +36,7 @@ public class DungeonMap : MonoBehaviour // only currentRoom is active
         currentRoom = triggerMap[trigger].transform.parent.GetComponent<DungeonRoom>();
         currentRoom.gameObject.SetActive(true);
         trigger.transform.parent.gameObject.SetActive(false);
-        foreach(var p in FindObjectsByType<Player>(FindObjectsSortMode.None))p.roomEntryPos = p.transform.position; // every player entered the new room
+        foreach(var p in FindObjectsByType<Player>(FindObjectsSortMode.None))p.roomEntryPos = p.transform.position;
         GameManager.Instance.UpdateMusic();
         PathFinding.Invalidate();
     }

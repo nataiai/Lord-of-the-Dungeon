@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-// All dialogue in one place, so any scene can use it: pick one in a Dialogue component's "Sequence"
 public enum DialogueSequence{None, EnterDungeon, FinishFirstRoom, EnterOuterHotSpring}
 public static class Dialogues{
     public static readonly Dictionary<DialogueSequence,string[]> text = new(){

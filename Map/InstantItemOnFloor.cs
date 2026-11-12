@@ -16,7 +16,7 @@ public class InstantItemOnFloor : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.TryGetComponent(out Player player) && !TryGetComponent(out Loot _)) // a Loot on the same object uses it already
+        if (other.TryGetComponent(out Player player) && !TryGetComponent(out Loot _))
         {
             player.InstantItemUse(itemSO);
             Destroy(gameObject);

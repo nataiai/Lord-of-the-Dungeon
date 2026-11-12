@@ -27,7 +27,7 @@ public class Enemy : Character
     [Tooltip("Tick if the sprite art faces left. It is flipped to face the player")]
     [SerializeField] bool spriteFacesLeft;
     protected virtual bool facesPlayer => true; // false: never flipped (Chest)
-    Vector2 way; // where it walks, for the gizmo
+    Vector2 way;
 
     protected virtual void Start(){
         HP = enemyData.maxHP;
@@ -41,7 +41,7 @@ public class Enemy : Character
         GetComponent<Rigidbody2D>().freezeRotation = true;
         gameObject.layer = LayerMask.NameToLayer("Enemy");
         col = GetComponent<Collider2D>();
-        col.isTrigger=true; // a trigger until it touches nothing, so it never spawns stuck
+        col.isTrigger=true;
         justSpawn = true;
     }
     void Update(){
@@ -51,28 +51,28 @@ public class Enemy : Character
         if(isDead)Died();
         if(StuntMech(enemyData.knocbackRecovery))return;
         Vector2 target = GameManager.Instance.player.center;
-        movement = target - center; // body to body, not feet to feet
-        if(facesPlayer && Mathf.Abs(movement.x)>0.01f)sr.flipX = (movement.x<0) != spriteFacesLeft; // face the player (left/right)
+        movement = target - center;
+        if(facesPlayer && Mathf.Abs(movement.x)>0.01f)sr.flipX = (movement.x<0) != spriteFacesLeft;
         if(movement.magnitude<enemyData.noticeRange)notice=true;
         if(notice){
             way = enemyData.ignoreCollide ? movement.normalized : PathFinding.Direction(center,target,GameManager.Instance.currentRoom.bounds,col); // ghosts go straight
-            rb.velocity = Vector2.ClampMagnitude(way + PathFinding.Separation(col, LayerMask.GetMask("Enemy")), 1) * enemyData.initSpeed; // AI/PathFinding.cs
+            rb.velocity = Vector2.ClampMagnitude(way + PathFinding.Separation(col, LayerMask.GetMask("Enemy")), 1) * enemyData.initSpeed;
         }
         setAnimFacing(movement.normalized);
     }
 
-    void OnDrawGizmosSelected(){ // select an enemy in play mode: its direction in yellow, walls it avoids in red
+    void OnDrawGizmosSelected(){
         PathFinding.DrawGizmos(col);
         Gizmos.color = Color.yellow;
         Gizmos.DrawLine(center, center+way);
     }
 
     protected virtual void Died(){
-        GameManager.Instance._Connect(); // the first kill also joins chat
+        GameManager.Instance._Connect();
         sr.color = Color.white;
         if(deathBreathTime==0){
             Loot.Drop(loot, weaponLoot, transform);
-            if(isDead){ // killed, not timed out: chat may summon this type now
+            if(isDead){
                 GameManager.Instance.summondb.Unlock(enemyData);
                 AddSummonTemplate(); // fills summonableEnemy from kills; comment out to fill it by hand
             }
@@ -80,17 +80,17 @@ public class Enemy : Character
         }
         if(Time.time >= deathBreathTime)Destroy(gameObject);
     }
-    void AddSummonTemplate(){ // a hidden copy of this enemy becomes what chat summons, if its type has none yet
+    void AddSummonTemplate(){
         var db = GameManager.Instance.summondb;
         if(db.getEnemy(enemyData.enemyName)!=null)return;
-        sr.color = originalSRcolor; // not the death white or hurt red
+        sr.color = originalSRcolor;
         var t = Instantiate(this); t.gameObject.SetActive(false); t.name = enemyData.enemyName+" (summon template)";
-        t.loot = null; t.weaponLoot = null; // summons drop nothing, so unique loot is not copied
+        t.loot = null; t.weaponLoot = null;
         db.summonableEnemy.Add(t);
     }
     public override void recieveDamage(int dmg,bool isMagical){
         base.recieveDamage(dmg,isMagical);
-        GameManager.Instance.ui.ShowText(enemyData.enemyName.ToLowerInvariant()); // teaches chat the summon name
+        GameManager.Instance.ui.ShowText(enemyData.enemyName.ToLowerInvariant());
         if(isDead)return;
         HurtColor();
         dmg -= isMagical?enemyData.combatStat.defenseMagic:enemyData.combatStat.defensePhysic;
@@ -101,7 +101,7 @@ public class Enemy : Character
     public override void receiveKnockback(Vector2 pos,float force)=>receiveKnockback(pos,force,enemyData.knockbackResistance);
 
     public virtual void OnTriggerStay2D(Collider2D other){
-        if(cooldownTimer>Time.time || deathBreathTime!=0 || !other.TryGetComponent(out Character victim) || !IsEnemyOf(victim))return; // no hits while dying
+        if(cooldownTimer>Time.time || deathBreathTime!=0 || !other.TryGetComponent(out Character victim) || !IsEnemyOf(victim))return;
         victim.receiveKnockback(transform.position,enemyData.attackKnockback);
         victim.recieveDamage(enemyData.combatStat.attackPhysic);
         cooldownTimer = Time.time+enemyData.cooldown;

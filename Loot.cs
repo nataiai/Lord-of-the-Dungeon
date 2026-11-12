@@ -20,9 +20,9 @@ public class Loot : MonoBehaviour
         sr = GetComponentInChildren<SpriteRenderer>();
         if(sr==null)sr = gameObject.AddComponent<SpriteRenderer>();
         UpdateImage();
-        if(GetComponent<Collider2D>()==null)gameObject.AddComponent<BoxCollider2D>().isTrigger = true; // after the sprite, so it fits
+        if(GetComponent<Collider2D>()==null)gameObject.AddComponent<BoxCollider2D>().isTrigger = true;
     }
-    void Yoink()=>LootYoink.Push(gameObject); // slides away (AI/Yoink.cs)
+    void Yoink()=>LootYoink.Push(gameObject);
     void UpdateImage(){if(lootType==LootType.weapon)sr.sprite = weaponLoot.uiWep;}
 
     void OnTriggerEnter2D(Collider2D other)
@@ -40,13 +40,13 @@ public class Loot : MonoBehaviour
         Destroy(gameObject);
     }
     void PickWeaponHandle(Player player){
-        if(TryFill(player.lWeapon)){GameManager.Instance._Connect();return;} // the first weapon joins chat
+        if(TryFill(player.lWeapon)){GameManager.Instance._Connect();return;}
         if(TryFill(player.rWeapon))return;
-        var c = GameManager.Instance.controller; // both hands full: hold that hand's button while stepping on it to swap
+        var c = GameManager.Instance.controller;
         if(c.attackLeft.isPressed)Swap(player.lWeapon);
         else if(c.attackRight.isPressed)Swap(player.rWeapon);
     }
-    bool TryFill(HoldingWeapons hand){ // an empty hand, or bare hands (CQC)
+    bool TryFill(HoldingWeapons hand){
         if(hand.weapon!=null && hand.weapon.type!=WeaponType.CQC)return false;
         hand.weapon = weaponLoot; hand.lootScale = sr.transform.lossyScale;
         SoundPlayer.PlaySound(SoundPlayer.instance.sd_pickup_wep);
@@ -59,7 +59,6 @@ public class Loot : MonoBehaviour
         Destroy(gameObject);
     }
 
-    // drop a Loot prefab and/or a weapon (its pickup is made in code); null = nothing
     public static void Drop(Loot prefab, Weapon weapon, Transform from){
         if(prefab!=null){var p = Instantiate(prefab, from.position, Quaternion.identity); p.transform.parent = from.parent; AIHooks.OnDrop(p, from);}
         if(weapon==null)return;
@@ -70,10 +69,10 @@ public class Loot : MonoBehaviour
         sr.sprite = weapon.uiWep;
         var fromSr = from.GetComponentInChildren<SpriteRenderer>();
         if(fromSr!=null){sr.sortingLayerID = fromSr.sortingLayerID; sr.sortingOrder = fromSr.sortingOrder + 1;}
-        go.AddComponent<BoxCollider2D>().isTrigger = true; // after the sprite, so it fits
+        go.AddComponent<BoxCollider2D>().isTrigger = true;
         var loot = go.AddComponent<Loot>();
         loot.lootType = LootType.weapon;
         loot.weaponLoot = weapon;
-        AIHooks.OnDrop(loot, from); // slides away, key id (AI/Hooks.cs)
+        AIHooks.OnDrop(loot, from);
     }
 }

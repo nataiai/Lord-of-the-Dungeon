@@ -21,14 +21,14 @@ public class Controller : MonoBehaviour
     [PlayModeOnly] public bool attack;
     [PlayModeOnly] public ControllerButton switchWeapon;
     bool disableMouse => Experimental.I.disableMouse;
-    bool mouseActive=true; // set by the script: on when the mouse moves, off after mouseTimeDeactivation still
+    bool mouseActive=true;
     public float mouseDistanceActivation = 10f;
     Vector2 mouseLastPos;
     float mouseLastTime;
     public float mouseTimeDeactivation=1f;
     [PlayModeOnly] public ControllerButton attackLeft;
     [PlayModeOnly] public ControllerButton attackRight;
-    [PlayModeOnly] public ControllerButton throwHold = new(); // hold, then a weapon button: throw that weapon (AI/ThrownWeapon.cs)
+    [PlayModeOnly] public ControllerButton throwHold = new();
 
     void Update(){
         movement = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
@@ -40,7 +40,7 @@ public class Controller : MonoBehaviour
         var gamepad = Gamepad.current;
         var keyboard = Keyboard.current;
         var mouse = Mouse.current;
-        if(gamepad!=null){ // a connected gamepad replaces keyboard and mouse
+        if(gamepad!=null){
             movement = gamepad.leftStick.ReadValue();
             looking = gamepad.rightStick.ReadValue();
             // attack = gamepad.buttonWest.isPressed;
@@ -70,7 +70,6 @@ public class Controller : MonoBehaviour
         }
     }
     static float Axis(bool negative,bool positive)=>(positive?1:0)-(negative?1:0);
-    // mouse aim turns on when the mouse moves far enough, and off after mouseTimeDeactivation seconds without moving
     void CheckMouseEnable(Vector2 mousePos){
         if((mousePos-mouseLastPos).magnitude > mouseDistanceActivation)mouseActive=true;
         if(mouseActive){

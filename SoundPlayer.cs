@@ -10,13 +10,13 @@ public class SoundPlayer : MonoBehaviour
     public RoomType[] roomTypeList; // roomMusicList[i] plays in rooms of type roomTypeList[i]
     public AudioClip[] roomMusicList;
 
-    void Awake(){instance = this;} // Awake, so sounds work from any Start
+    void Awake(){instance = this;}
     public static void PlaySound(AudioClip sound)=>instance.soundSource.PlayOneShot(sound);
     public void UpdateMusic(){
         var clip = getClip(GameManager.Instance.currentRoom.roomType);
         if(musicSource.clip==clip)return;
         musicSource.clip = clip;
-        if(clip==null){musicSource.Stop();return;} // no music for this room type
+        if(clip==null){musicSource.Stop();return;}
         musicSource.Play();
         print("Play:"+clip.name);
     }

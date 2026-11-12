@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Characters of the ticked teams standing in this trigger heal 1 HP, HPHealPerSecond times a second, with a sound and the heal animation
 public class HealingRoom : MonoBehaviour
 {
     public Team heals = Team.Player;

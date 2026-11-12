@@ -37,9 +37,9 @@ public class GameManager: MonoBehaviour{
         DontDestroyOnLoad(this);
         mainCam = Camera.main;
         uiCam = mainCam.transform.Find("UI Cam").GetComponent<Camera>();
-        ui = FindFirstObjectByType<UI>(); // use the UI in the scene, or make one
+        ui = FindFirstObjectByType<UI>();
         if(ui==null)ui = Instantiate(uiPrefab, new Vector2(0,0), Quaternion.identity);
-        QualitySettings.vSyncCount = 0; // vSync off, so targetFrameRate works
+        QualitySettings.vSyncCount = 0;
         Application.targetFrameRate = FPS;
     }
     void Start(){
@@ -54,11 +54,11 @@ public class GameManager: MonoBehaviour{
     }
     void Spawn(Enemy enemy)=>currentRoom.Spawn(enemy,playerPos,spawnRangeFromPlayer);
 
-    public void _Connect(){ // join chat (Twitch or YouTube), once
+    public void _Connect(){
         if(_connectOnce)return;
         _connectOnce = true;
         chat.channel = Data.cn;
-        if(!testWithoutChat && !UnifiedChat.TryConnect(Data.cn))chat.Connect(); // on/off in Experimental.cs; Lexone (chat.Connect) is the backup
+        if(!testWithoutChat && !UnifiedChat.TryConnect(Data.cn))chat.Connect();
     }
     public void _re(){ // back to the first room
         map.currentRoom.gameObject.SetActive(false);

@@ -16,7 +16,6 @@ public class Spawner : MonoBehaviour // on a room's floor tilemap
     public Enemy Spawn(Enemy enemy, Vector2 pos)=>Instantiate(enemy, pos, Quaternion.identity);
     public Enemy Spawn(Enemy enemy, Bounds b)=>Spawn(enemy, Rand(b));
     public Enemy Spawn(Enemy enemy)=>Spawn(enemy,bounds);
-    // a random free spot near oriPos: BFS on a 0.5 grid, within range, inside the room, not right on oriPos
     public Enemy Spawn(Enemy enemy, Vector2 oriPos,float range){
         Queue<Vector2> q = new();q.Enqueue(oriPos);
         HashSet<Vector2> seen = new();
@@ -31,6 +30,6 @@ public class Spawner : MonoBehaviour // on a room's floor tilemap
                 if(seen.Add(n)&&Physics2D.OverlapPoint(n)==null&&bounds.Contains(n))q.Enqueue(n);
             }
         }
-        return Instantiate(enemy, result.Count>0?result[Random.Range(0,result.Count)]:oriPos, Quaternion.identity); // no free spot: on oriPos
+        return Instantiate(enemy, result.Count>0?result[Random.Range(0,result.Count)]:oriPos, Quaternion.identity);
     }
 }

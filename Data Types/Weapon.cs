@@ -30,5 +30,5 @@ public partial class Weapon : ScriptableObject // Throw / Boomerang / Key settin
     public int maxHits;
     public BaseWeapon anim;
     public Sprite uiWep;
-    public BuffEffect.Buff buff; // Buff section: type none = no effect; copied to each hitbox (BuffEffect.cs)
+    public BuffEffect.Buff buff;
 }

@@ -9,10 +9,10 @@ public class DungeonRoom : MonoBehaviour
     public Bounds bounds => spawner.bounds;
 
     public void Spawn(Enemy enemy, Vector2 oriPos,float range){
-        var enemies = transform.Find("Enemies"); // spawned enemies live under the room, so they pause with it
+        var enemies = transform.Find("Enemies");
         if(!enemies){enemies = new GameObject("Enemies").transform; enemies.SetParent(transform);}
         var e = spawner.Spawn(enemy,oriPos,range);
         e.transform.parent = enemies;
-        e.gameObject.SetActive(true); // copies of hidden summon templates start inactive
+        e.gameObject.SetActive(true);
     }
 }

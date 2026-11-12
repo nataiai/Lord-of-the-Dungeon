@@ -48,7 +48,7 @@ public class UI : MonoBehaviour
         UpdateDialogue();
     }
 
-    public void ShowText(string txt){ // for 2 seconds; a new text restarts the timer
+    public void ShowText(string txt){
         enemyNameTextLabel.SetText(txt);
         if(d_hide!=null)StopCoroutine(d_hide);
         d_hide = StartCoroutine(d_foo());
@@ -58,7 +58,7 @@ public class UI : MonoBehaviour
         yield return new WaitForSeconds(2);
         enemyNameTextbox.SetActive(false);
     }
-    public void UpdateMaxHP(int maxHP){ // heart[0] is the template and always shown
+    public void UpdateMaxHP(int maxHP){
         Transform t = healthUI.transform;
         while(heart.Count<=maxHP)heart.Add(Instantiate(heart[0],t.position,Quaternion.identity,t));
         for(int i=1;i<heart.Count;i++)heart[i].enabled = i<maxHP;
@@ -81,13 +81,13 @@ public class UI : MonoBehaviour
         }
         player.froze();
         player.invincibleTime = Time.time+1;
-        player.lWeapon.lastUse = player.rWeapon.lastUse = Time.time; // clicking through dialogue doesn't attack
+        player.lWeapon.lastUse = player.rWeapon.lastUse = Time.time;
         dialogueTextbox.SetActive(true);
         dialogueTextLabel.SetText(dialogueTextToShow[0]);
         int shown = (int)((Time.time-dialogueStart)*dialogueSpeed); // typewriter
         dialogueTextLabel.maxVisibleCharacters = shown;
         if(GameManager.Instance.controller.attackLeft.isPressedOnce("dialogue")){
-            if(shown<dialogueTextToShow[0].Length){dialogueStart-=9999;return;} // still typing: show the whole line
+            if(shown<dialogueTextToShow[0].Length){dialogueStart-=9999;return;}
             dialogueStart=Time.time;
             if(dialogueTextToShow.Length==1)dialogueTextToShow=null;
             else dialogueTextToShow = dialogueTextToShow[1..];

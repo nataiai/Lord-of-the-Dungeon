@@ -17,7 +17,7 @@ public partial class HoldingWeapons{ // one hand
     public float cooldown=>weapon.cooldown;
     BaseWeapon anim;
     public void Unequip(){weapon = PrefabDatabase.Instance.fist; }
-    public void Use(Character user){if(isUsable)ForceUse(user);} // any Character can hold weapons
+    public void Use(Character user){if(isUsable)ForceUse(user);}
     public float getReloadPercent()=>weapon==null?1:Mathf.Min((Time.time-lastUse)/weapon.cooldown,1); // for ui
     public void ForceUse(Character player){
         lastUse = Time.time;
@@ -40,7 +40,7 @@ public partial class HoldingWeapons{ // one hand
         hitBox.damage = weapon.damage * (weapon.isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
         hitBox.playerPos = playerPos;
         hitBox.setVelocity((Experimental.I.fourWayAttack ? looking4dir : player.looking) * weapon.velocity);
-        AIHooks.OnAttack(hitBox, this, player, Experimental.I.fourWayAttack ? looking4dir : player.looking); // keys, boomerang (AI/Hooks.cs)
+        AIHooks.OnAttack(hitBox, this, player, Experimental.I.fourWayAttack ? looking4dir : player.looking);
     }
     public void StopAnim(){if(anim!=null)GameObject.Destroy(anim.gameObject);anim=null;}
 }
@@ -56,7 +56,7 @@ public class Player : Character
     public override int maxHP{get=>_maxHP;set{_maxHP=value;GameManager.Instance.ui.UpdateMaxHP(maxHP);}}
     bool enableInvincible => Experimental.I.enableInvincible;
     public float speedBoost;
-    [PlayModeOnly] public int state; // IDLE, MOVING, or the WeaponType number while attacking
+    [PlayModeOnly] public int state;
     bool attackState;
     const int IDLE = 0;
     const int MOVING = 1;
@@ -78,7 +78,7 @@ public class Player : Character
     [PlayModeOnly] public bool forceAnim;
     [Tooltip("Fall down animation when it falls in a hole (a state with this clip's name in its Animator). Empty: it shrinks away")]
     public AnimationClip fallClip;
-    [PlayModeOnly] public Vector2 roomEntryPos; // where this player entered the current room: falling in a hole brings it back here
+    [PlayModeOnly] public Vector2 roomEntryPos;
 
     public override int HP{get=>_HP;set{_HP=value;GameManager.Instance.ui.UpdateHP(HP);}}
 
@@ -92,11 +92,11 @@ public class Player : Character
         if(HP<=0)Died();
         movement = Vector2.ClampMagnitude(controller.movement,1);
         if(Experimental.I.stopMoveOnAttack && attackState)movement = Vector2.zero;
-        if(Experimental.I.lookFollowMovement){if(isMoving)looking = movement;} // face where it walks; standing still: keep the last direction
-        else if(controller.looking.magnitude>0)looking = controller.looking; // no look input: keep the last direction it looked
-        else if(!isLooking)looking = movement; // never looked yet: face where it walks
+        if(Experimental.I.lookFollowMovement){if(isMoving)looking = movement;}
+        else if(controller.looking.magnitude>0)looking = controller.looking;
+        else if(!isLooking)looking = movement;
         if(!StuntMech(8))rb.velocity = movement * initSpeed;
-        if(ThrownWeapon.TryThrow(this)){UpdateAnim(); return;} // Throw held: no attacks (AI/ThrownWeapon.cs)
+        if(ThrownWeapon.TryThrow(this)){UpdateAnim(); return;}
         TryAttack(lWeapon, controller.attackLeft);
         TryAttack(rWeapon, controller.attackRight);
         UpdateAnim();
@@ -108,13 +108,13 @@ public class Player : Character
         cooldown = hand.cooldown;
         state = (int)hand.weapon.type;
     }
-    public void InstantItemUse(InstantItem item){ // walked into an instant use item
+    public void InstantItemUse(InstantItem item){
         if(item==null)return;
         if(item.usableItemType==ItemType.Heal)HealWithEffect(item.healAmount);
     }
-    public void Respawn(){ // back where it entered the room
+    public void Respawn(){
         transform.position = roomEntryPos;
-        currentAnim = null; // replay idle/walk, whatever played meanwhile (e.g. the fall)
+        currentAnim = null;
     }
     void Died(){
         HP = maxHP; //test
@@ -123,7 +123,7 @@ public class Player : Character
     }
 
     void UpdateAnim(){
-        if(!forceAnim && attackState && anim.GetCurrentAnimatorStateInfo(0).normalizedTime<.9f)return; // let the attack finish
+        if(!forceAnim && attackState && anim.GetCurrentAnimatorStateInfo(0).normalizedTime<.9f)return;
         attackState = false;
         setAnimFacing(looking);
         switch(state){
@@ -162,7 +162,7 @@ public class Player : Character
         if(!forceAnim && currentAnim == toAnim.name)return;
         anim.Play(toAnim.name, 0, 0f);
         currentAnim = toAnim.name;
-        anim.speed = cooldown!=0?Mathf.Max(toAnim.length / cooldown, 1):1; // an attack fits its cooldown
+        anim.speed = cooldown!=0?Mathf.Max(toAnim.length / cooldown, 1):1;
     }
 
     public override void recieveDamage(int dmg, bool isMagical=false){

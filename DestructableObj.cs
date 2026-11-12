@@ -16,11 +16,11 @@ public class Destructable : MonoBehaviour
 
     void Start(){HP = hitUntillBreak;}
     void Died(){
-        PathFinding.Invalidate(); // it may have been in the way
+        PathFinding.Invalidate();
         if(destroyAfterDead)Destroy(gameObject);
         Loot.Drop(loot, weaponLoot, transform);
     }
-    public virtual void recieveDamage(int dmg,bool isMagical){ // magic does nothing; any other hit counts as 1
+    public virtual void recieveDamage(int dmg,bool isMagical){
         if(isMagical)return;
         HP-=1;
         if(++index<sprites.Length)myRender.sprite=sprites[index];

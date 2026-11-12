@@ -10,7 +10,7 @@ public class CombatStat{
     public int defenseMagic = 1;
 }
 
-[System.Flags] public enum Team{Player=1,Enemy=2,Neutral=4} // hitboxes and touch damage only hurt other teams. Flags: a field can tick several teams
+[System.Flags] public enum Team{Player=1,Enemy=2,Neutral=4}
 
 public abstract class Character : MonoBehaviour // remove abstract and fix combat stat if bug
 {
@@ -29,7 +29,7 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
     float stunTime;
     Collider2D _col;
     public Collider2D bodyCollider{get{if(!_col)_col = GetComponent<Collider2D>(); return _col;}}
-    public Vector2 center => bodyCollider?(Vector2)bodyCollider.bounds.center:(Vector2)transform.position; // middle of the body; the transform is at the feet
+    public Vector2 center => bodyCollider?(Vector2)bodyCollider.bounds.center:(Vector2)transform.position;
     public virtual Team team => Team.Neutral;
     public bool IsEnemyOf(Character c) => c!=null && c.team!=team;
 
@@ -42,7 +42,7 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
         return 2;
     }
     public void froze(){stunTime=Time.time+1;}
-    protected bool StuntMech(float recover){ // true while stunned: slows down, ignores own movement
+    protected bool StuntMech(float recover){
         if(stunTime<=Time.time)return false;
         rb.velocity*=Mathf.Exp(-recover*Time.deltaTime);
         if(rb.velocity.magnitude<0.5f)stunTime=0;
@@ -50,17 +50,17 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
     }
     public virtual void receiveKnockback(Vector2 pos,float force)=>receiveKnockback(pos,force,0);
     public void receiveKnockback(Vector2 pos,float force,float resistance){
-        Vector2 dir = Quaternion.Euler(0,0,Random.Range(-10f,10f)) * ((Vector2)transform.position-pos); // away from pos, +-10 degrees
+        Vector2 dir = Quaternion.Euler(0,0,Random.Range(-10f,10f)) * ((Vector2)transform.position-pos);
         rb.velocity = force * dir.normalized * (1-resistance);
         stunTime = Time.time + 1;
     }
 
     public virtual void Heal(int heal=1){HP+=heal;if(HP>maxHP)HP=maxHP;}
-    [PlayModeOnly] public bool isHealing; // standing in a healing room
-    public void HealWithEffect(int amount){ // heal and show the heal animation
+    [PlayModeOnly] public bool isHealing;
+    public void HealWithEffect(int amount){
         Heal(amount);
         var healEffect = GameManager.Instance.healEffect;
-        if(healEffect!=null)PlayOnce.Spawn(healEffect, transform.position, transform); // plays once, then gone (AI/PlayOnce.cs)
+        if(healEffect!=null)PlayOnce.Spawn(healEffect, transform.position, transform);
     }
 
     public virtual void recieveDamage(int dmg,bool isMagical=false){

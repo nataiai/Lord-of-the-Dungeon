@@ -7,7 +7,6 @@ public enum ChatType{summon=0,teleport=1,vote,work,invalid}
 public abstract class Chat : MonoBehaviour
 {
     public SimpleSummonDB summondb;
-    // the first word can be any start of the command ("s", "sum", "summon"), then the allowed word count
     static (string word, int minWords, int maxWords, ChatType type)[] commands = {
         ("summon",2,3,ChatType.summon), // summon enemy (north)
         ("spawn",2,3,ChatType.summon),
