@@ -33,6 +33,7 @@ public static class Slide
         int n = Physics2D.CircleCast(pos, radius, move.normalized, solid, hits, move.magnitude);
         for(int i=0;i<n && !blocked;i++){
             Collider2D col = hits[i].collider;
+            if(col.OverlapPoint(pos))continue; // started inside it (loot from a chest): slide out
             bool keepGoing = onTouch==null || onTouch(col);
             if(keepGoing && !IsSolid(col))continue; // characters don't block
             pos = hits[i].centroid;
