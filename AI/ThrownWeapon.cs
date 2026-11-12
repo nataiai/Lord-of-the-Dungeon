@@ -74,7 +74,9 @@ public class ThrownWeapon : MonoBehaviour
         Slide.Turn(rb, velocity, weapon.throwSettings.spinSpeed, weapon.throwSettings.initSpeed, weapon.throwSettings.spriteAngle);
     }
     void LateUpdate(){ // straight below, even when it spins
-        if(shadow!=null)shadow.position = transform.position + Vector3.down*weapon.throwSettings.shadowHeight;
+        if(shadow==null)return;
+        float speed = Mathf.Clamp01(velocity.magnitude/Mathf.Max(weapon.throwSettings.initSpeed,0.01f));
+        shadow.position = transform.position + Vector3.down*weapon.throwSettings.shadowHeight*speed;
     }
     void OnTriggerEnter2D(Collider2D other){if(!done)Touch(other);} // enemies it passes
 
