@@ -41,7 +41,13 @@ public partial class HoldingWeapons{ // one hand
     public void PlayAnim(Character player, int facing, float angle=0){ // angle: turned around the body (spin)
         if(weapon.anim==null)return;
         anim = Object.Instantiate(weapon.anim, player.transform.position, Quaternion.identity,player.transform);
-        if(angle!=0)anim.transform.RotateAround((Vector2)player.transform.position+new Vector2(0,0.5f), Vector3.forward, angle);
+        if(angle!=0){ // a holder turns it: the clip moves and turns the anim itself
+            var holder = new GameObject("turned anim").transform;
+            holder.SetParent(player.transform, false);
+            anim.transform.SetParent(holder, true);
+            holder.RotateAround((Vector2)player.transform.position+new Vector2(0,0.5f), Vector3.forward, angle);
+            Object.Destroy(holder.gameObject, 2);
+        }
         if(facing<anim.animations.Length){
             var clip = anim.animations[facing];
             anim.anim.Play(clip.name);
