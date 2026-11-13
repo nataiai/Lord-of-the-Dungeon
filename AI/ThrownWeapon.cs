@@ -52,7 +52,7 @@ public class ThrownWeapon : MonoBehaviour
             shadow.sprite = sr.sprite;
             shadow.color = new Color(0,0,0,.4f);
             shadow.sortingLayerID = sr.sortingLayerID;
-            shadow.sortingOrder = sr.sortingOrder-1;
+            shadow.sortingOrder = 3; // Order in Layer 3, like the other shadows
             t.shadow = shadow.transform;
         }
         t.radius = Mathf.Max(weapon.throwSettings.size,0.05f);
