@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 330774034f9cd62049988ff75ad5d5bc, type: 3}
   m_Name: Fist
   m_EditorClassIdentifier: 
-  canThrow: 1
+  canThrow: 0
   throwDamage: 1
   throwInitSpeed: 10
   throwDeceleration: 8
@@ -24,8 +24,19 @@ MonoBehaviour:
   spinSpeed: 0
   spriteAngle: 45
   boomerangDeceleration: 10
-  isKey: 0
   keyId: 
+  chargeSettings:
+    autoAttack: 0
+    chargeTime: 0.5
+    skill: 6
+    damage: 1
+    count: 8
+    interval: -0.10
+    noKnockback: 1
+    stun: 1
+    spread: 0
+    size: 1
+    dashSpeed: 0
   type: 905
   useSound: {fileID: 8300000, guid: 66bd0cbdf7e484a41b698ff2f3d4bfa0, type: 3}
   hitSound: {fileID: 8300000, guid: 700550a0e4c1c6049a58b89b38acf4c2, type: 3}
@@ -49,12 +60,3 @@ MonoBehaviour:
     duration: 1
     power: 1
     isStackable: 0
-  chargeSettings:
-    autoAttack: 1
-    chargeTime: 1
-    skill: 0
-    damage: 1
-    count: 1
-    spread: 0
-    size: 1
-    dashSpeed: 0
