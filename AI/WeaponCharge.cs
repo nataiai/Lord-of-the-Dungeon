@@ -58,7 +58,7 @@ public static class WeaponCharge
             break;
             case WeaponSkill.Spin:
             for(int i=0;i<cs.spinCount;i++){
-                var d = Turn(dir, 360f*i/cs.spinCount);
+                var d = Turn(dir, i==0 ? 0 : cs.spinRandom ? Random.Range(0f,360f) : 360f*i/cs.spinCount); // the first: front
                 Spawn(hand, p, d, cs.damage, 1);
                 if(cs.spinAnim && i>0)hand.PlayAnim(p, d); // the front one already plays
             }

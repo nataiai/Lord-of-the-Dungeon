@@ -83,6 +83,10 @@ public class ChargeSettings{ // Weapon.chargeSettings
     [ShowIf("skill", WeaponSkill.Spin)]
     [Tooltip("Spin: the weapon's swing anim plays toward every hit, not only to the front")]
     public bool spinAnim = true;
+    [ShowIf("autoAttack", false)]
+    [ShowIf("skill", WeaponSkill.Spin)]
+    [Tooltip("Spin: the first hit is in front, the others go in random directions (not evenly spaced)")]
+    public bool spinRandom;
 }
 
 [System.Serializable]

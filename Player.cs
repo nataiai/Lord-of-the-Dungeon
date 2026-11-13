@@ -41,7 +41,8 @@ public partial class HoldingWeapons{ // one hand
     public void PlayAnim(Character player, Vector2 dir){ // between the 4 clips: turned toward dir
         if(weapon.anim==null)return;
         int facing = Direction.facing(dir);
-        anim = Object.Instantiate(weapon.anim, player.transform.position, Quaternion.FromToRotation(Direction.vec2MoveDict[facing], dir),player.transform);
+        anim = Object.Instantiate(weapon.anim, player.transform.position, Quaternion.identity,player.transform);
+        anim.transform.RotateAround((Vector2)player.transform.position+new Vector2(0,0.5f), Vector3.forward, Vector2.SignedAngle(Direction.vec2MoveDict[facing], dir)); // around the body, like the hitboxes
         if(facing<anim.animations.Length){
             var clip = anim.animations[facing];
             anim.anim.Play(clip.name);
