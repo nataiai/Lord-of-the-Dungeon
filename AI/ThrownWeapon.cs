@@ -36,15 +36,11 @@ public class ThrownWeapon : MonoBehaviour
 
     // scale: the size it had as loot (zero = 1), so it looks the same flying and landed
     public static ThrownWeapon Throw(Weapon weapon, Character by, Vector2 dir, Vector3 scale=default){
-        var go = new GameObject(weapon.name+" (thrown)");
-        go.transform.position = by.center;
+        var sr = Sprite(weapon, by, by.center, dir);
+        var go = sr.gameObject;
+        go.name = weapon.name+" (thrown)";
         if(GameManager.Instance.currentRoom!=null)go.transform.parent = GameManager.Instance.currentRoom.transform; // pauses with its room
-        go.transform.rotation = Quaternion.Euler(0,0,Slide.PointAngle(dir, weapon.throwSettings.spriteAngle));
         go.transform.localScale = scale==Vector3.zero ? Vector3.one : scale;
-        var sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite = weapon.uiWep;
-        var bySr = by.GetComponentInChildren<SpriteRenderer>();
-        if(bySr!=null){sr.sortingLayerID = bySr.sortingLayerID; sr.sortingOrder = bySr.sortingOrder+1;}
         var t = go.AddComponent<ThrownWeapon>();
         if(weapon.throwSettings.shadowHeight>0){
             var shadow = new GameObject("shadow").AddComponent<SpriteRenderer>();
@@ -64,6 +60,17 @@ public class ThrownWeapon : MonoBehaviour
         t.velocity = dir.normalized*weapon.throwSettings.initSpeed;
         if(weapon.useSound!=null)SoundPlayer.PlaySound(weapon.useSound);
         return t;
+    }
+
+    // the weapon's sprite at pos, pointing along dir, drawn over `by` (a throw, Spin's sprites)
+    public static SpriteRenderer Sprite(Weapon weapon, Character by, Vector2 pos, Vector2 dir){
+        var sr = new GameObject(weapon.name).AddComponent<SpriteRenderer>();
+        sr.transform.position = pos;
+        sr.transform.rotation = Quaternion.Euler(0,0,Slide.PointAngle(dir, weapon.throwSettings.spriteAngle));
+        sr.sprite = weapon.uiWep;
+        var bySr = by.GetComponentInChildren<SpriteRenderer>();
+        if(bySr!=null){sr.sortingLayerID = bySr.sortingLayerID; sr.sortingOrder = bySr.sortingOrder+1;}
+        return sr;
     }
 
     void FixedUpdate(){

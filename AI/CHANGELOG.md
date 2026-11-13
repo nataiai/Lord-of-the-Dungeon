@@ -28,6 +28,7 @@ Charge     hold a weapon button: one normal attack, then it charges (player glow
              skill   Multi (normal attacks in a row, the default; interval 0 = one per cooldown) / Big (one big hit) / Spin (hits all around) / Volley (fan of shots) / Flurry (quick hits) / Lunge (dash, then hit)
              damage  x the weapon's damage;  count, interval, spread, size, dashSpeed  show only for the skills that use them
              Multi   noKnockback (hits don't push back), stun (stunned until the next hit): ticks
+             Spin    spinCount (8 = every 45 degrees, 3 = every 120), spinSprite: the weapon shows at every hit (default on)
            Set now: Fist, KeyBronze, GameBreaker autoAttack. Sword1 Spin, Zweihander Big, Rapier Flurry,
            Spear1 Lunge, Arrow Volley, RodFire1 Big, RodIce1 Spin.
 
@@ -53,3 +54,4 @@ PlayOnce   AI/PlayOnce.cs: play an animation once, then hide / destroy. Use it a
 # Dev (code only)
 
 ShowIf     AI/ShowIf.cs: [ShowIf("skill", WeaponSkill.Big)] on a field = Inspector shows it only for those values. Use it anywhere.
+           Several on one field: all must match. Experimental > Inspector > useShowIf off: every field shows.

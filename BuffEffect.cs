@@ -13,8 +13,11 @@ public class BuffEffect : MonoBehaviour
     [System.Serializable]
     public class Buff{
         public BuffType type = BuffType.none; // none = no effect
+        [ShowIf("type", BuffType.burn, BuffType.heal, BuffType.slow, BuffType.stun, BuffType.stopMovement, BuffType.stopFacing)]
         public float duration=1f;
+        [ShowIf("type", BuffType.burn, BuffType.heal)]
         public int power = 1; // burn, heal: HP per second
+        [ShowIf("type", BuffType.burn, BuffType.heal, BuffType.slow, BuffType.stun, BuffType.stopMovement, BuffType.stopFacing)]
         public bool isStackable;
         public void CopyTo(GameObject go){
             if(type==BuffType.none)return;
