@@ -20,8 +20,7 @@ public class TwitchChat : Chat
     
     public void Connect() => Connect(channel);
     public void Connect(string channel){
-        UnifiedChat.KeepLexone(irc, channel);
-        irc.OnChatMessage += OnChatMessage;
+        if(UnifiedChat.KeepLexone(irc, channel))irc.OnChatMessage += OnChatMessage;
     }
 
     private void OnChatMessage(Chatter chatter)

@@ -36,6 +36,7 @@ Charge     hold a weapon button: one normal attack, then it charges (player glow
 Chat       no internet, a drop or Twitch down never stops the game: chat tries again by itself (about every 20 s).
            Quiet for 10 s: it pings Twitch; no answer for 20 s: it reconnects (Lexone, Twitch, WebGL, YouTube).
 [SETUP]    IRC object (Lexone): useAnonymousLogin on (or oauth + username), joinChannelOnStart on.
+           No IRC object (removed or turned off) or WebGL: chat uses AI/UnifiedChat.cs's own Twitch reader.
 [TWEAK]    IRC object: untick connectIRCOnStart, or the game can freeze at load when Twitch can't be reached.
 
 Buffs      Weapon > Buff > Type is a mask: tick several at once (burn + slow ...). power = burn / heal HP per second
