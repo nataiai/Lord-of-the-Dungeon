@@ -37,11 +37,13 @@ public partial class HoldingWeapons{ // one hand
         AIHooks.OnAttack(hitBox, this, player, flyDir);
         return hitBox;
     }
-    public void PlayAnim(Character player){
+    public void PlayAnim(Character player)=>PlayAnim(player, Direction.vec2MoveDict[player.animFacing]);
+    public void PlayAnim(Character player, Vector2 dir){ // between the 4 clips: turned toward dir
         if(weapon.anim==null)return;
-        anim = Object.Instantiate(weapon.anim, player.transform.position, Quaternion.identity,player.transform);
-        if(player.animFacing<anim.animations.Length){
-            var clip = anim.animations[player.animFacing];
+        int facing = Direction.facing(dir);
+        anim = Object.Instantiate(weapon.anim, player.transform.position, Quaternion.FromToRotation(Direction.vec2MoveDict[facing], dir),player.transform);
+        if(facing<anim.animations.Length){
+            var clip = anim.animations[facing];
             anim.anim.Play(clip.name);
             anim.anim.speed = Mathf.Max(clip.length / cooldown, 1);
         }

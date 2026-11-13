@@ -81,8 +81,8 @@ public class ChargeSettings{ // Weapon.chargeSettings
     public int spinCount = 8;
     [ShowIf("autoAttack", false)]
     [ShowIf("skill", WeaponSkill.Spin)]
-    [Tooltip("Spin: the weapon's sprite shows at every hit for a moment (its swing anim only plays to the front)")]
-    public bool spinSprite = true;
+    [Tooltip("Spin: the weapon's swing anim plays toward every hit, not only to the front")]
+    public bool spinAnim = true;
 }
 
 [System.Serializable]
@@ -113,7 +113,7 @@ public class ThrowSettings{ // Weapon.throwSettings: a foldout in the weapon's I
     [Range(0,1)] public float bounciness = 0.1f; // speed kept per bounce
     [Tooltip("Sprite spin, degrees per second at full speed (slows with it). 0 = flies point first. A boomerang spins with this too")]
     public float spinSpeed;
-    [Tooltip("Which way the sprite art points (0 = right, 90 = up), so a non-spinning throw flies point first. Spin's sprites too")]
+    [Tooltip("Which way the sprite art points (0 = right, 90 = up), so a non-spinning throw flies point first")]
     public float spriteAngle = 45;
     [ShowIf("canThrow", true)]
     [Tooltip("How high it flies above its shadow. 0 = no shadow")]

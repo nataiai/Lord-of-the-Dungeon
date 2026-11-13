@@ -59,8 +59,8 @@ public static class WeaponCharge
             case WeaponSkill.Spin:
             for(int i=0;i<cs.spinCount;i++){
                 var d = Turn(dir, 360f*i/cs.spinCount);
-                var hb = Spawn(hand, p, d, cs.damage, 1);
-                if(cs.spinSprite && hb!=null)SpinSprite(w, p, hb.transform.position, d);
+                Spawn(hand, p, d, cs.damage, 1);
+                if(cs.spinAnim && i>0)hand.PlayAnim(p, d); // the front one already plays
             }
             break;
             case WeaponSkill.Volley:
@@ -107,13 +107,8 @@ public static class WeaponCharge
 
     static Vector2 Turn(Vector2 dir, float angle) => Quaternion.Euler(0,0,angle)*dir;
 
-    static HitBox Spawn(HoldingWeapons hand, Player p, Vector2 dir, float damage, float size){
-        return hand.weapon!=null ? hand.SpawnHitBox(p, dir, dir, damage, size) : null; // null: thrown mid-flurry
-    }
-    static void SpinSprite(Weapon w, Player p, Vector2 at, Vector2 dir){ // the weapon at a Spin hit, for a moment
-        var sr = ThrownWeapon.Sprite(w, p, at, dir);
-        sr.transform.SetParent(p.transform, true); // moves with the player
-        Object.Destroy(sr.gameObject, .25f);
+    static void Spawn(HoldingWeapons hand, Player p, Vector2 dir, float damage, float size){
+        if(hand.weapon!=null)hand.SpawnHitBox(p, dir, dir, damage, size); // null: thrown mid-flurry
     }
 }
 
