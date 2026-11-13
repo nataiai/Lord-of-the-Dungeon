@@ -15,6 +15,8 @@ public partial class Experimental : MonoBehaviour{ // Weapons switches: AI/Field
     public bool enableInvincible = false;
     [Tooltip("Turn the mouse off: no mouse aim or clicks")]
     public bool disableMouse = true;
+    [Tooltip("On: hold a weapon button to charge its skill, let go to use it (AI/WeaponCharge.cs)")]
+    public bool chargeSkills = true;
 
     [Header("Enemy AI")]
     [Tooltip("Off: no pathfinding, enemies walk straight at the player")]

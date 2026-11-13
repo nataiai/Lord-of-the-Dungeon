@@ -22,3 +22,12 @@ MonoBehaviour:
   velocity: 10
   destroyTimer: 5
   destroyOnHit: 3
+  chargeSettings:
+    autoAttack: 0
+    chargeTime: 1.2
+    skill: 3
+    damage: 1
+    count: 5
+    spread: 10
+    size: 1
+    dashSpeed: 0

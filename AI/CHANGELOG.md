@@ -17,6 +17,14 @@ Throw      hold Q / pad X + weapon button. Lands as loot; the hand goes back to 
              spriteAngle   which way the art points (0 = right)
              shadowHeight  how high it flies above its shadow (0 = no shadow)
 
+Charge     hold a weapon button: one normal attack, then it charges (player glows when ready). Let go: the skill.
+[TWEAK]    Experimental > Player > chargeSkills (untick = feature off)
+[TWEAK]    Weapon > Charge Settings (foldout): autoAttack (holding keeps attacking, the old way), chargeTime,
+             skill   Multi (normal attacks in a row, the default; interval 0 = one per cooldown) / Big (one big hit) / Spin (hits all around) / Volley (fan of shots) / Flurry (quick hits) / Lunge (dash, then hit)
+             damage  x the weapon's damage;  count, interval, spread, size, dashSpeed  show only for the skills that use them
+           Set now: Fist, KeyBronze, GameBreaker autoAttack. Sword1 Spin, Zweihander Big, Rapier Flurry,
+           Spear1 Lunge, Arrow Volley, RodFire1 Big, RodIce1 Spin.
+
 Boomerang  a weapon of type Boomerang: its attack comes back through walls. The hand waits until it's back.
 [TWEAK]    Weapon > boomerangDeceleration  slow-down going out
 
@@ -29,3 +37,8 @@ Loot       dropped loot slides and bounces (placed loot stays put; still falls i
 
 PlayOnce   AI/PlayOnce.cs: play an animation once, then hide / destroy. Use it anywhere.
            Door opens with it (plays once, then gone); the heal effect lasts as long as its animation.
+
+
+# Dev (code only)
+
+ShowIf     AI/ShowIf.cs: [ShowIf("skill", WeaponSkill.Big)] on a field = Inspector shows it only for those values. Use it anywhere.

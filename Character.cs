@@ -2,6 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public class Direction{
+    static public string[] strMoveDict = {"up", "right", "down", "left", };
+    static public Vector2[] vec2MoveDict = {Vector2.up, Vector2.right, Vector2.down, Vector2.left, };
+    static public int facing(Vector2 v){ //up = 0, right = 1, down = 2, left = 3
+        if(v.x>0.7071f)return 1;
+        if(v.x<-0.7071f)return 3;
+        if(v.y>0)return 0;
+        if(v.y<0)return 2;
+        return 2;
+    }
+}
+
 [System.Serializable]
 public class CombatStat{
     public int attackPhysic = 1;
@@ -34,13 +46,7 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
     public bool IsEnemyOf(Character c) => c!=null && c.team!=team;
 
     protected void setAnimFacing(Vector2 v)=>animFacing = _setAnimFacing(v);
-    protected virtual int _setAnimFacing(Vector2 looking){
-        if(looking.x>0.7071f)return 1;
-        if(looking.x<-0.7071f)return 3;
-        if(looking.y>0)return 0;
-        if(looking.y<0)return 2;
-        return 2;
-    }
+    protected virtual int _setAnimFacing(Vector2 looking)=>Direction.facing(looking);
     public void froze(){stunTime=Time.time+1;}
     protected bool StuntMech(float recover){
         if(stunTime<=Time.time)return false;

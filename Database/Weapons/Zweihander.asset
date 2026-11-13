@@ -30,3 +30,12 @@ MonoBehaviour:
   maxHits: 0
   anim: {fileID: 6972958541385030361, guid: f54af862def8a644ea6350f1edbc0ee6, type: 3}
   uiWep: {fileID: 21300000, guid: bd00db85f7ae0ba4a99be7a36d5ee299, type: 3}
+  chargeSettings:
+    autoAttack: 0
+    chargeTime: 1.5
+    skill: 1
+    damage: 3
+    count: 1
+    spread: 0
+    size: 2.5
+    dashSpeed: 0

@@ -3,11 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class Direction{
-    static public string[] strMoveDict = {"up", "right", "down", "left", };
-    static public Vector2[] vec2MoveDict = {Vector2.up, Vector2.right, Vector2.down, Vector2.left, };
-}
-
 [System.Serializable]
 public partial class HoldingWeapons{ // one hand
     public Weapon weapon;
@@ -21,26 +16,34 @@ public partial class HoldingWeapons{ // one hand
     public float getReloadPercent()=>weapon==null?1:Mathf.Min((Time.time-lastUse)/weapon.cooldown,1); // for ui
     public void ForceUse(Character player){
         lastUse = Time.time;
-        Vector2 playerPos = player.transform.position;
         Vector2 looking4dir = Direction.vec2MoveDict[player.animFacing];
-        Vector2 initPos = playerPos + new Vector2(0,0.5f) + looking4dir * weapon.hitBoxDistance + weapon.GetOffset(player.animFacing);
-        if(weapon.anim!=null){
-            anim = Object.Instantiate(weapon.anim, playerPos, Quaternion.identity,player.transform);
-            if(player.animFacing<anim.animations.Length){
-                var clip = anim.animations[player.animFacing];
-                anim.anim.Play(clip.name);
-                anim.anim.speed = Mathf.Max(clip.length / cooldown, 1);
-            }
-        }
+        PlayAnim(player);
         if(weapon.useSound!=null)SoundPlayer.PlaySound(weapon.useSound);
-        HitBox hitBox = Object.Instantiate(weapon.hitBox, initPos, weapon.velocity!=0?Quaternion.identity:Quaternion.FromToRotation(Vector2.right, looking4dir));
+        SpawnHitBox(player, looking4dir, Experimental.I.fourWayAttack ? looking4dir : player.looking);
+    }
+    // dir: where it spawns and points, flyDir: where it flies. damage, size: x normal
+    public HitBox SpawnHitBox(Character player, Vector2 dir, Vector2 flyDir, float damage=1, float size=1){
+        Vector2 playerPos = player.transform.position;
+        Vector2 initPos = playerPos + new Vector2(0,0.5f) + dir * weapon.hitBoxDistance + weapon.GetOffset(Direction.facing(dir));
+        HitBox hitBox = Object.Instantiate(weapon.hitBox, initPos, weapon.velocity!=0?Quaternion.identity:Quaternion.FromToRotation(Vector2.right, dir));
+        hitBox.transform.localScale *= size;
         hitBox.weapon = weapon;
         hitBox.owner = player;
         if(weapon.buff!=null)weapon.buff.CopyTo(hitBox.gameObject); // weapon -> hitbox
-        hitBox.damage = weapon.damage * (weapon.isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
+        hitBox.damage = Mathf.RoundToInt(weapon.damage*damage) * (weapon.isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
         hitBox.playerPos = playerPos;
-        hitBox.setVelocity((Experimental.I.fourWayAttack ? looking4dir : player.looking) * weapon.velocity);
-        AIHooks.OnAttack(hitBox, this, player, Experimental.I.fourWayAttack ? looking4dir : player.looking);
+        hitBox.setVelocity(flyDir * weapon.velocity);
+        AIHooks.OnAttack(hitBox, this, player, flyDir);
+        return hitBox;
+    }
+    public void PlayAnim(Character player){
+        if(weapon.anim==null)return;
+        anim = Object.Instantiate(weapon.anim, player.transform.position, Quaternion.identity,player.transform);
+        if(player.animFacing<anim.animations.Length){
+            var clip = anim.animations[player.animFacing];
+            anim.anim.Play(clip.name);
+            anim.anim.speed = Mathf.Max(clip.length / cooldown, 1);
+        }
     }
     public void StopAnim(){if(anim!=null)GameObject.Destroy(anim.gameObject);anim=null;}
 }
@@ -102,9 +105,16 @@ public class Player : Character
         UpdateAnim();
     }
     void TryAttack(HoldingWeapons hand, ControllerButton button){
+        if(WeaponCharge.Blocks(this, hand, button))return; // charge skills (AI/WeaponCharge.cs)
         if(!hand.isUsable || !button.isPressed)return;
+        ForceAttack(hand);
+    }
+    public void ForceAttack(HoldingWeapons hand){ // even on cooldown
+        hand.ForceUse(this);
+        ForceAnim(hand);
+    }
+    public void ForceAnim(HoldingWeapons hand){ // the attack anim only
         forceAnim = true;
-        hand.Use(this);
         cooldown = hand.cooldown;
         state = (int)hand.weapon.type;
     }

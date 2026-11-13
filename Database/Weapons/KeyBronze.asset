@@ -35,3 +35,12 @@ MonoBehaviour:
     duration: 1
     power: 1
     isStackable: 0
+  chargeSettings:
+    autoAttack: 1
+    chargeTime: 1
+    skill: 0
+    damage: 1
+    count: 1
+    spread: 0
+    size: 1
+    dashSpeed: 0

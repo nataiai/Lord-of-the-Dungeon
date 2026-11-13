@@ -27,6 +27,36 @@ public partial class Weapon{
     [Tooltip("Not empty: this weapon is a key. It opens a Lock / Door / Chest with the same keyId, swung or thrown")]
     public string keyId;
     public bool isKey => !string.IsNullOrEmpty(keyId);
+
+    [Tooltip("Charge skill (AI/WeaponCharge.cs): hold this weapon's button, let go to use the skill")]
+    public ChargeSettings chargeSettings = new();
+}
+
+[System.Serializable]
+public class ChargeSettings{ // Weapon.chargeSettings
+    [Tooltip("On: holding the button keeps attacking (no charge skill)")]
+    public bool autoAttack;
+    [Tooltip("Seconds to hold before the skill is ready (the player glows)")]
+    public float chargeTime = 1;
+    public WeaponSkill skill = WeaponSkill.Multi;
+    [ShowIf("skill", WeaponSkill.Big, WeaponSkill.Spin, WeaponSkill.Volley, WeaponSkill.Flurry, WeaponSkill.Lunge)]
+    [Tooltip("Damage per hit, x the weapon's damage")]
+    public float damage = 2;
+    [ShowIf("skill", WeaponSkill.Spin, WeaponSkill.Volley, WeaponSkill.Flurry, WeaponSkill.Multi)]
+    [Tooltip("Hits for Spin / Volley / Flurry, attacks for Multi")]
+    public int count = 2;
+    [ShowIf("skill", WeaponSkill.Multi)]
+    [Tooltip("Multi: seconds between attacks, after the weapon's cooldown. 0 = right after, below 0 = sooner")]
+    public float interval;
+    [ShowIf("skill", WeaponSkill.Volley)]
+    [Tooltip("Volley: degrees between shots")]
+    public float spread = 20;
+    [ShowIf("skill", WeaponSkill.Big)]
+    [Tooltip("Big: hitbox size, x normal")]
+    public float size = 2;
+    [ShowIf("skill", WeaponSkill.Lunge)]
+    [Tooltip("Lunge: dash speed")]
+    public float dashSpeed = 10;
 }
 
 [System.Serializable]
@@ -55,4 +85,6 @@ public class ThrowSettings{ // Weapon.throwSettings: a foldout in the weapon's I
 
 public partial class HoldingWeapons{
     [System.NonSerialized] public Vector3 lootScale; // size of the loot it was picked up from: a throw keeps that size (zero = 1)
+    [System.NonSerialized] public bool charging;
+    [System.NonSerialized] public float chargeStart;
 }
