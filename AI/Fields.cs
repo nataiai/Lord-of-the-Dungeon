@@ -63,10 +63,10 @@ public class ChargeSettings{ // Weapon.chargeSettings
 public class ThrowSettings{ // Weapon.throwSettings: a foldout in the weapon's Inspector
     [Tooltip("Untick to keep this weapon from being thrown")]
     public bool canThrow = true;
-    public int damage = 1;          // per enemy hit, x the thrower's attack stat (like a swing)
+    public float damage=.5f;          // per enemy hit, x the thrower's attack stat (like a swing)
     public float initSpeed = 10;    // starting speed
     [Tooltip("Speed lost per second. 0 = flies until it hits something solid")]
-    public float deceleration = 8;
+    public float deceleration;
     [Tooltip("Radius of the thrown weapon: what it hits and bumps into")]
     public float size = 0.25f;
     public float knockback = 3;
@@ -74,7 +74,7 @@ public class ThrowSettings{ // Weapon.throwSettings: a foldout in the weapon's I
     public int maxHits;
     [Tooltip("Bounces off solid things instead of stopping there")]
     public bool isBounce;
-    [Range(0,1)] public float bounciness = 0.6f; // speed kept per bounce
+    [Range(0,1)] public float bounciness = 0.1f; // speed kept per bounce
     [Tooltip("Sprite spin, degrees per second at full speed (slows with it). 0 = flies point first. A boomerang spins with this too")]
     public float spinSpeed;
     [Tooltip("Which way the sprite art points (0 = right, 90 = up), so a non-spinning throw flies point first")]

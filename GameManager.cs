@@ -55,6 +55,7 @@ public class GameManager: MonoBehaviour{
     void Spawn(Enemy enemy)=>currentRoom.Spawn(enemy,playerPos,spawnRangeFromPlayer);
 
     public void _Connect(){
+        //to do: make sure no connection work; and auto reconnect asap
         if(_connectOnce)return;
         _connectOnce = true;
         chat.channel = Data.cn;

@@ -1,3 +1,5 @@
+** KeyBronze keyId ("bronze") must match door/chest keyId **
+
 # Weapons update: throwing, boomerang, keys, loot slide
 
 >> All logic is in AI/. Outside it, files only got `partial` or a one-line hook (search "AIHooks.").

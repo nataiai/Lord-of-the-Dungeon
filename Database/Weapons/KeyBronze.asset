@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 330774034f9cd62049988ff75ad5d5bc, type: 3}
   m_Name: KeyBronze
   m_EditorClassIdentifier: 
+  keyId: bronze
   type: 904
   useSound: {fileID: 8300000, guid: 66bd0cbdf7e484a41b698ff2f3d4bfa0, type: 3}
   hitSound: {fileID: 8300000, guid: 71a7bc9060dc22e40a35e6bb65570e7c, type: 3}
