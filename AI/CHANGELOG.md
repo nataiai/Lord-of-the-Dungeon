@@ -27,6 +27,7 @@ Charge     hold a weapon button: one normal attack, then it charges (player glow
 [TWEAK]    Weapon > Charge Settings (foldout): autoAttack (holding keeps attacking, the old way), chargeTime,
              skill   Multi (normal attacks in a row, the default; interval 0 = one per cooldown) / Big (one big hit) / Spin (hits all around) / Volley (fan of shots) / Flurry (quick hits) / Lunge (dash, then hit)
              damage  x the weapon's damage;  count, interval, spread, size, dashSpeed  show only for the skills that use them
+             Multi   noKnockback (hits don't push back), stun (stunned until the next hit): ticks
            Set now: Fist, KeyBronze, GameBreaker autoAttack. Sword1 Spin, Zweihander Big, Rapier Flurry,
            Spear1 Lunge, Arrow Volley, RodFire1 Big, RodIce1 Spin.
 

@@ -31,6 +31,7 @@ public partial class HoldingWeapons{ // one hand
         hitBox.owner = player;
         if(weapon.buff!=null)weapon.buff.CopyTo(hitBox.gameObject); // weapon -> hitbox
         hitBox.damage = weapon.Damage(player, damage);
+        hitBox.knockback = weapon.knocback;
         hitBox.playerPos = playerPos;
         hitBox.setVelocity(flyDir * weapon.velocity);
         AIHooks.OnAttack(hitBox, this, player, flyDir);

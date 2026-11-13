@@ -50,6 +50,12 @@ public class ChargeSettings{ // Weapon.chargeSettings
     [ShowIf("skill", WeaponSkill.Multi)]
     [Tooltip("Multi: seconds between attacks, after the weapon's cooldown. 0 = right after, below 0 = sooner")]
     public float interval;
+    [ShowIf("skill", WeaponSkill.Multi)]
+    [Tooltip("Multi: its hits don't push enemies back, so the next hit lands too")]
+    public bool noKnockback;
+    [ShowIf("skill", WeaponSkill.Multi)]
+    [Tooltip("Multi: an enemy it hits is stunned until the next hit")]
+    public bool stun;
     [ShowIf("skill", WeaponSkill.Volley)]
     [Tooltip("Volley: degrees between shots")]
     public float spread = 20;

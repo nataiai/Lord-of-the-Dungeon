@@ -76,13 +76,23 @@ public static class WeaponCharge
             yield return new WaitForSeconds(.08f);
         }
     }
+    static ChargeSettings multi; // while a Multi attacks: OnAttack changes its hitbox
     static IEnumerator Multi(HoldingWeapons hand, Player p, ChargeSettings cs){ // normal attacks in a row
         var w = hand.weapon;
         for(int i=0;i<cs.count;i++){
-            if(i>0)yield return new WaitForSeconds(Mathf.Max(w.cooldown+cs.interval, 0));
+            if(i>0)yield return new WaitForSeconds(Gap(w, cs));
             if(hand.weapon!=w)yield break; // thrown or swapped
+            multi = cs;
             p.ForceAttack(hand);
+            multi = null;
         }
+    }
+    static float Gap(Weapon w, ChargeSettings cs) => Mathf.Max(w.cooldown+cs.interval, 0); // between a Multi's attacks
+    // AIHooks.OnAttack: a Multi's hit can skip knockback, and stun until the next hit
+    public static void OnAttack(HitBox hb){
+        if(multi==null)return;
+        if(multi.noKnockback)hb.knockback = 0;
+        if(multi.stun)new BuffEffect.Buff{type = BuffType.stun, duration = Gap(hb.weapon, multi)+.1f}.CopyTo(hb.gameObject);
     }
     static IEnumerator Lunge(HoldingWeapons hand, Player p, Vector2 dir, ChargeSettings cs){
         p.rb.velocity = dir*cs.dashSpeed;
