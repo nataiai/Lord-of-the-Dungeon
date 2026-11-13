@@ -81,7 +81,7 @@ public class ChargeSettings{ // Weapon.chargeSettings
     public int spinCount = 8;
     [ShowIf("autoAttack", false)]
     [ShowIf("skill", WeaponSkill.Spin)]
-    [Tooltip("Spin: the weapon's right-facing swing anim plays toward every hit, turned (off: only the normal swing to the front)")]
+    [Tooltip("Spin: the weapon's swing anim for where the player faces plays toward every hit, turned (off: only the normal swing to the front)")]
     public bool spinAnim = true;
     [ShowIf("autoAttack", false)]
     [ShowIf("skill", WeaponSkill.Spin)]
