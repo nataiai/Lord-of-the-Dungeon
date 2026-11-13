@@ -16,8 +16,12 @@ The owner reads code outside `AI/`; inside `AI/` they barely look.
 ## Changes
 - Many diffs annoy the owner. Change as few lines as possible; never reformat working code.
 - Comments: never reword one. Delete it or leave it.
-- New logic in `AI/`, a one-line hook in the owner's files.
+- If it exists, keep it there: new code goes where code like it already lives
+  (UI code in `UI.cs` like `leftFill`, charge logic in `AI/WeaponCharge.cs`, etc.).
+  Only logic with no such place goes in `AI/`, with a one-line hook in the owner's files.
 - "Least code" = less logic, not cramming lines.
+- Reuse and generalise: call existing functions/classes first; for duplicate code make a shared
+  function, a base/child class or an interface instead of writing it again.
 - Keep default usings (`System.Collections`, `System.Collections.Generic`, `UnityEngine`).
   Don't add usings; write `System.X` in place.
 - Keep empty `Start`/`Update`, commented-out code, unused fields/functions ("i'll use those later").
