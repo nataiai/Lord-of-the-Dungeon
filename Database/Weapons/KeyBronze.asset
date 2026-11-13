@@ -32,7 +32,7 @@ MonoBehaviour:
   anim: {fileID: 6972958541385030361, guid: 523207e1db61e3845b1be14b391557dd, type: 3}
   uiWep: {fileID: 21300000, guid: 6687f76e8b0ed664c8e1e0734c3ac890, type: 3}
   buff:
-    type: 4
+    type: 0
     duration: 1
     power: 1
     isStackable: 0

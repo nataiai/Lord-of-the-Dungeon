@@ -37,11 +37,19 @@ public partial class HoldingWeapons{ // one hand
         AIHooks.OnAttack(hitBox, this, player, flyDir);
         return hitBox;
     }
-    public void PlayAnim(Character player){
+    public void PlayAnim(Character player)=>PlayAnim(player, player.animFacing);
+    public void PlayAnim(Character player, int facing, float angle=0){ // angle: turned around the body (spin)
         if(weapon.anim==null)return;
         anim = Object.Instantiate(weapon.anim, player.transform.position, Quaternion.identity,player.transform);
-        if(player.animFacing<anim.animations.Length){
-            var clip = anim.animations[player.animFacing];
+        if(angle!=0){ // a holder turns it: the clip moves and turns the anim itself
+            var holder = new GameObject("turned anim").transform;
+            holder.SetParent(player.transform, false);
+            anim.transform.SetParent(holder, true);
+            holder.RotateAround((Vector2)player.transform.position+new Vector2(0,0.5f), Vector3.forward, angle);
+            Object.Destroy(holder.gameObject, 2);
+        }
+        if(facing<anim.animations.Length){
+            var clip = anim.animations[facing];
             anim.anim.Play(clip.name);
             anim.anim.speed = Mathf.Max(clip.length / cooldown, 1);
         }

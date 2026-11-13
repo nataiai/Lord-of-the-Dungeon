@@ -7,8 +7,11 @@ public enum LootType{weapon,chatSkill, instantItem,None}
 public class Loot : MonoBehaviour
 {
     public LootType lootType = LootType.None;
+    [ShowIf("lootType", LootType.chatSkill)]
     public ChatType skill = ChatType.invalid;
+    [ShowIf("lootType", LootType.weapon)]
     public Weapon weaponLoot;
+    [ShowIf("lootType", LootType.instantItem)]
     public InstantItem instantItem;
     public Animator anim;
     [Tooltip("Fall down animation when it falls in a hole (a state with this clip's name in its Animator). Empty: it shrinks away")]

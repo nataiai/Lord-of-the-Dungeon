@@ -28,13 +28,18 @@ Charge     hold a weapon button: one normal attack, then it charges (player glow
              skill   Multi (normal attacks in a row, the default; interval 0 = one per cooldown) / Big (one big hit) / Spin (hits all around) / Volley (fan of shots) / Flurry (quick hits) / Lunge (dash, then hit)
              damage  x the weapon's damage;  count, interval, spread, size, dashSpeed  show only for the skills that use them
              Multi   noKnockback (hits don't push back), stun (stunned until the next hit): ticks
+             Spin    spinCount (8 = every 45 degrees, 3 = every 120), spinAnim: the facing swing anim, turned toward every hit (default on),
+                     spinRandom: the first hit in front, the others in random directions
            Set now: Fist, KeyBronze, GameBreaker autoAttack. Sword1 Spin, Zweihander Big, Rapier Flurry,
            Spear1 Lunge, Arrow Volley, RodFire1 Big, RodIce1 Spin.
 
 Chat       no internet, a drop or Twitch down never stops the game: chat tries again by itself (about every 20 s).
            Quiet for 10 s: it pings Twitch; no answer for 20 s: it reconnects (Lexone, Twitch, WebGL, YouTube).
 [SETUP]    IRC object (Lexone): useAnonymousLogin on (or oauth + username), joinChannelOnStart on.
+           No IRC object (removed or turned off) or WebGL: chat uses AI/UnifiedChat.cs's own Twitch reader.
 [TWEAK]    IRC object: untick connectIRCOnStart, or the game can freeze at load when Twitch can't be reached.
+
+Buffs      Weapon > Buff > Type is a mask: tick several at once (burn + slow ...). power = burn / heal HP per second
 
 Boomerang  a weapon of type Boomerang: its attack comes back through walls. The hand waits until it's back.
 [TWEAK]    Weapon > boomerangDeceleration  slow-down going out
@@ -53,3 +58,4 @@ PlayOnce   AI/PlayOnce.cs: play an animation once, then hide / destroy. Use it a
 # Dev (code only)
 
 ShowIf     AI/ShowIf.cs: [ShowIf("skill", WeaponSkill.Big)] on a field = Inspector shows it only for those values. Use it anywhere.
+           Several on one field: all must match. Experimental > Inspector > useShowIf off: every field shows.

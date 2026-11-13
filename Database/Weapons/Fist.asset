@@ -56,7 +56,7 @@ MonoBehaviour:
   anim: {fileID: 0}
   uiWep: {fileID: 21300000, guid: 26b080e49bfa04646aa1fbf9ad2385e8, type: 3}
   buff:
-    type: 4
+    type: 0
     duration: 1
     power: 1
     isStackable: 0

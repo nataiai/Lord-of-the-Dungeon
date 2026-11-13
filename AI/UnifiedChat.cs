@@ -20,8 +20,9 @@ public class UnifiedChat : MonoBehaviour
     Coroutine yt;
     float heard = -60; // realtime of chat's last answer (or Keep's last try); -60 = connect now
 
-    public static bool TryConnect(string channel){ // Twitch: name or link. YouTube (desktop only): link or @handle
-        if(!Experimental.I.unifiedChat || string.IsNullOrWhiteSpace(channel))return false;
+    public static bool TryConnect(string channel)=>Experimental.I.unifiedChat && Open(channel);
+    static bool Open(string channel){ // Twitch: name or link. YouTube (desktop only): link or @handle
+        if(string.IsNullOrWhiteSpace(channel))return false;
         channel = channel.Trim();
         var c = new GameObject("UnifiedChat").AddComponent<UnifiedChat>();
         bool youtube = channel.Contains("youtube.com")||channel.Contains("youtu.be")||channel.StartsWith("@");
@@ -31,13 +32,15 @@ public class UnifiedChat : MonoBehaviour
         return true;
     }
     // Lexone (TwitchChat.Connect) joins irc.channel on every connect, but gives up when it can't connect
-    public static void KeepLexone(Lexone.UnityTwitchChat.IRC irc, string channel){
-        if(irc==null || string.IsNullOrWhiteSpace(channel))return;
-        if(Application.platform==RuntimePlatform.WebGLPlayer)return; // no sockets: use unifiedChat
+    // false = no Lexone (IRC object removed or turned off, or WebGL): our own reader instead
+    public static bool KeepLexone(Lexone.UnityTwitchChat.IRC irc, string channel){
+        if(string.IsNullOrWhiteSpace(channel))return false;
+        if(irc==null || !irc.isActiveAndEnabled || Application.platform==RuntimePlatform.WebGLPlayer){Open(channel); return false;}
         irc.channel = TwitchName(channel);
         var c = new GameObject("UnifiedChat").AddComponent<UnifiedChat>();
         irc.OnConnectionAlert += a=>c.Heard(); // any alert: Lexone is up, or busy retrying itself
         c.StartCoroutine(c.Keep(()=>c.StartCoroutine(c.Probe(irc)), irc.Ping));
+        return true;
     }
     static string TwitchName(string channel)=>(Find(channel, @"twitch\.tv/(?:popout/)?(\w+)") ?? channel.Trim().TrimStart('#')).ToLowerInvariant();
     void Update(){while(inbox.TryDequeue(out var l))OnIrcLine(l);}
@@ -57,6 +60,7 @@ public class UnifiedChat : MonoBehaviour
     }
     // Lexone connects on the main thread (no internet = game freezes), so test on a thread first
     IEnumerator Probe(Lexone.UnityTwitchChat.IRC irc){
+        if(irc==null || !irc.isActiveAndEnabled)yield break; // turned off: its coroutines can't run
         irc.Disconnect(); // or Lexone notices the dead socket and reconnects on the main thread itself
         yield return new WaitForSecondsRealtime(1); // its threads stop
         float asked = heard;

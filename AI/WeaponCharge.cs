@@ -50,14 +50,18 @@ public static class WeaponCharge
         hand.lastUse = Time.time; // cooldown starts after the skill
         Vector2 dir = Experimental.I.fourWayAttack || !p.isLooking ? Direction.vec2MoveDict[p.animFacing] : p.looking;
         if(w.useSound!=null)SoundPlayer.PlaySound(w.useSound);
-        hand.PlayAnim(p);
+        if(cs.skill!=WeaponSkill.Spin || !cs.spinAnim)hand.PlayAnim(p);
         p.ForceAnim(hand);
         switch(cs.skill){
             case WeaponSkill.Big:
             Spawn(hand, p, dir, cs.damage, cs.size);
             break;
             case WeaponSkill.Spin:
-            for(int i=0;i<cs.count;i++)Spawn(hand, p, Turn(dir, 360f*i/cs.count), cs.damage, 1);
+            for(int i=0;i<cs.spinCount;i++){
+                var d = Turn(dir, i==0 ? 0 : cs.spinRandom ? Random.Range(0f,360f) : 360f*i/cs.spinCount); // the first: front
+                Spawn(hand, p, d, cs.damage, 1);
+                if(cs.spinAnim)hand.PlayAnim(p, p.animFacing, Vector2.SignedAngle(Direction.vec2MoveDict[p.animFacing], d)); // the facing clip, turned
+            }
             break;
             case WeaponSkill.Volley:
             for(int i=0;i<cs.count;i++)Spawn(hand, p, Turn(dir, (i-(cs.count-1)/2f)*cs.spread), cs.damage, 1);

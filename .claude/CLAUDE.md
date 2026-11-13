@@ -25,6 +25,7 @@ The owner reads code outside `AI/`; inside `AI/` they barely look.
 - Keep default usings (`System.Collections`, `System.Collections.Generic`, `UnityEngine`).
   Don't add usings; write `System.X` in place.
 - Keep empty `Start`/`Update`, commented-out code, unused fields/functions ("i'll use those later").
+- Edit `.asset` files only to fill in a new field, or after the owner allows it.
 - Keep names and typos (`recieveDamage`, `knocback`, `d_` = dirty). Rename only if misleading,
   with `[FormerlySerializedAs]`.
 - Push to `main` only when asked. Few commits, short messages, tl;dr reports.

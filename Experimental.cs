@@ -23,8 +23,10 @@ public partial class Experimental : MonoBehaviour{ // Weapons switches: AI/Field
     public bool pathFinding = true;
     [Tooltip("Off: no separation, enemies may stack")]
     public bool separation = true;
+    [ShowIf("pathFinding", true)]
     [Tooltip("Space enemies keep from walls and rocks when the room allows it (tight spots use the exact body)")]
     public float wallSpacing = 0.25f;
+    [ShowIf("separation", true)]
     [Tooltip("Space enemies keep from each other, times their own size (1 = half their diagonal: 0.71 for a 1x1 enemy)")]
     public float enemySpacing = 1f;
 
@@ -33,9 +35,12 @@ public partial class Experimental : MonoBehaviour{ // Weapons switches: AI/Field
     public bool unifiedChat = false;
     [Tooltip("No chat: spawn mockEnemy every testWithoutChatSpawnCooldown seconds (hold L to pause)")]
     public bool testWithoutChat = false;
+    [ShowIf("testWithoutChat", true)]
     public float testWithoutChatSpawnCooldown = 5f;
 
     [Header("Inspector")]
     [Tooltip("On: [PlayModeOnly] fields show (and can be edited) while playing. Off: always hidden")]
     public bool showPlayModeOnly = true;
+    [Tooltip("On: [ShowIf] fields hide when their setting doesn't use them. Off: every field shows")]
+    public bool useShowIf = true;
 }
