@@ -24,6 +24,8 @@ public class UI : MonoBehaviour
     TMP_Text enemyNameTextLabel;
     Coroutine d_hide;
     Image leftFill, rightFill;
+    Image leftCharge, rightCharge;
+    bool showCharge = false; // on when the weapon icons have a "Charge" image, like "Fill"
     Player player => GameManager.Instance.player;
 
     void Awake(){
@@ -34,6 +36,10 @@ public class UI : MonoBehaviour
         dialogueTextLabel = dialogueTextbox.GetComponentInChildren<TMP_Text>();
         leftFill = leftWeapon.transform.Find("Fill").GetComponent<Image>();
         rightFill = rightWeapon.transform.Find("Fill").GetComponent<Image>();
+        if(showCharge){
+            leftCharge = leftWeapon.transform.Find("Charge").GetComponent<Image>();
+            rightCharge = rightWeapon.transform.Find("Charge").GetComponent<Image>();
+        }
     }
     void Start(){
         Canvas canvas = GetComponent<Canvas>();
@@ -44,7 +50,10 @@ public class UI : MonoBehaviour
     void Update(){
         leftFill.fillAmount=player.lWeapon.getReloadPercent();
         rightFill.fillAmount=player.rWeapon.getReloadPercent();
-        // WeaponCharge.ShowCharge(player, leftWeapon, rightWeapon); // charge ui: off until the icons have a "Charge" image
+        if(showCharge){
+            leftCharge.fillAmount=player.lWeapon.getChargePercent();
+            rightCharge.fillAmount=player.rWeapon.getChargePercent();
+        }
         UpdateSkill();
         UpdateDialogue();
     }
