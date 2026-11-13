@@ -57,6 +57,8 @@ public class UnifiedChat : MonoBehaviour
     }
     // Lexone connects on the main thread (no internet = game freezes), so test on a thread first
     IEnumerator Probe(Lexone.UnityTwitchChat.IRC irc){
+        irc.Disconnect(); // or Lexone notices the dead socket and reconnects on the main thread itself
+        yield return new WaitForSecondsRealtime(1); // its threads stop
         float asked = heard;
         var t = System.Threading.Tasks.Task.Run(()=>new TcpClient(irc.address, irc.port).Close());
         yield return new WaitUntil(()=>t.IsCompleted);
