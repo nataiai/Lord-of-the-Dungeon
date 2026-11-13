@@ -16,7 +16,7 @@ public class Spawner : MonoBehaviour // on a room's floor tilemap
     public Enemy Spawn(Enemy enemy, Vector2 pos)=>Instantiate(enemy, pos, Quaternion.identity);
     public Enemy Spawn(Enemy enemy, Bounds b)=>Spawn(enemy, Rand(b));
     public Enemy Spawn(Enemy enemy)=>Spawn(enemy,bounds);
-    public Enemy Spawn(Enemy enemy, Vector2 oriPos,float range){
+    public T Spawn<T>(T enemy, Vector2 oriPos,float range) where T:Object{
         Queue<Vector2> q = new();q.Enqueue(oriPos);
         HashSet<Vector2> seen = new();
         List<Vector2> result = new();

@@ -28,6 +28,7 @@ public partial class HoldingWeapons{ // one hand
         HitBox hitBox = Object.Instantiate(weapon.hitBox, initPos, weapon.velocity!=0?Quaternion.identity:Quaternion.FromToRotation(Vector2.right, dir));
         hitBox.transform.localScale *= size;
         hitBox.weapon = weapon;
+        hitBox.hitEffect = weapon.hitEffect;
         hitBox.owner = player;
         if(weapon.buff!=null)weapon.buff.CopyTo(hitBox.gameObject); // weapon -> hitbox
         hitBox.damage = weapon.Damage(player, damage);

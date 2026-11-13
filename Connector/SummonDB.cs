@@ -11,13 +11,17 @@ public class SummonCommand{
 }
 
 [System.Serializable]
-public class SimpleSummonDB{
+public partial class SimpleSummonDB{ // summon order, potions: AI/ChatPotion.cs
     public List<Enemy> summonableEnemy;
     public int limitPerPlayer = 10;
     public Skill spawnSkill;
     public List<SummonCommand> summonQ=new();
     public List<EnemySO> unlocked=new();
     int indexQ=0;
+    public List<InstantItemOnFloor> potions=new();
+    public int potionsPerRoom = 3;
+    public Skill potionSkill = new(){chatType = ChatType.potion, cooldown = 10};
+    public List<SummonCommand> potionQ=new();
 
     public Enemy GetToSpawn(){
         if(!spawnSkill.isReady)return null;
@@ -30,7 +34,7 @@ public class SimpleSummonDB{
         if(summonQ.Count>300)Reset();
         summonQ.Add(command);
     }
-    public Enemy _Pop()=>summonQ.Count>indexQ?getEnemy(summonQ[indexQ++].spawnableName):null;
+    public Enemy _Pop()=>summonQ.Count>indexQ?getEnemy(Count(Next(summonQ,indexQ++)).spawnableName):null;
     public void Unlock(EnemySO e){if(!unlocked.Contains(e))unlocked.Add(e);}
     public Enemy getEnemy(string enemyName){
         string n = enemyName.ToLowerInvariant().Trim();

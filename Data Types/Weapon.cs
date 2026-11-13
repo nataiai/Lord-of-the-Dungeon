@@ -9,6 +9,8 @@ public partial class Weapon : ScriptableObject // Throw / Boomerang / Key settin
     public WeaponType type;
     public AudioClip useSound;
     public AudioClip hitSound;
+    [Tooltip("Made on each enemy it hits, plays its animation once. Empty = none")]
+    public GameObject hitEffect;
     public bool isMagical;
     public int damage;
     public float cooldown;

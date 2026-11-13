@@ -25,6 +25,7 @@ public static class AIHooks
         if(by!=null && other.TryGetComponent(out Character c) && by.IsEnemyOf(c)){
             if(!already.Add(c))return Touched.Nothing; // each once
             SoundPlayer.PlaySound(w.hitSound);
+            if(w.hitEffect!=null)PlayOnce.Spawn(w.hitEffect, c.center, c.transform); // thrown, boomerang
             c.recieveDamage(damage, w.isMagical);
             c.receiveKnockback(from, knockback);
             if(w.buff!=null)w.buff.CopyTo(c.gameObject);

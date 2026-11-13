@@ -7,6 +7,7 @@ public class HitBox : MonoBehaviour
 {
     [PlayModeOnly] public Weapon weapon;
     [PlayModeOnly] public int damage;
+    [PlayModeOnly] public GameObject hitEffect;
     [PlayModeOnly] public float knockback;
     [PlayModeOnly] public Character owner;
     [PlayModeOnly] public Vector2 playerPos;
@@ -31,6 +32,7 @@ public class HitBox : MonoBehaviour
         if(other.TryGetComponent(out Character enemy) && CanHit(enemy)){
             if(!hitEnemy.Add(enemy))return;
             SoundPlayer.PlaySound(weapon.hitSound);
+            if(hitEffect!=null)PlayOnce.Spawn(hitEffect, enemy.center, enemy.transform);
             enemy.recieveDamage(damage,weapon.isMagical);
             enemy.receiveKnockback(playerPos,knockback);
             if(weapon.maxHits>0 && weapon.maxHits<=++hitCount)Destroy(gameObject);
