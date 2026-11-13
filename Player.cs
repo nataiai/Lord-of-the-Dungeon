@@ -30,7 +30,7 @@ public partial class HoldingWeapons{ // one hand
         hitBox.weapon = weapon;
         hitBox.owner = player;
         if(weapon.buff!=null)weapon.buff.CopyTo(hitBox.gameObject); // weapon -> hitbox
-        hitBox.damage = Mathf.RoundToInt(weapon.damage*damage) * (weapon.isMagical? player.combatStat.attackMagic:player.combatStat.attackPhysic);
+        hitBox.damage = weapon.Damage(player, damage);
         hitBox.playerPos = playerPos;
         hitBox.setVelocity(flyDir * weapon.velocity);
         AIHooks.OnAttack(hitBox, this, player, flyDir);

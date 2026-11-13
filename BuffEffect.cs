@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-public enum BuffType{stopMovement,stopFacing,burn,heal,slow,stun,none}
+public enum BuffType{burn,heal,slow,stun,none,stopMovement,stopFacing}
 
 // if on ... do ...
 // weapons -> copy to hitbox
@@ -49,7 +49,7 @@ public class BuffEffect : MonoBehaviour
         if(buff.type==BuffType.slow)cha.rb.velocity *= .9f;
         if(buff.type==BuffType.stun)cha.froze();
         if(buff.type==BuffType.stopMovement)cha.froze();
-        if(buff.type==BuffType.stopFacing)return;//to do -> add method in cha
+        if(buff.type==BuffType.stopFacing)cha.stopFacing();
         if(tick>Time.time)return;
         tick = Time.time+1;
         if(buff.type==BuffType.burn)cha.recieveDamage(buff.power);

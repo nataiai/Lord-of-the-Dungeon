@@ -10,7 +10,8 @@
 
 
 Throw      hold Q / pad X + weapon button. Lands as loot; the hand goes back to Fist (Unequip).
-[TWEAK]    Weapon > Throw Settings (foldout): damage, initSpeed, knockback, canThrow, isBounce, and
+[TWEAK]    Weapon > Throw Settings (foldout): initSpeed, knockback, canThrow, isBounce, and
+             damage        x the weapon's damage (0.5 = half, 0 = none), x attack, rounded down
              deceleration  0 = flies until a wall
              size          radius it hits with
              maxHits       0 = no limit

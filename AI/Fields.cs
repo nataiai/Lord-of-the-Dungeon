@@ -27,6 +27,8 @@ public partial class Weapon{
     [Tooltip("Not empty: this weapon is a key. It opens a Lock / Door / Chest with the same keyId, swung or thrown")]
     public string keyId;
     public bool isKey => !string.IsNullOrEmpty(keyId);
+    // damage x times x the user's attack stat, rounded down: swings, charge skills, throws
+    public int Damage(Character by, float times=1) => (int)(damage*times*(isMagical ? by.combatStat.attackMagic : by.combatStat.attackPhysic));
 
     [Tooltip("Charge skill (AI/WeaponCharge.cs): hold this weapon's button, let go to use the skill")]
     public ChargeSettings chargeSettings = new();
@@ -63,7 +65,8 @@ public class ChargeSettings{ // Weapon.chargeSettings
 public class ThrowSettings{ // Weapon.throwSettings: a foldout in the weapon's Inspector
     [Tooltip("Untick to keep this weapon from being thrown")]
     public bool canThrow = true;
-    public float damage=.5f;          // per enemy hit, x the thrower's attack stat (like a swing)
+    [Tooltip("x the weapon's damage: 1 = same as a swing, 0.5 = half, 0 = none. Then x the thrower's attack, rounded down (can be 0)")]
+    public float damage=.5f;
     public float initSpeed = 10;    // starting speed
     [Tooltip("Speed lost per second. 0 = flies until it hits something solid")]
     public float deceleration;

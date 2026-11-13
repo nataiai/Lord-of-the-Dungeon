@@ -60,7 +60,7 @@ public class ThrownWeapon : MonoBehaviour
         col.radius = t.radius/Mathf.Max(go.transform.lossyScale.x,0.01f); col.isTrigger = true; // throwSettings.size stays its real size
         t.rb = Slide.Body(go);
         t.weapon = weapon; t.thrower = by;
-        t.damage = (int) (weapon.throwSettings.damage * (weapon.isMagical ? by.combatStat.attackMagic : by.combatStat.attackPhysic));
+        t.damage = weapon.Damage(by, weapon.throwSettings.damage);
         t.velocity = dir.normalized*weapon.throwSettings.initSpeed;
         if(weapon.useSound!=null)SoundPlayer.PlaySound(weapon.useSound);
         return t;
