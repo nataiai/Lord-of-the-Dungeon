@@ -37,6 +37,8 @@ Chat       no internet, a drop or Twitch down never stops the game: chat tries a
 [SETUP]    IRC object (Lexone): useAnonymousLogin on (or oauth + username), joinChannelOnStart on.
 [TWEAK]    IRC object: untick connectIRCOnStart, or the game can freeze at load when Twitch can't be reached.
 
+Buffs      Weapon > Buff > Type is a mask: tick several at once (burn + slow ...). power = burn / heal HP per second
+
 Boomerang  a weapon of type Boomerang: its attack comes back through walls. The hand waits until it's back.
 [TWEAK]    Weapon > boomerangDeceleration  slow-down going out
 

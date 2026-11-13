@@ -2,14 +2,16 @@ using UnityEngine;
 
 // [ShowIf("skill", WeaponSkill.Spin, WeaponSkill.Volley)] on a field: the Inspector shows it only while the field next to it
 // named "skill" (an enum or a bool) is one of those values. Hidden fields keep their values
-// Several [ShowIf] on one field: all must match. [Range] still shows its slider. Experimental.useShowIf off: all show
+// A [Flags] enum: shown when any of those flags is set. Several [ShowIf] on one field: all must match. [Range] still shows its slider. Experimental.useShowIf off: all show
 [System.AttributeUsage(System.AttributeTargets.Field, AllowMultiple = true)]
 public class ShowIfAttribute : PropertyAttribute{
     public string field;
     public int[] values;
+    public bool flags;
     public ShowIfAttribute(string field, params object[] values){
         this.field = field;
         this.values = System.Array.ConvertAll(values, v => System.Convert.ToInt32(v));
+        flags = values.Length>0 && values[0].GetType().IsDefined(typeof(System.FlagsAttribute), false);
     }
 }
 
@@ -28,6 +30,7 @@ public class ShowIfDrawer : UnityEditor.PropertyDrawer{
         var other = property.serializedObject.FindProperty(dot<0 ? a.field : path.Substring(0,dot+1)+a.field);
         if(other==null)return true; // typo in the name: just show it
         int value = other.propertyType==UnityEditor.SerializedPropertyType.Boolean ? (other.boolValue?1:0) : other.intValue;
+        if(a.flags)return System.Array.Exists(a.values, v => (value & v)!=0);
         return System.Array.IndexOf(a.values, value)>=0;
     }
     public override float GetPropertyHeight(UnityEditor.SerializedProperty property, GUIContent label)
