@@ -34,10 +34,7 @@ public static class WeaponCharge
         }
         return true;
     }
-    static bool IsCharged(HoldingWeapons hand){
-        if(!hand.charging || hand.weapon==null)return false;
-        return Time.time-hand.chargeStart >= hand.weapon.chargeSettings.chargeTime;
-    }
+    static bool IsCharged(HoldingWeapons hand)=>hand.getChargePercent()>=1;
     static void Glow(Player p){ // yellow while a hand is charged
         var sr = p.GetComponentInChildren<SpriteRenderer>();
         if(sr==null)return;
@@ -98,5 +95,23 @@ public static class WeaponCharge
 
     static void Spawn(HoldingWeapons hand, Player p, Vector2 dir, float damage, float size){
         if(hand.weapon!=null)hand.SpawnHitBox(p, dir, dir, damage, size); // null: thrown mid-flurry
+    }
+
+    // UI.Update: each weapon icon's "Charge" fill image (a child, like its "Fill") shows that hand's charge
+    public static void ShowCharge(Player p, UnityEngine.UI.Image left, UnityEngine.UI.Image right){
+        Fill(left, p.lWeapon);
+        Fill(right, p.rWeapon);
+    }
+    static void Fill(UnityEngine.UI.Image icon, HoldingWeapons hand){
+        var charge = icon.transform.Find("Charge");
+        if(charge!=null && charge.TryGetComponent(out UnityEngine.UI.Image img))img.fillAmount = hand.getChargePercent();
+    }
+}
+
+public partial class HoldingWeapons{ // fields: AI/Fields.cs
+    // 0 to 1 while a charge skill's button is held, 1 = ready. 0 = not charging (for ui, like getReloadPercent)
+    public float getChargePercent(){
+        if(!charging || weapon==null)return 0;
+        return Mathf.Min((Time.time-chargeStart)/Mathf.Max(weapon.chargeSettings.chargeTime,0.0001f),1);
     }
 }

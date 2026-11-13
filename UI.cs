@@ -44,6 +44,7 @@ public class UI : MonoBehaviour
     void Update(){
         leftFill.fillAmount=player.lWeapon.getReloadPercent();
         rightFill.fillAmount=player.rWeapon.getReloadPercent();
+        // WeaponCharge.ShowCharge(player, leftWeapon, rightWeapon); // charge ui: off until the icons have a "Charge" image
         UpdateSkill();
         UpdateDialogue();
     }

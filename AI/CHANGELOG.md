@@ -22,6 +22,8 @@ Throw      hold Q / pad X + weapon button. Lands as loot; the hand goes back to 
 
 Charge     hold a weapon button: one normal attack, then it charges (player glows when ready). Let go: the skill.
 [TWEAK]    Experimental > Player > chargeSkills (untick = feature off)
+[SETUP]    Charge UI (off): give LeftWeapon / RightWeapon a "Charge" child Image (Filled, like "Fill"),
+           then uncomment the WeaponCharge.ShowCharge line in UI.Update
 [TWEAK]    Weapon > Charge Settings (foldout): autoAttack (holding keeps attacking, the old way), chargeTime,
              skill   Multi (normal attacks in a row, the default; interval 0 = one per cooldown) / Big (one big hit) / Spin (hits all around) / Volley (fan of shots) / Flurry (quick hits) / Lunge (dash, then hit)
              damage  x the weapon's damage;  count, interval, spread, size, dashSpeed  show only for the skills that use them
