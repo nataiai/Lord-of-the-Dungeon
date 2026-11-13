@@ -14,6 +14,7 @@ public class Boomerang : MonoBehaviour
     Rigidbody2D rb;
     float radius, born;
     int damage;
+    float knockback;
     bool returning;
     readonly HashSet<Character> hit = new();
 
@@ -21,7 +22,7 @@ public class Boomerang : MonoBehaviour
     public static bool Launch(HitBox hb, HoldingWeapons hand, Character owner, Vector2 dir){
         if(!Experimental.I.boomerangReturns || hb==null || hb.weapon==null || hb.weapon.type!=WeaponType.Boomerang)return false;
         var b = hb.gameObject.AddComponent<Boomerang>();
-        b.weapon = hb.weapon; b.damage = hb.damage; b.hand = hand; b.owner = owner; b.born = Time.time;
+        b.weapon = hb.weapon; b.damage = hb.damage; b.knockback = hb.knockback; b.hand = hand; b.owner = owner; b.born = Time.time;
         Destroy(hb); // this flies and hits instead of the HitBox (gone before its Start, so it never destroys itself)
         b.rb = Slide.Body(hb.gameObject);
         b.rb.bodyType = RigidbodyType2D.Kinematic; b.rb.useFullKinematicContacts = true; b.rb.velocity = Vector2.zero; // moved by AI/Slide.cs
@@ -41,6 +42,6 @@ public class Boomerang : MonoBehaviour
         var ts = weapon.throwSettings; // spins like its throw
         if(ts.spinSpeed!=0)Slide.Turn(rb, velocity, ts.spinSpeed, weapon.velocity, ts.spriteAngle);
     }
-    void OnTriggerEnter2D(Collider2D other)=>AIHooks.Hit(other, owner, weapon, damage, weapon.knocback, from, hit);
+    void OnTriggerEnter2D(Collider2D other)=>AIHooks.Hit(other, owner, weapon, damage, knockback, from, hit);
     void OnDestroy(){if(hand!=null && hand.weapon!=null)hand.lastUse = Time.time - hand.cooldown;} // back (or gone some other way): ready again
 }

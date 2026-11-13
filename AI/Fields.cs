@@ -54,7 +54,7 @@ public class ChargeSettings{ // Weapon.chargeSettings
     [Tooltip("Multi: its hits don't push enemies back, so the next hit lands too")]
     public bool noKnockback;
     [ShowIf("skill", WeaponSkill.Multi)]
-    [Tooltip("Multi: an enemy it hits is stunned until the next hit")]
+    [Tooltip("Multi: an enemy it hits is stunned until the next hit (not with a Boomerang)")]
     public bool stun;
     [ShowIf("skill", WeaponSkill.Volley)]
     [Tooltip("Volley: degrees between shots")]

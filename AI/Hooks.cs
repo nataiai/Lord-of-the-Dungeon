@@ -7,8 +7,8 @@ public static class AIHooks
     // HoldingWeapons.ForceUse, right after the attack's hitbox is made
     public static void OnAttack(HitBox hb, HoldingWeapons hand, Character user, Vector2 dir){
         Lock.Swing(hb, hand);                  // a key opens a Lock it touches (AI/Lock.cs)
-        Boomerang.Launch(hb, hand, user, dir); // a boomerang comes back (AI/Boomerang.cs)
         WeaponCharge.OnAttack(hb);             // a Multi's hit: no knockback, stun (AI/WeaponCharge.cs)
+        Boomerang.Launch(hb, hand, user, dir); // a boomerang comes back (AI/Boomerang.cs)
     }
 
     // Loot.Drop, for each loot it makes. from: what dropped it (an enemy or chest, a crate, a thrown weapon landing)

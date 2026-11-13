@@ -92,7 +92,7 @@ public static class WeaponCharge
     public static void OnAttack(HitBox hb){
         if(multi==null)return;
         if(multi.noKnockback)hb.knockback = 0;
-        if(multi.stun)new BuffEffect.Buff{type = BuffType.stun, duration = Gap(hb.weapon, multi)+.1f}.CopyTo(hb.gameObject);
+        if(multi.stun)new BuffEffect.Buff{type = BuffType.stun, duration = Gap(hb.weapon, multi)+.1f, isStackable = true}.CopyTo(hb.gameObject);
     }
     static IEnumerator Lunge(HoldingWeapons hand, Player p, Vector2 dir, ChargeSettings cs){
         p.rb.velocity = dir*cs.dashSpeed;

@@ -52,7 +52,7 @@ public class Enemy : Character
         if(StuntMech(enemyData.knocbackRecovery))return;
         Vector2 target = GameManager.Instance.player.center;
         movement = target - center;
-        if(facesPlayer && Mathf.Abs(movement.x)>0.01f)sr.flipX = (movement.x<0) != spriteFacesLeft;
+        if(facesPlayer && canFace && Mathf.Abs(movement.x)>0.01f)sr.flipX = (movement.x<0) != spriteFacesLeft;
         if(movement.magnitude<enemyData.noticeRange)notice=true;
         if(notice){
             way = enemyData.ignoreCollide ? movement.normalized : PathFinding.Direction(center,target,GameManager.Instance.currentRoom.bounds,col); // ghosts go straight

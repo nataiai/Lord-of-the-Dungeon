@@ -45,10 +45,11 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
     public virtual Team team => Team.Neutral;
     public bool IsEnemyOf(Character c) => c!=null && c.team!=team;
 
-    protected void setAnimFacing(Vector2 v){if(stopFacingTime<Time.time)animFacing = _setAnimFacing(v);}
+    protected void setAnimFacing(Vector2 v){if(canFace)animFacing = _setAnimFacing(v);}
     protected virtual int _setAnimFacing(Vector2 looking)=>Direction.facing(looking);
     public void froze(){stunTime=Time.time+1;}
     public void stopFacing(){stopFacingTime=Time.time+.1f;} // keeps its facing a moment, call it every frame
+    public bool canFace => stopFacingTime<Time.time;
     protected bool StuntMech(float recover){
         if(stunTime<=Time.time)return false;
         rb.velocity*=Mathf.Exp(-recover*Time.deltaTime);
