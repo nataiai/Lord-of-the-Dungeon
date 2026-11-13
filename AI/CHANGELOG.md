@@ -31,6 +31,11 @@ Charge     hold a weapon button: one normal attack, then it charges (player glow
            Set now: Fist, KeyBronze, GameBreaker autoAttack. Sword1 Spin, Zweihander Big, Rapier Flurry,
            Spear1 Lunge, Arrow Volley, RodFire1 Big, RodIce1 Spin.
 
+Chat       no internet, a drop or Twitch down never stops the game: chat tries again by itself (about every 20 s).
+           Quiet for 10 s: it pings Twitch; no answer for 20 s: it reconnects (Lexone, Twitch, WebGL, YouTube).
+[SETUP]    IRC object (Lexone): useAnonymousLogin on (or oauth + username), joinChannelOnStart on.
+[TWEAK]    IRC object: untick connectIRCOnStart, or the game can freeze at load when Twitch can't be reached.
+
 Boomerang  a weapon of type Boomerang: its attack comes back through walls. The hand waits until it's back.
 [TWEAK]    Weapon > boomerangDeceleration  slow-down going out
 

@@ -20,7 +20,7 @@ public class TwitchChat : Chat
     
     public void Connect() => Connect(channel);
     public void Connect(string channel){
-        irc.JoinChannel(channel);
+        UnifiedChat.KeepLexone(irc, channel);
         irc.OnChatMessage += OnChatMessage;
     }
 
