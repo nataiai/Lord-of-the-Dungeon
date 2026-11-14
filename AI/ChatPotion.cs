@@ -27,8 +27,8 @@ public partial class SimpleSummonDB{
         else potionQ.Add(c);
     }
     // GameManager.Update, before GetToSpawn: the potion whose turn it is, or null
-    public InstantItemOnFloor GetPotionToSpawn()=>PopPotion(potionQ,0,potionSkill) ?? PopPotion(summonQ,indexQ,spawnSkill);
-    InstantItemOnFloor PopPotion(List<SummonCommand> q, int from, Skill skill){
+    public Loot GetPotionToSpawn()=>PopPotion(potionQ,0,potionSkill) ?? PopPotion(summonQ,indexQ,spawnSkill);
+    Loot PopPotion(List<SummonCommand> q, int from, Skill skill){
         if(!skill.isReady || q.Count<=from || !Next(q,from).spawnableName.StartsWith("potion "))return null;
         string name = Count(q[from]).spawnableName.Replace("potion ","");
         q.RemoveAt(from);

@@ -18,7 +18,7 @@ public partial class SimpleSummonDB{ // summon order, potions: AI/ChatPotion.cs
     public List<SummonCommand> summonQ=new();
     public List<EnemySO> unlocked=new();
     int indexQ=0;
-    public List<InstantItemOnFloor> potions=new();
+    public List<Loot> potions=new();
     public int potionsPerRoom = 3;
     public Skill potionSkill = new(){chatType = ChatType.potion, cooldown = 10};
     public List<SummonCommand> potionQ=new();

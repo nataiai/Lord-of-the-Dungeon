@@ -63,8 +63,10 @@ Summon     each cooldown, the chatter with the fewest turns goes first, then the
 
 Potions    chat types "potion" (the first one) or "potion health" (how its name starts): it appears near the player.
            A room gets a few, ever (coming back doesn't refill). Full: the request is dropped.
-[SETUP]    TwitchChat > Summondb > Potions: drag the Health Bone floor prefab
+[SETUP]    TwitchChat > Summondb > Potions: Loot prefabs (Loot Type = Instant Item, Instant Item = HealthBone, a sprite).
+           It slides out like dropped loot
 [TWEAK]    Summondb > Potions Per Room (3)
+           UI: skill slot 2 (the 2nd child of Skill Slot) shows the potion cooldown, like slot 1 shows summon
 [TWEAK]    Experimental > Chat > potionSamePool
              off  own line, Summondb > Potion Skill > Cooldown (10)
              on   waits in the summon line with the enemies, uses Spawn Skill's cooldown
