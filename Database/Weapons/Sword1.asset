@@ -39,8 +39,9 @@ MonoBehaviour:
     spread: 0
     size: 1
     dashSpeed: 0
-    spinCount: 7
+    spinCount: 8
     spinAnim: 1
+    spinRandom: 0
   type: 900
   useSound: {fileID: 8300000, guid: b79ad94d4c3679e45bbc7cc9f1da0e8b, type: 3}
   hitSound: {fileID: 8300000, guid: 28fb490446c69d84484107afdd1ca7a2, type: 3}

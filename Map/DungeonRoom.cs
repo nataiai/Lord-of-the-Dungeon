@@ -16,8 +16,10 @@ public class DungeonRoom : MonoBehaviour
         e.transform.parent = enemies;
         e.gameObject.SetActive(true);
     }
-    public void SpawnPotion(InstantItemOnFloor potion, Vector2 oriPos,float range){
-        spawner.Spawn(potion,oriPos,range).transform.parent = transform;
+    public void SpawnPotion(Loot potion, Vector2 oriPos,float range){
+        var p = spawner.Spawn(potion,oriPos,range);
+        p.transform.parent = transform;
+        AIHooks.OnDrop(p, transform); // slides like dropped loot
         potionsSpawned++;
     }
 }
