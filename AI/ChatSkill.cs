@@ -5,6 +5,7 @@ using UnityEngine;
 // Chat skills (design: AI/CHAT_SKILLS.md). On/off: Experimental.chatSkills.
 // Teleport: "teleport 3 4" = tile 3 4 of the room (1 1 = its bottom left floor tile; a ruler on the room's edge shows the numbers).
 // One request per chatter, the fair line (the chatter with the fewest turns first), teleportSkill's cooldown.
+// Buff words (berserk, invincible, magicshield, physicalshield; 3+ letters): the buff goes on the player. Summondb > Skills
 public partial class SimpleSummonDB{
     string said; float saidAt;
     readonly HashSet<DungeonRoom> ruled = new();
@@ -16,6 +17,13 @@ public partial class SimpleSummonDB{
         if(!Experimental.I.chatSkills){GameManager.Instance.TeleportSkill(x,y); return;} // as before: at once, a world position
         teleportQ.RemoveAll(c=>c.username==username); // a newer one replaces it
         teleportQ.Add(new SummonCommand("teleport",username,x+" "+y));
+    }
+    // Chat.addToDB: a buff word. One chatter casts it, its cooldown limits how often
+    public void Call(string username, ChatType type, string msg){
+        var s = skills.Find(x=>x.chatType==type);
+        if(!Experimental.I.chatSkills || s==null || msg.Trim().Length<3 || !s.Call())return; // "b" or "i" alone is no cast
+        s.buff.CopyTo(GameManager.Instance.player.gameObject);
+        Say(username+": "+type+"!");
     }
     // GameManager.Update
     public void ChatUpdate(){
@@ -52,4 +60,16 @@ public partial class SimpleSummonDB{
         t.alignment = TMPro.TextAlignmentOptions.Center;
         t.sortingOrder = 50;
     }
+}
+
+[System.Serializable]
+public class ChatSkill : Skill{ // a chat word that puts its buff on the player
+    public BuffEffect.Buff buff = new();
+    public static List<ChatSkill> Defaults() => new(){
+        New(ChatType.berserk, BuffType.berserk, 15), // attack x2 to x4 (more with less HP), no healing
+        New(ChatType.invincible, BuffType.invincible, 10), // no damage, no knockback
+        New(ChatType.magicShield, BuffType.magicShield, 15),
+        New(ChatType.physicalShield, BuffType.physicalShield, 15),
+    };
+    static ChatSkill New(ChatType word, BuffType type, float duration) => new(){chatType = word, cooldown = 60, buff = new(){type = type, duration = duration}};
 }

@@ -129,7 +129,7 @@ public class Enemy : Character
     public virtual void OnTriggerStay2D(Collider2D other){
         if(cooldownTimer>Time.time || deathBreathTime!=0 || !other.TryGetComponent(out Character victim) || !IsEnemyOf(victim))return;
         victim.receiveKnockback(transform.position,enemyData.attackKnockback);
-        victim.recieveDamage(enemyData.combatStat.attackPhysic);
+        victim.recieveDamage(enemyData.isMagical?enemyData.combatStat.attackMagic:enemyData.combatStat.attackPhysic, enemyData.isMagical);
         cooldownTimer = Time.time+enemyData.cooldown;
     }
 }

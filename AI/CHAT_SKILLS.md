@@ -359,3 +359,5 @@ the earthquake stun on the player = today's stun (can't walk, can attack).
 ## Built so far
 
 - Step 1, teleport: `AI/ChatSkill.cs`.
+- Player buffs (berserk, invincible, magic / physical shield): one chatter casts, cooldown 60 s each, they stack.
+  The crowd vote comes later as its own step and then applies to all of them.

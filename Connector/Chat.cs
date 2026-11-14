@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ChatType{summon=0,teleport=1,vote,work,invalid,potion} // new ones at the end (saved as numbers)
+public enum ChatType{summon=0,teleport=1,vote,work,invalid,potion,berserk,invincible,magicShield,physicalShield} // new ones at the end (saved as numbers)
 
 public abstract class Chat : MonoBehaviour
 {
@@ -14,6 +14,10 @@ public abstract class Chat : MonoBehaviour
         ("vote",2,2,ChatType.vote), // vote leftdoor
         ("work",2,2,ChatType.work), // work smith
         ("potion",1,3,ChatType.potion), // potion (healthbone)
+        ("berserk",1,1,ChatType.berserk),
+        ("invincible",1,1,ChatType.invincible),
+        ("magicshield",1,1,ChatType.magicShield),
+        ("physicalshield",1,1,ChatType.physicalShield),
     };
 
     public ChatType Categorize(string message){
@@ -29,6 +33,7 @@ public abstract class Chat : MonoBehaviour
             case ChatType.summon: summondb.Add(username,new SummonCommand(words[1],username)); break;
             case ChatType.teleport: if(int.TryParse(words[1],out int x) && int.TryParse(words[2],out int y))summondb.AddTeleport(username,x,y); break;
             case ChatType.potion: summondb.AddPotion(username,words.Length>1?words[1]:""); break;
+            default: summondb.Call(username,Categorize(msg),msg); break;
         }
     }
 }

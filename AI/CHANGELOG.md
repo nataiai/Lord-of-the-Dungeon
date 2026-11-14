@@ -73,6 +73,12 @@ Teleport   chat types "teleport 3 4": the player jumps to tile 3 4 of the room (
 [SETUP]    UI > Chat Text: a TMP text. It shows what chat did ("Bob teleports you to 3 4", "Bob: 3 4 is blocked").
            UI skill slot 3 shows the teleport cooldown. Design of all chat skills: AI/CHAT_SKILLS.md
 
+Chat buffs chat types berserk / invincible / magicshield / physicalshield (3+ letters, "ber" works): the buff goes on the player.
+             berserk     attack x2 at full HP up to x4, no healing (15 s)
+             invincible  no damage, no knockback (10 s)
+             shields     block magic / physical damage (15 s). Enemy data > isMagical: its touch is magic (Ghost)
+[TWEAK]    Summondb > Skills: each word's Cooldown (60) and Buff (duration, effect prefab). One chatter casts for now
+
 Summon     each cooldown, the chatter with the fewest turns goes first, then the oldest request (AI/ChatPotion.cs).
            e.g. A A . A B . A B . A B  (. = cooldown done)  spawns  A A B B A ...  One spammer can't make the others wait.
            A new room clears the summon and potion lines (the spawn counts stay).
