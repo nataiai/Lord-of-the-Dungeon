@@ -19,7 +19,7 @@ public class Enemy : Character
     Color originalSRcolor;
     float deathBreathTime;
     float hurtTime;
-    float lifeSpan = 360; // seconds, then it dies by itself
+    float lifeSpan = 86400; // seconds, then it dies by itself
     float born;
     float cooldownTimer;
     bool justSpawn;
@@ -28,10 +28,36 @@ public class Enemy : Character
     [SerializeField] bool spriteFacesLeft;
     protected virtual bool facesPlayer => true; // false: never flipped (Chest)
     Vector2 way;
+    Vector2 home; // where it started (Experimental: Enemy reset)
+    float leftAt = -1;
 
+    void OnDisable(){leftAt = Time.time;} // the player left its room
+    void OnEnable(){ // the player is back (Experimental: Enemy reset)
+        if(leftAt<0 || isDead)return;
+        var x = Experimental.I;
+        float away = Time.time-leftAt;
+        if(x.resetPosition && x.walkBack)StartCoroutine(WalkHome(initSpeed*away));
+        else if(x.resetPosition)transform.position = home;
+        if(x.resetHealth)Heal(x.enemyRegen>0 ? (int)(x.enemyRegen*away) : maxHP);
+        if(x.forgetPlayer)notice = false;
+        if(x.clearBuffs)foreach(var b in GetComponents<BuffEffect>())Destroy(b);
+        if(x.pauseLifeSpan)born += away;
+    }
+    IEnumerator WalkHome(float distance){ // where it got to, walking home by the path, while you were away
+        yield return null; // PathFinding knows this room's walls from the next frame
+        Vector2 off = (Vector2)transform.position - center, at = center, goal = home - off;
+        var bounds = GameManager.Instance.currentRoom.bounds;
+        for(int i=0;i<400 && distance>0 && (goal-at).magnitude>.05f;i++){
+            float step = Mathf.Min(.25f, Mathf.Min(distance, (goal-at).magnitude));
+            at += (enemyData.ignoreCollide ? (goal-at).normalized : PathFinding.Direction(at, goal, bounds, bodyCollider))*step; // ghosts go straight
+            distance -= step;
+        }
+        transform.position = at + off;
+    }
     protected virtual void Start(){
         HP = enemyData.maxHP;
         born = Time.time;
+        home = transform.position;
         sr = GetComponentInChildren<SpriteRenderer>();
         foreach(Transform child in sr.transform){
             var s = child.GetComponent<SpriteRenderer>();

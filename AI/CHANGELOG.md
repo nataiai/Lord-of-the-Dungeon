@@ -56,6 +56,11 @@ Loot       dropped loot slides and bounces (placed loot stays put; still falls i
 PlayOnce   AI/PlayOnce.cs: play an animation once, then hide / destroy. Use it anywhere.
            Door opens with it (plays once, then gone); the heal effect lasts as long as its animation.
 
+Enemies    Experimental > Enemy reset, while you're out of their room (worked out when you come back):
+             resetPosition  back to where they started: walkBack (along the path, as far as their speed gets them) or straight there
+             resetHealth    heal enemyRegen HP per second (0 = back to full)
+             forgetPlayer, clearBuffs, pauseLifeSpan (their 24 hour life span stops)
+
 Mini map   top right all the time. M (gamepad Select): the big map, moved with the move keys / stick (player can't move or attack).
            Shows rooms you've been in (the one you're in brighter), doors (yellow = leads to a room you haven't been in),
            a ? just past each door to a room you haven't entered, and you (red). AI/MiniMap.cs, made by UI.Start.

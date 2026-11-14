@@ -48,6 +48,7 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
     protected void setAnimFacing(Vector2 v){if(canFace)animFacing = _setAnimFacing(v);}
     protected virtual int _setAnimFacing(Vector2 looking)=>Direction.facing(looking);
     public void froze(){stunTime=Time.time+1;}
+    public bool isStunned => stunTime>Time.time; // knocked back or frozen
     public void stopFacing(){stopFacingTime=Time.time+.1f;} // keeps its facing a moment, call it every frame
     public bool canFace => stopFacingTime<Time.time;
     protected bool StuntMech(float recover){

@@ -23,10 +23,12 @@ public class BuffEffect : MonoBehaviour
         [Tooltip("Shown on the one who has the buff while it lasts (an ice cube, a heal glow...)")]
         public GameObject effect;
         public void CopyTo(GameObject go){
-            if(type==BuffType.none)return;
-            if(!isStackable)foreach(var b in go.GetComponents<BuffEffect>())if(b.buff.type==type){b.end=Time.time+duration;return;}
+            var buff = this;
+            if(go.TryGetComponent(out Enemy e) && e.enemyData && (type & e.enemyData.buffResistance)!=0){buff = (Buff)MemberwiseClone(); buff.type &= ~e.enemyData.buffResistance;} // without what it resists
+            if(buff.type==BuffType.none)return;
+            if(!isStackable)foreach(var b in go.GetComponents<BuffEffect>())if(b.buff.type==buff.type){b.end=Time.time+duration;return;}
             var c = go.AddComponent<BuffEffect>();
-            c.buff=this; c.end=Time.time+duration;
+            c.buff=buff; c.end=Time.time+duration;
         }
     }
     public Buff buff;

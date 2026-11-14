@@ -34,6 +34,24 @@ public partial class Experimental : MonoBehaviour{ // Weapons switches: AI/Field
     [Tooltip("Space enemies keep from each other, times their own size (1 = half their diagonal: 0.71 for a 1x1 enemy)")]
     public float enemySpacing = 1f;
 
+    [Header("Enemy reset: while you're out of its room")]
+    [Tooltip("Enemies go back to where they started")]
+    public bool resetPosition = true;
+    [ShowIf("resetPosition", true)]
+    [Tooltip("On: they walk back, as far as their speed gets them while you're away. Off: straight back there")]
+    public bool walkBack = true;
+    [Tooltip("Enemies heal")]
+    public bool resetHealth = false;
+    [ShowIf("resetHealth", true)]
+    [Tooltip("HP per second while you're away. 0 = back to full at once")]
+    public float enemyRegen = 1;
+    [Tooltip("Enemies forget you: they wait until you come close again (their noticeRange)")]
+    public bool forgetPlayer = true;
+    [Tooltip("Buffs on enemies (burn, slow...) end")]
+    public bool clearBuffs = true;
+    [Tooltip("Their life span (they die after 24 hours) doesn't count while you're away")]
+    public bool pauseLifeSpan = false;
+
     [Header("Chat")]
     [Tooltip("On: AI/UnifiedChat.cs reads chat. Off: Lexone TwitchChat reads chat")]
     public bool unifiedChat = true;
