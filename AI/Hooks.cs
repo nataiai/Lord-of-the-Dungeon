@@ -15,7 +15,7 @@ public static class AIHooks
     public static void OnDrop(Loot loot, Transform from){
         if(loot==null)return;
         if(from.TryGetComponent(out ThrownWeapon _)){loot.transform.localScale = from.lossyScale; return;} // a thrown weapon landing: keeps its size, no slide
-        LootYoink.Push(loot.gameObject); // slides away (AI/Yoink.cs)
+        LootYoink.Push(loot.gameObject, default, from); // slides away, out of a chest too (AI/Yoink.cs)
     }
 
     // a flying weapon (thrown or boomerang) touches `other`: hurts it if it's an enemy of `by` not hit yet (a chest too: opens it),
