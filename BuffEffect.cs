@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-[System.Flags] public enum BuffType{none=0,burn=1,heal=2,slow=4,stun=8,stopMovement=16,stopFacing=32}
+[System.Flags] public enum BuffType{none=0,burn=1,heal=2,slow=4,stun=8,stopMovement=16,stopFacing=32,stopAnim=64}
 
 // if on ... do ...
 // weapons -> copy to hitbox
@@ -13,11 +13,11 @@ public class BuffEffect : MonoBehaviour
     [System.Serializable]
     public class Buff{
         public BuffType type = BuffType.none; // none = no effect
-        [ShowIf("type", BuffType.burn, BuffType.heal, BuffType.slow, BuffType.stun, BuffType.stopMovement, BuffType.stopFacing)]
+        [ShowIf("type", BuffType.burn, BuffType.heal, BuffType.slow, BuffType.stun, BuffType.stopMovement, BuffType.stopFacing, BuffType.stopAnim)]
         public float duration=1f;
         [ShowIf("type", BuffType.burn, BuffType.heal)]
         public int power = 1; // burn, heal: HP per second
-        [ShowIf("type", BuffType.burn, BuffType.heal, BuffType.slow, BuffType.stun, BuffType.stopMovement, BuffType.stopFacing)]
+        [ShowIf("type", BuffType.burn, BuffType.heal, BuffType.slow, BuffType.stun, BuffType.stopMovement, BuffType.stopFacing, BuffType.stopAnim)]
         public bool isStackable;
         public void CopyTo(GameObject go){
             if(type==BuffType.none)return;
@@ -29,6 +29,8 @@ public class BuffEffect : MonoBehaviour
     public Buff buff;
     Character cha;
     float end, tick;
+    Animator stopped; // stopAnim: plays again when the buff ends
+    void OnDestroy(){if(stopped)stopped.speed = 1;}
     // Start is called before the first frame update
     void Start()
     {
@@ -53,6 +55,7 @@ public class BuffEffect : MonoBehaviour
         if(buff.type.HasFlag(BuffType.stun))cha.froze();
         if(buff.type.HasFlag(BuffType.stopMovement))cha.froze();
         if(buff.type.HasFlag(BuffType.stopFacing))cha.stopFacing();
+        if(buff.type.HasFlag(BuffType.stopAnim)){stopped = cha.GetComponentInChildren<Animator>(); if(stopped)stopped.speed = 0;}
         if(tick>Time.time)return;
         tick = Time.time+1;
         if(buff.type.HasFlag(BuffType.burn))cha.recieveDamage(buff.power);
