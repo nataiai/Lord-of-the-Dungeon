@@ -19,6 +19,9 @@ public class BuffEffect : MonoBehaviour
         public int power = 1; // burn, heal: HP per second
         [ShowIf("type", BuffType.burn, BuffType.heal, BuffType.slow, BuffType.stun, BuffType.stopMovement, BuffType.stopFacing, BuffType.stopAnim)]
         public bool isStackable;
+        [ShowIf("type", BuffType.burn, BuffType.heal, BuffType.slow, BuffType.stun, BuffType.stopMovement, BuffType.stopFacing, BuffType.stopAnim)]
+        [Tooltip("Shown on the one who has the buff while it lasts (an ice cube, a heal glow...)")]
+        public GameObject effect;
         public void CopyTo(GameObject go){
             if(type==BuffType.none)return;
             if(!isStackable)foreach(var b in go.GetComponents<BuffEffect>())if(b.buff.type==type){b.end=Time.time+duration;return;}
@@ -30,12 +33,14 @@ public class BuffEffect : MonoBehaviour
     Character cha;
     float end, tick;
     Animator stopped; // stopAnim: plays again when the buff ends
-    void OnDestroy(){if(stopped)stopped.speed = 1;}
+    GameObject shown; // buff.effect on this character
+    void OnDestroy(){if(stopped)stopped.speed = 1; if(shown)Destroy(shown);}
     // Start is called before the first frame update
     void Start()
     {
         cha = gameObject.GetComponent<Character>();
         tick = Time.time+1;
+        if(cha!=null && buff.effect!=null)shown = Instantiate(buff.effect, cha.center, Quaternion.identity, transform);
     }
 
     void OnTriggerEnter2D(Collider2D other)
