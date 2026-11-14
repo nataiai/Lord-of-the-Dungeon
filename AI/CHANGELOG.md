@@ -77,7 +77,10 @@ Chat buffs chat types berserk / invincible / magicshield / physicalshield (3+ le
              berserk     attack x2 at full HP up to x4, no healing (15 s)
              invincible  no damage, no knockback (10 s)
              shields     block magic / physical damage (15 s). Enemy data > isMagical: its touch is magic (Ghost)
-[TWEAK]    Summondb > Skills: each word's Cooldown (60) and Buff (duration, effect prefab). One chatter casts for now
+             floating    holes don't take the player (10 s); if it ends over a hole, the player falls
+           earthquake / quake: every enemy of the room is stunned (3 s) and pushed away. The player is stunned too,
+             never pushed; not stunned while invincible (buff, or the frames after a hit) or floating. No enemies: no cast
+[TWEAK]    Summondb > Skills: each word's Cooldown and Buff (duration, effect prefab), Knockback (earthquake). One chatter casts for now
 
 Summon     each cooldown, the chatter with the fewest turns goes first, then the oldest request (AI/ChatPotion.cs).
            e.g. A A . A B . A B . A B  (. = cooldown done)  spawns  A A B B A ...  One spammer can't make the others wait.

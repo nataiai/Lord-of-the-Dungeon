@@ -5,7 +5,9 @@ using UnityEngine;
 // Chat skills (design: AI/CHAT_SKILLS.md). On/off: Experimental.chatSkills.
 // Teleport: "teleport 3 4" = tile 3 4 of the room (1 1 = its bottom left floor tile; a ruler on the room's edge shows the numbers).
 // One request per chatter, the fair line (the chatter with the fewest turns first), teleportSkill's cooldown.
-// Buff words (berserk, invincible, magicshield, physicalshield; 3+ letters): the buff goes on the player. Summondb > Skills
+// Buff words (berserk, invincible, magicshield, physicalshield, floating; 3+ letters): the buff goes on the player. Summondb > Skills
+// earthquake / quake: its buff (stun) and a push go on every enemy of the room; the player is stunned too,
+// unless invincible (buff or the frames after a hit) or floating. Never pushed.
 public partial class SimpleSummonDB{
     string said; float saidAt;
     readonly HashSet<DungeonRoom> ruled = new();
@@ -21,8 +23,18 @@ public partial class SimpleSummonDB{
     // Chat.addToDB: a buff word. One chatter casts it, its cooldown limits how often
     public void Call(string username, ChatType type, string msg){
         var s = skills.Find(x=>x.chatType==type);
-        if(!Experimental.I.chatSkills || s==null || msg.Trim().Length<3 || !s.Call())return; // "b" or "i" alone is no cast
-        s.buff.CopyTo(GameManager.Instance.player.gameObject);
+        if(!Experimental.I.chatSkills || s==null || msg.Trim().Length<3 || !s.isReady)return; // "b" or "i" alone is no cast
+        var p = GameManager.Instance.player;
+        bool onPlayer = true;
+        if(type==ChatType.earthquake){
+            var enemies = System.Array.FindAll(GameManager.Instance.currentRoom.GetComponentsInChildren<Enemy>(), e=>!(e is Chest));
+            if(enemies.Length==0)return; // it would only stun the player
+            foreach(var e in enemies){s.buff.CopyTo(e.gameObject); e.receiveKnockback(p.center, s.knockback);}
+            onPlayer = !p.isInvincible && !p.Has(BuffType.invincible|BuffType.floating);
+        }
+        s.Call();
+        if(onPlayer)s.buff.CopyTo(p.gameObject);
+        if(type==ChatType.floating)p.rb.sleepMode = RigidbodySleepMode2D.NeverSleep; // so it falls when the float ends over a hole
         Say(username+": "+type+"!");
     }
     // GameManager.Update
@@ -65,11 +77,16 @@ public partial class SimpleSummonDB{
 [System.Serializable]
 public class ChatSkill : Skill{ // a chat word that puts its buff on the player
     public BuffEffect.Buff buff = new();
+    [Tooltip("Earthquake: how hard enemies are pushed away from the player")]
+    public float knockback;
     public static List<ChatSkill> Defaults() => new(){
         New(ChatType.berserk, BuffType.berserk, 15), // attack x2 to x4 (more with less HP), no healing
         New(ChatType.invincible, BuffType.invincible, 10), // no damage, no knockback
         New(ChatType.magicShield, BuffType.magicShield, 15),
         New(ChatType.physicalShield, BuffType.physicalShield, 15),
+        New(ChatType.floating, BuffType.floating, 10, 30), // holes don't take the player
+        New(ChatType.earthquake, BuffType.stun, 3, 45, 6),
     };
-    static ChatSkill New(ChatType word, BuffType type, float duration) => new(){chatType = word, cooldown = 60, buff = new(){type = type, duration = duration}};
+    static ChatSkill New(ChatType word, BuffType type, float duration, float cooldown=60, float knockback=0)
+        => new(){chatType = word, cooldown = cooldown, knockback = knockback, buff = new(){type = type, duration = duration}};
 }

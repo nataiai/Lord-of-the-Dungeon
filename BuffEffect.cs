@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-[System.Flags] public enum BuffType{none=0,burn=1,heal=2,slow=4,stun=8,stopMovement=16,stopFacing=32,stopAnim=64,berserk=128,invincible=256,magicShield=512,physicalShield=1024}
+[System.Flags] public enum BuffType{none=0,burn=1,heal=2,slow=4,stun=8,stopMovement=16,stopFacing=32,stopAnim=64,berserk=128,invincible=256,magicShield=512,physicalShield=1024,floating=2048}
 
 // if on ... do ...
 // weapons -> copy to hitbox

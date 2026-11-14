@@ -349,9 +349,10 @@ Test each step with one account: need is 1, so every vote closes at once.
 1. **Teleport numbers:** room tiles with a ruler (`1 1` = bottom left). One cell is one Unity unit.
 2. **Magic damage:** yes. `EnemySO.isMagical`, so the magic shield blocks something.
 3. **Buffs stack.** Each of the four buffs is its own vote with its own cooldown (no shared group).
-4. **Earthquake:** a floating player is safe from it. (Knockback wording to confirm before step 2.)
-5. **Weapons room:** fixed until the next weapons room, also through death. The streamer has one voice too.
-   Zero votes or a tie: random.
+4. **Earthquake:** it also knocks the enemies back. The player is never knocked back, only stunned, and not even that
+   while invincible, in invincibility frames or floating.
+5. **Weapons room:** fixed until the next weapons room, also through death. The streamer has one voice too:
+   the last vote, cast when chat's time is up. Still a tie, or no votes at all: random.
 
 Still my picks, not asked yet: vote length 20 s, which skills are loot (`skillLoot` off for now),
 the earthquake stun on the player = today's stun (can't walk, can attack).
@@ -361,3 +362,4 @@ the earthquake stun on the player = today's stun (can't walk, can attack).
 - Step 1, teleport: `AI/ChatSkill.cs`.
 - Player buffs (berserk, invincible, magic / physical shield): one chatter casts, cooldown 60 s each, they stack.
   The crowd vote comes later as its own step and then applies to all of them.
+- Float and earthquake, the same way (one chatter, cooldowns 30 s and 45 s).

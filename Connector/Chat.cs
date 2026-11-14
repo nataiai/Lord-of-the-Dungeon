@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ChatType{summon=0,teleport=1,vote,work,invalid,potion,berserk,invincible,magicShield,physicalShield} // new ones at the end (saved as numbers)
+public enum ChatType{summon=0,teleport=1,vote,work,invalid,potion,berserk,invincible,magicShield,physicalShield,earthquake,floating} // new ones at the end (saved as numbers)
 
 public abstract class Chat : MonoBehaviour
 {
@@ -18,6 +18,9 @@ public abstract class Chat : MonoBehaviour
         ("invincible",1,1,ChatType.invincible),
         ("magicshield",1,1,ChatType.magicShield),
         ("physicalshield",1,1,ChatType.physicalShield),
+        ("earthquake",1,1,ChatType.earthquake),
+        ("quake",1,1,ChatType.earthquake),
+        ("floating",1,1,ChatType.floating), // float
     };
 
     public ChatType Categorize(string message){
