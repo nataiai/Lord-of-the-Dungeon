@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Mini map: a small map in the top right all the time. M (gamepad Select): the big map, moved with the move keys / stick.
-// Shows rooms you've been in, rooms behind a door you've seen but not entered (darker), doors, and you. Made by UI.Start.
+// Shows rooms you've been in, doors, a ? behind each door to a room you haven't entered, and you. Made by UI.Start.
 // The room you're in is filmed live into its picture; a room you left keeps its last one.
-// A camera can't see a hidden room, so one you haven't entered stays a dark box.
+// A camera can't see a hidden room: one you haven't entered is only a ? past its door.
 // Experimental.bigMapPauses: the big map pauses the game.
 public class MiniMap : MonoBehaviour
 {
@@ -18,13 +18,14 @@ public class MiniMap : MonoBehaviour
     public Vector2 miniSize = new(220,160);
     [Tooltip("Pixels per world unit of a room's picture")]
     public float pixelsPerUnit = 8;
-    public Color current = new(1,1,1,.9f), visited = new(.6f,.6f,.6f,.8f), found = new(.3f,.3f,.3f,.6f);
+    public Color current = new(1,1,1,.9f), visited = new(.6f,.6f,.6f,.8f);
     public Color door = new(1,.8f,.2f), doorDone = new(.5f,.5f,.5f), you = Color.red;
 
     RectTransform mini, big, content, me;
     readonly HashSet<DungeonRoom> been = new();
     readonly Dictionary<DungeonRoom,UnityEngine.UI.Image> rooms = new();
     readonly Dictionary<RoomTrigger,UnityEngine.UI.Image> doors = new();
+    readonly Dictionary<RoomTrigger,GameObject> unknown = new(); // a ? on the far side of a door
     readonly Dictionary<DungeonRoom,RenderTexture> pictures = new();
     Camera cam;
     DungeonRoom filming;
@@ -60,7 +61,8 @@ public class MiniMap : MonoBehaviour
             gm.player.froze(); // no walking or attacks, like a dialogue
             gm.player.lWeapon.lastUse = gm.player.rWeapon.lastUse = Time.time;
         }
-        foreach(var r in rooms)r.Value.color = r.Key==map.currentRoom ? current : been.Contains(r.Key) ? visited : found;
+        foreach(var r in rooms)r.Value.color = r.Key==map.currentRoom ? current : visited;
+        foreach(var u in unknown)u.Value.SetActive(!been.Contains(Room(u.Key)));
         foreach(var d in doors)d.Value.color = map.triggerMap.TryGetValue(d.Key, out var to) && to && been.Contains(Room(to)) ? doorDone : door;
         Vector2 p = gm.player.transform.position;
         me.anchoredPosition = p;
@@ -83,7 +85,7 @@ public class MiniMap : MonoBehaviour
         foreach(var t in map.roomTrigger){
             if(t==null || doors.ContainsKey(t) || !been.Contains(Room(t)))continue;
             doors[t] = Box(t.transform.position, Vector2.one, door, "door");
-            if(map.triggerMap.TryGetValue(t, out var to) && to)AddRoom(Room(to));
+            if(map.triggerMap.TryGetValue(t, out var to) && to && !unknown.ContainsKey(to))unknown[to] = Mark(to.transform.position);
         }
         me.SetAsLastSibling();
     }
@@ -117,7 +119,7 @@ public class MiniMap : MonoBehaviour
     void AddRoom(DungeonRoom r){
         if(r==null || rooms.ContainsKey(r))return;
         var b = Floor(r);
-        rooms[r] = Box(b.center, b.size, found, r.name);
+        rooms[r] = Box(b.center, b.size, visited, r.name);
         rooms[r].transform.SetAsFirstSibling(); // under doors and you
     }
     static Bounds Floor(DungeonRoom r){ // its floor tilemap (the Spawner's): known while the room is hidden too
@@ -137,6 +139,18 @@ public class MiniMap : MonoBehaviour
         img.color = c;
         img.raycastTarget = false;
         return img;
+    }
+    GameObject Mark(Vector2 at){ // a ?
+        var t = new GameObject("?", typeof(RectTransform), typeof(TMPro.TextMeshProUGUI)).GetComponent<TMPro.TextMeshProUGUI>();
+        t.transform.SetParent(content, false);
+        t.rectTransform.anchoredPosition = at;
+        t.rectTransform.sizeDelta = Vector2.one*3;
+        t.text = "?";
+        t.fontSize = 3;
+        t.alignment = TMPro.TextAlignmentOptions.Center;
+        t.color = door;
+        t.raycastTarget = false;
+        return t.gameObject;
     }
     static RectTransform Panel(Transform parent, Vector2 min, Vector2 max, Vector2 pivot, Vector2 size, Vector2 at){
         var rt = new GameObject("map", typeof(RectTransform), typeof(UnityEngine.UI.Image), typeof(UnityEngine.UI.RectMask2D)).GetComponent<RectTransform>();
