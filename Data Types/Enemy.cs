@@ -12,6 +12,8 @@ public class EnemySO : ScriptableObject
     public CombatStat combatStat;
     public float knockbackResistance; // 1 = immune to knockback; 0 = get full knockback
     public float knocbackRecovery = 4;
+    [Tooltip("Buffs that don't work on it (tick several); the rest of a buff still does")]
+    public BuffType buffResistance;
     public float attackKnockback;
     public bool ignoreCollide;
     public float noticeRange=9999f;
