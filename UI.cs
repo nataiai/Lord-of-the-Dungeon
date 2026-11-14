@@ -45,6 +45,7 @@ public class UI : MonoBehaviour
         Canvas canvas = GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceCamera;
         canvas.worldCamera = GameManager.Instance.uiCam;
+        gameObject.AddComponent<MiniMap>();
         UpdateWeap();
     }
     void Update(){
