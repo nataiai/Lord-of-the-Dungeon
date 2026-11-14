@@ -58,7 +58,7 @@ public class UI : MonoBehaviour
             rightCharge.fillAmount=player.rWeapon.getChargePercent();
         }
         UpdateSkill();
-        if(chatText)chatText.SetText(GameManager.Instance.summondb.ChatText());
+        if(chatText)chatText.text = GameManager.Instance.summondb.ChatText();
         UpdateDialogue();
     }
 

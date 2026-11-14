@@ -54,7 +54,8 @@ public partial class SimpleSummonDB{
         Say(c.username+" teleports you to "+c.spawnableLocation);
     }
     static bool InDoorway(Player p){ // a teleport out of a door trigger would switch rooms
-        foreach(var c in Physics2D.OverlapPointAll(p.center))if(c.GetComponent<RoomTrigger>())return true;
+        var b = p.bodyCollider.bounds; // the whole body: the trigger's exit fires for any part of it
+        foreach(var c in Physics2D.OverlapAreaAll(b.min, b.max))if(c.GetComponent<RoomTrigger>())return true;
         return false;
     }
     void Ruler(DungeonRoom room){ // tile numbers below and left of the floor, once per room
