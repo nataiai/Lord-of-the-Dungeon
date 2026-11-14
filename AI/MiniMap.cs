@@ -28,6 +28,7 @@ public class MiniMap : MonoBehaviour
     readonly Dictionary<RoomTrigger,UnityEngine.UI.Image> doors = new();
     readonly Dictionary<RoomTrigger,GameObject> unknown = new(); // a ? on the far side of a door
     readonly Dictionary<DungeonRoom,UnityEngine.UI.RawImage> pictures = new();
+    readonly Dictionary<DungeonRoom,Vector2> shift = new(), center = new(); // shift: a shuffled room is drawn next to the door you came in by (AI/RoomShuffle.cs)
     Camera cam;
     DungeonRoom filming;
     Vector2 look; // big map: how far it moved from the player
@@ -62,7 +63,7 @@ public class MiniMap : MonoBehaviour
         foreach(var r in pictures)r.Value.color = r.Key==map.currentRoom ? current : visited;
         foreach(var u in unknown)u.Value.SetActive(!been.Contains(Room(u.Key)));
         foreach(var d in doors)d.Value.color = map.triggerMap.TryGetValue(d.Key, out var to) && to && been.Contains(Room(to)) ? doorDone : door;
-        Vector2 p = gm.player.transform.position;
+        Vector2 p = (Vector2)gm.player.transform.position + Off(map.currentRoom);
         me.anchoredPosition = p;
         float scale = open ? bigScale : miniScale;
         content.localScale = Vector3.one*scale;
@@ -81,11 +82,15 @@ public class MiniMap : MonoBehaviour
 
     // a new room entered: it, its doors, and the rooms behind them
     void Refresh(DungeonMap map){
+        var d = RoomShuffle.lastDoor; // came in by: draw it next to that door
+        if(d && map.triggerMap.TryGetValue(d, out var by) && by && Room(by)==map.currentRoom && RoomShuffle.Near(d))
+            shift[map.currentRoom] = Off(Room(d)) + (Vector2)(RoomShuffle.Near(d).transform.position - by.transform.position);
         AddRoom(map.currentRoom);
         foreach(var t in map.roomTrigger){
             if(t==null || doors.ContainsKey(t) || !been.Contains(Room(t)))continue;
-            doors[t] = Box(t.transform.position, Vector2.one, door, "door");
-            if(map.triggerMap.TryGetValue(t, out var to) && to && !unknown.ContainsKey(to))unknown[to] = Mark(to.transform.position);
+            doors[t] = Box((Vector2)t.transform.position + Off(Room(t)), Vector2.one, door, "door");
+            var next = RoomShuffle.Near(t) ? RoomShuffle.Near(t) : t; // just past the door
+            if(map.triggerMap.TryGetValue(t, out var to) && to && !unknown.ContainsKey(to))unknown[to] = Mark((Vector2)next.transform.position + Off(Room(t)));
         }
         me.SetAsLastSibling();
     }
@@ -113,13 +118,15 @@ public class MiniMap : MonoBehaviour
         cam.targetTexture = (RenderTexture)pic.texture;
         cam.ResetAspect(); // the picture's shape, not the screen's
         cam.orthographicSize = box.sizeDelta.y/2;
-        cam.transform.position = new Vector3(box.anchoredPosition.x, box.anchoredPosition.y, main.transform.position.z);
+        cam.transform.position = new Vector3(center[r].x, center[r].y, main.transform.position.z);
     }
+    Vector2 Off(DungeonRoom r) => shift.TryGetValue(r, out var s) ? s : Vector2.zero;
     static DungeonRoom Room(RoomTrigger t) => t.transform.parent.GetComponent<DungeonRoom>(); // like DungeonMap.switchRoom
     void AddRoom(DungeonRoom r){
         if(r==null || rooms.ContainsKey(r))return;
         var b = Area(r);
-        rooms[r] = Box(b.center, b.size, Color.clear, r.name); // only its place: the picture shows the room
+        center[r] = b.center;
+        rooms[r] = Box((Vector2)b.center + Off(r), b.size, Color.clear, r.name); // only its place: the picture shows the room
         Sort();
     }
     // under doors and you; a bigger room first, so a room inside a room shows on top of it

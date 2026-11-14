@@ -15,6 +15,7 @@ public class DungeonMap : MonoBehaviour // only currentRoom is active
     void Start(){
         roomTrigger = FindObjectsByType<RoomTrigger>(FindObjectsInactive.Include,FindObjectsSortMode.None);
         fillTriggerMap();
+        RoomShuffle.Shuffle(this); // Experimental.shuffleRooms (AI/RoomShuffle.cs)
         foreach(var r in allRooms)if(r.bounds.Contains(GameManager.Instance.playerPos)&&r.gameObject.activeInHierarchy)currentRoom = r;
     }
     void fillTriggerMap(){
@@ -29,10 +30,11 @@ public class DungeonMap : MonoBehaviour // only currentRoom is active
         }
     }
     public void roomTriggerExit(RoomTrigger trigger){
-        Vector2 toPartner = triggerMap[trigger].transform.position - trigger.transform.position;
+        Vector2 toPartner = RoomShuffle.Near(trigger).transform.position - trigger.transform.position;
         if(Vector2.Dot(toPartner,GameManager.Instance.player.rb.velocity)>0)switchRoom(trigger);
     }
     public void switchRoom(RoomTrigger trigger){
+        RoomShuffle.Warp(this, trigger);
         currentRoom = triggerMap[trigger].transform.parent.GetComponent<DungeonRoom>();
         currentRoom.gameObject.SetActive(true);
         trigger.transform.parent.gameObject.SetActive(false);

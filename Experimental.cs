@@ -21,6 +21,11 @@ public partial class Experimental : MonoBehaviour{ // Weapons switches: AI/Field
     public bool miniMap = false;
     [Tooltip("On: the big map (M / gamepad Select) pauses the game (AI/MiniMap.cs)")]
     public bool bigMapPauses = true;
+    [Tooltip("On: the scene's doors are paired at random each run, rooms stay put (AI/RoomShuffle.cs)")]
+    public bool shuffleRooms = false;
+    [ShowIf("shuffleRooms", true)]
+    [Tooltip("0 = a new layout every run, any other number = always the same one")]
+    public int roomSeed;
 
     [Header("Enemy AI")]
     [Tooltip("Off: no pathfinding, enemies walk straight at the player")]

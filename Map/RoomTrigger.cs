@@ -12,7 +12,7 @@ public class RoomTrigger : MonoBehaviour
     }
     void OnTriggerStay2D(Collider2D other){ // a knockback can't push the player through: like a wall
         if(!other.TryGetComponent(out Player player) || !player.isStunned)return;
-        var to = GameManager.Instance.map.triggerMap[this];
+        var to = RoomShuffle.Near(this);
         if(to==null)return;
         Vector2 way = (to.transform.position - transform.position).normalized;
         float v = Vector2.Dot(player.rb.velocity, way);

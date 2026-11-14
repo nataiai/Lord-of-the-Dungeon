@@ -56,6 +56,10 @@ Loot       dropped loot slides and bounces (placed loot stays put; still falls i
 PlayOnce   AI/PlayOnce.cs: play an animation once, then hide / destroy. Use it anywhere.
            Door opens with it (plays once, then gone); the heal effect lasts as long as its animation.
 
+Rooms      Experimental > shuffleRooms: each run the scene's doors are paired at random (right with left, up with down);
+           rooms stay put, a door moves you to its new partner. Every room can still be reached. roomSeed 0 = new each run.
+           Not yet: rotating rooms, keys before their locks. AI/RoomShuffle.cs
+
 Mini map   top right all the time. M (gamepad Select): the big map, moved with the move keys / stick (player can't move or attack).
            Shows rooms you've been in (the one you're in brighter), doors (yellow = leads to a room you haven't been in),
            a ? just past each door to a room you haven't entered, and you (red). AI/MiniMap.cs, made by UI.Start.
