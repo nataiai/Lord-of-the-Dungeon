@@ -29,6 +29,7 @@ public class Controller : MonoBehaviour
     [PlayModeOnly] public ControllerButton attackLeft;
     [PlayModeOnly] public ControllerButton attackRight;
     [PlayModeOnly] public ControllerButton throwHold = new();
+    [PlayModeOnly] public ControllerButton map = new();
 
     void Update(){
         movement = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
@@ -48,6 +49,7 @@ public class Controller : MonoBehaviour
             attackLeft.isPressed = gamepad.leftShoulder.isPressed||gamepad.buttonSouth.isPressed;
             attackRight.isPressed = gamepad.rightShoulder.isPressed||gamepad.buttonEast.isPressed;
             throwHold.isPressed = gamepad.xButton.isPressed;
+            map.isPressed = gamepad.selectButton.isPressed;
             return;
         }
         if(keyboard!=null){
@@ -59,6 +61,7 @@ public class Controller : MonoBehaviour
             attackLeft.isPressed = keyboard.oKey.isPressed;
             attackRight.isPressed = keyboard.pKey.isPressed;
             throwHold.isPressed = k.qKey.isPressed;
+            map.isPressed = k.mKey.isPressed;
         }
         if(mouse==null||disableMouse){mouseActive = false;return;}
         Vector2 mousePos = mouse.position.ReadValue();

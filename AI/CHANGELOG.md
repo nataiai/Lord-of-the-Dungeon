@@ -57,6 +57,11 @@ Loot       dropped loot slides and bounces (placed loot stays put; still falls i
 PlayOnce   AI/PlayOnce.cs: play an animation once, then hide / destroy. Use it anywhere.
            Door opens with it (plays once, then gone); the heal effect lasts as long as its animation.
 
+Mini map   top right all the time. M (gamepad Select): the big map, moved with the move keys / stick (player can't move or attack).
+           Shows rooms you've been in (the one you're in brighter), rooms behind a door you've seen but not entered (darker),
+           doors (yellow = leads to a room you haven't been in) and you (red). AI/MiniMap.cs, made by UI.Start.
+[TWEAK]    Experimental > bigMapPauses (on: the big map pauses the game). In Play mode: UI > MiniMap scales, colors, panSpeed
+
 Summon     each cooldown, the chatter with the fewest turns goes first, then the oldest request (AI/ChatPotion.cs).
            e.g. A A . A B . A B . A B  (. = cooldown done)  spawns  A A B B A ...  One spammer can't make the others wait.
            A new room clears the summon and potion lines (the spawn counts stay).

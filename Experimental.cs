@@ -17,6 +17,8 @@ public partial class Experimental : MonoBehaviour{ // Weapons switches: AI/Field
     public bool disableMouse = true;
     [Tooltip("On: hold a weapon button to charge its skill, let go to use it (AI/WeaponCharge.cs)")]
     public bool chargeSkills = true;
+    [Tooltip("On: the big map (M / gamepad Select) pauses the game (AI/MiniMap.cs)")]
+    public bool bigMapPauses = true;
 
     [Header("Enemy AI")]
     [Tooltip("Off: no pathfinding, enemies walk straight at the player")]
