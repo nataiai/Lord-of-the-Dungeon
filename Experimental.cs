@@ -32,7 +32,7 @@ public partial class Experimental : MonoBehaviour{ // Weapons switches: AI/Field
 
     [Header("Chat")]
     [Tooltip("On: AI/UnifiedChat.cs reads chat. Off: Lexone TwitchChat reads chat")]
-    public bool unifiedChat = false;
+    public bool unifiedChat = true;
     [Tooltip("No chat: spawn mockEnemy every testWithoutChatSpawnCooldown seconds (hold L to pause)")]
     public bool testWithoutChat = false;
     [ShowIf("testWithoutChat", true)]

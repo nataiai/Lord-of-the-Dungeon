@@ -5,7 +5,6 @@
 >> Fields and small hooks sit next to code like it (UI in UI.cs, summon fields in SummonDB.cs); the logic is in AI/.
 >> [TWEAK] = a setting designers can change.  [SETUP] = assign once or it won't work.
 
-[SETUP]  Database/Resources/PrefabDatabase > fist = Database/Weapons/Fist  (keep it in a Resources folder)
 [TWEAK]  Experimental > Weapons: throwing, boomerangReturns, yoink, locks  (untick = feature off)
 
 
@@ -38,8 +37,6 @@ Hit effect Weapon > hitEffect: a prefab made on each enemy it hits (swung, shot,
 
 Chat       no internet, a drop or Twitch down never stops the game: chat tries again by itself (about every 20 s).
            Quiet for 10 s: it pings Twitch; no answer for 20 s: it reconnects (Lexone, Twitch, WebGL, YouTube).
-[SETUP]    IRC object (Lexone): useAnonymousLogin on (or oauth + username), joinChannelOnStart on.
-           No IRC object (removed or turned off) or WebGL: chat uses AI/UnifiedChat.cs's own Twitch reader.
 [TWEAK]    IRC object: untick connectIRCOnStart, or the game can freeze at load when Twitch can't be reached.
 
 Buffs      Weapon > Buff > Type is a mask: tick several at once (burn + slow ...). power = burn / heal HP per second
