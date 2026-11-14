@@ -9,19 +9,21 @@ public class LootYoink : MonoBehaviour
     public static float bounciness = 0.6f;  // speed kept per bounce
     Vector2 velocity;
     Rigidbody2D rb;
+    Collider2D from; // what dropped it (a chest): it slides out of that
     float radius;
 
-    public static void Push(GameObject loot, Vector2 dir=default){ // dir zero = a random way
+    public static void Push(GameObject loot, Vector2 dir=default, Component from=null){ // dir zero = a random way
         if(!Experimental.I.yoink || loot==null)return; // ON/OFF in Experimental
         if(dir.sqrMagnitude<1e-6f)dir = Random.insideUnitCircle;
         if(dir.sqrMagnitude<1e-6f)dir = Vector2.right;
         if(!loot.TryGetComponent(out LootYoink y))y = loot.AddComponent<LootYoink>();
         y.velocity = dir.normalized*speed;
+        y.from = from ? from.GetComponent<Collider2D>() : null;
     }
     void Start(){rb = Slide.Body(gameObject); radius = Slide.Radius(gameObject);}
     void FixedUpdate(){
         if(rb==null)return;
         if(velocity==Vector2.zero || TryGetComponent(out Loot l) && !l.enabled){Destroy(this); return;} // stopped, or falling in a Hole
-        Slide.Step(rb, ref velocity, radius, deceleration, bounciness, true);
+        Slide.Step(rb, ref velocity, radius, deceleration, bounciness, true, null, from);
     }
 }

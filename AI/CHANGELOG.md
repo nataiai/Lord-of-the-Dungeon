@@ -40,6 +40,7 @@ Chat       no internet, a drop or Twitch down never stops the game: chat tries a
 [TWEAK]    IRC object: untick connectIRCOnStart, or the game can freeze at load when Twitch can't be reached.
 
 Buffs      Weapon > Buff > Type is a mask: tick several at once (burn + slow ...). power = burn / heal HP per second
+           stopAnim: the target's animation stops. Effect: a prefab shown on the target while the buff lasts (loop it)
 
 Boomerang  a weapon of type Boomerang: its attack comes back through walls. The hand waits until it's back.
 [TWEAK]    Weapon > boomerangDeceleration  slow-down going out
@@ -49,10 +50,17 @@ Keys       >> a weapon with a keyId is a key. A Door / Chest / Lock with a keyId
 [TWEAK]    keyId on the weapon and on the Door / Chest;  consumeKey = key is used up (default off)
 
 Loot       dropped loot slides and bounces (placed loot stays put; still falls in Holes).
+           Loot from a chest slides out of it.
 [TWEAK]    in code: LootYoink.speed / deceleration / bounciness (AI/Yoink.cs)
 
 PlayOnce   AI/PlayOnce.cs: play an animation once, then hide / destroy. Use it anywhere.
            Door opens with it (plays once, then gone); the heal effect lasts as long as its animation.
+
+Mini map   top right all the time. M (gamepad Select): the big map, moved with the move keys / stick (player can't move or attack).
+           Shows rooms you've been in (the one you're in brighter), doors (yellow = leads to a room you haven't been in),
+           a ? just past each door to a room you haven't entered, and you (red). AI/MiniMap.cs, made by UI.Start.
+           The room you're in is filmed live (enemies, you); a room you left keeps its last picture.
+[TWEAK]    Experimental > miniMap (off: no corner map, M still works), bigMapPauses (on: the big map pauses the game). In Play mode: UI > MiniMap scales, colors, panSpeed
 
 Summon     each cooldown, the chatter with the fewest turns goes first, then the oldest request (AI/ChatPotion.cs).
            e.g. A A . A B . A B . A B  (. = cooldown done)  spawns  A A B B A ...  One spammer can't make the others wait.

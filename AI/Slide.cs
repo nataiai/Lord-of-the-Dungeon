@@ -24,8 +24,8 @@ public static class Slide
     // solid = blocks a slide: anything not a trigger and not a character (chests count as solid)
     public static bool IsSolid(Collider2D col){var ch = col.GetComponentInParent<Character>(); return ch==null || ch is Chest;}
 
-    // onTouch: called for each collider in the way, characters too (return false = stop right there)
-    public static void Step(Rigidbody2D rb, ref Vector2 velocity, float radius, float deceleration, float bounciness, bool bounce, Func<Collider2D,bool> onTouch=null){
+    // onTouch: called for each collider in the way, characters too (return false = stop right there). ignore: passes through it
+    public static void Step(Rigidbody2D rb, ref Vector2 velocity, float radius, float deceleration, float bounciness, bool bounce, Func<Collider2D,bool> onTouch=null, Collider2D ignore=null){
         if(velocity==Vector2.zero)return;
         float dt = Time.fixedDeltaTime;
         Vector2 pos = rb.position, move = velocity*dt;
@@ -33,7 +33,7 @@ public static class Slide
         int n = Physics2D.CircleCast(pos, radius, move.normalized, solid, hits, move.magnitude);
         for(int i=0;i<n && !blocked;i++){
             Collider2D col = hits[i].collider;
-            if(col.OverlapPoint(pos))continue; // started inside it (loot from a chest): slide out
+            if(col==ignore || col.OverlapPoint(pos))continue; // started inside it (loot from a chest): slide out
             bool keepGoing = onTouch==null || onTouch(col);
             if(keepGoing && !IsSolid(col))continue; // characters don't block
             pos = hits[i].centroid;
