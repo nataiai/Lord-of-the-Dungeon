@@ -61,7 +61,7 @@ Mini map   top right all the time. M (gamepad Select): the big map, moved with t
            Shows rooms you've been in (the one you're in brighter), doors (yellow = leads to a room you haven't been in),
            a ? just past each door to a room you haven't entered, and you (red). AI/MiniMap.cs, made by UI.Start.
            The room you're in is filmed live (enemies, you); a room you left keeps its last picture.
-[TWEAK]    Experimental > bigMapPauses (on: the big map pauses the game). In Play mode: UI > MiniMap scales, colors, panSpeed
+[TWEAK]    Experimental > miniMap (off: no corner map, M still works), bigMapPauses (on: the big map pauses the game). In Play mode: UI > MiniMap scales, colors, panSpeed
 
 Summon     each cooldown, the chatter with the fewest turns goes first, then the oldest request (AI/ChatPotion.cs).
            e.g. A A . A B . A B . A B  (. = cooldown done)  spawns  A A B B A ...  One spammer can't make the others wait.

@@ -53,6 +53,7 @@ public class MiniMap : MonoBehaviour
         var gm = GameManager.Instance;
         var map = gm.map;
         if(map==null || map.currentRoom==null || map.roomTrigger==null)return;
+        mini.gameObject.SetActive(!open && Experimental.I.miniMap);
         if(been.Add(map.currentRoom))Refresh(map);
         if(filming!=map.currentRoom)Film(map.currentRoom);
         if(gm.controller.map.isPressedOnce("minimap"))Open(!open);
@@ -74,7 +75,6 @@ public class MiniMap : MonoBehaviour
         open = on;
         look = Vector2.zero;
         big.gameObject.SetActive(on);
-        mini.gameObject.SetActive(!on);
         content.SetParent(on ? big : mini, false);
         if(Experimental.I.bigMapPauses)Time.timeScale = on ? 0 : 1;
     }
