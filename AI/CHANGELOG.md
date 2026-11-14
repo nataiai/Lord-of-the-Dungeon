@@ -60,6 +60,7 @@ PlayOnce   AI/PlayOnce.cs: play an animation once, then hide / destroy. Use it a
 Mini map   top right all the time. M (gamepad Select): the big map, moved with the move keys / stick (player can't move or attack).
            Shows rooms you've been in (the one you're in brighter), rooms behind a door you've seen but not entered (darker),
            doors (yellow = leads to a room you haven't been in) and you (red). AI/MiniMap.cs, made by UI.Start.
+           The room you're in is filmed live (enemies, you); a room you left keeps its last picture.
 [TWEAK]    Experimental > bigMapPauses (on: the big map pauses the game). In Play mode: UI > MiniMap scales, colors, panSpeed
 
 Summon     each cooldown, the chatter with the fewest turns goes first, then the oldest request (AI/ChatPotion.cs).

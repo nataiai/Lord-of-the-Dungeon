@@ -4,6 +4,8 @@ using UnityEngine;
 
 // Mini map: a small map in the top right all the time. M (gamepad Select): the big map, moved with the move keys / stick.
 // Shows rooms you've been in, rooms behind a door you've seen but not entered (darker), doors, and you. Made by UI.Start.
+// The room you're in is filmed live into its picture; a room you left keeps its last one.
+// A camera can't see a hidden room, so one you haven't entered stays a dark box.
 // Experimental.bigMapPauses: the big map pauses the game.
 public class MiniMap : MonoBehaviour
 {
@@ -14,6 +16,8 @@ public class MiniMap : MonoBehaviour
     [Tooltip("Big map: world units per second the move keys move it")]
     public float panSpeed = 20;
     public Vector2 miniSize = new(220,160);
+    [Tooltip("Pixels per world unit of a room's picture")]
+    public float pixelsPerUnit = 8;
     public Color current = new(1,1,1,.9f), visited = new(.6f,.6f,.6f,.8f), found = new(.3f,.3f,.3f,.6f);
     public Color door = new(1,.8f,.2f), doorDone = new(.5f,.5f,.5f), you = Color.red;
 
@@ -21,6 +25,9 @@ public class MiniMap : MonoBehaviour
     readonly HashSet<DungeonRoom> been = new();
     readonly Dictionary<DungeonRoom,UnityEngine.UI.Image> rooms = new();
     readonly Dictionary<RoomTrigger,UnityEngine.UI.Image> doors = new();
+    readonly Dictionary<DungeonRoom,RenderTexture> pictures = new();
+    Camera cam;
+    DungeonRoom filming;
     Vector2 look; // big map: how far it moved from the player
     bool open;
 
@@ -35,13 +42,18 @@ public class MiniMap : MonoBehaviour
         content.SetParent(mini, false);
         me = Box(Vector2.zero, Vector2.one*1.5f, you, "you").rectTransform;
     }
-    void OnDestroy(){if(open)Time.timeScale = 1;}
+    void OnDestroy(){
+        if(open)Time.timeScale = 1;
+        foreach(var rt in pictures.Values)rt.Release();
+        if(cam)Destroy(cam.gameObject);
+    }
 
     void Update(){
         var gm = GameManager.Instance;
         var map = gm.map;
         if(map==null || map.currentRoom==null || map.roomTrigger==null)return;
         if(been.Add(map.currentRoom))Refresh(map);
+        if(filming!=map.currentRoom)Film(map.currentRoom);
         if(gm.controller.map.isPressedOnce("minimap"))Open(!open);
         if(open){
             look += gm.controller.movement * panSpeed * Time.unscaledDeltaTime;
@@ -74,6 +86,32 @@ public class MiniMap : MonoBehaviour
             if(map.triggerMap.TryGetValue(t, out var to) && to)AddRoom(Room(to));
         }
         me.SetAsLastSibling();
+    }
+    void Film(DungeonRoom r){ // the camera films this room into its picture
+        filming = r;
+        var box = rooms[r].rectTransform;
+        if(!pictures.TryGetValue(r, out var rt)){
+            Vector2 size = box.sizeDelta*pixelsPerUnit;
+            rt = pictures[r] = new RenderTexture(Mathf.Max(1,(int)size.x), Mathf.Max(1,(int)size.y), 16);
+            var pic = new GameObject(r.name+" picture", typeof(RectTransform), typeof(UnityEngine.UI.RawImage)).GetComponent<UnityEngine.UI.RawImage>();
+            pic.transform.SetParent(content, false);
+            pic.rectTransform.anchoredPosition = box.anchoredPosition;
+            pic.rectTransform.sizeDelta = box.sizeDelta;
+            pic.texture = rt;
+            pic.raycastTarget = false;
+            pic.transform.SetSiblingIndex(rooms.Count); // over the room boxes, under doors and you
+        }
+        var main = GameManager.Instance.mainCam;
+        if(cam==null){
+            cam = new GameObject("MiniMap camera").AddComponent<Camera>();
+            cam.CopyFrom(main);
+            cam.orthographic = true;
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = Color.clear;
+        }
+        cam.targetTexture = rt;
+        cam.orthographicSize = box.sizeDelta.y/2;
+        cam.transform.position = new Vector3(box.anchoredPosition.x, box.anchoredPosition.y, main.transform.position.z);
     }
     static DungeonRoom Room(RoomTrigger t) => t.transform.parent.GetComponent<DungeonRoom>(); // like DungeonMap.switchRoom
     void AddRoom(DungeonRoom r){
