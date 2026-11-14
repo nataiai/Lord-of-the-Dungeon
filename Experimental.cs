@@ -38,7 +38,7 @@ public partial class Experimental : MonoBehaviour{ // Weapons switches: AI/Field
     [ShowIf("testWithoutChat", true)]
     public float testWithoutChatSpawnCooldown = 5f;
     [Tooltip("On: chat potions wait in the summon line with the enemies and use its cooldown. Off: their own line and cooldown (AI/ChatPotion.cs)")]
-    public bool potionSamePool = false;
+    public bool potionSamePool = true;
 
     [Header("Inspector")]
     [Tooltip("On: [PlayModeOnly] fields show (and can be edited) while playing. Off: always hidden")]
