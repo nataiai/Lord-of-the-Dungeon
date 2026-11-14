@@ -49,6 +49,7 @@ public class GameManager: MonoBehaviour{
     }
     void Update(){
         if(testWithoutChat && !Input.GetKeyDown(KeyCode.L) && tmp<Time.time){Spawn(mockEnemy);tmp = Time.time+testWithoutChatSpawnCooldown;}
+        summondb.ChatUpdate();
         var potion = summondb.GetPotionToSpawn(); // before GetToSpawn
         if(potion!=null)currentRoom.SpawnPotion(potion,playerPos,spawnRangeFromPlayer);
         var summon = summondb.GetToSpawn();
@@ -68,10 +69,11 @@ public class GameManager: MonoBehaviour{
         map.currentRoom = initRoom;
         summondb.NewRoom();
     }
-    public void TeleportSkill(int x, int y){
+    public bool TeleportSkill(float x, float y){
         if(true){ // TODO: check cooldown
             Vector2 pos = new Vector2(x,y);
-            if(map._findRoom(pos)==map.currentRoom&&Physics2D.OverlapPoint(pos)==null)player.transform.position = pos;
+            if(map.currentRoom.bounds.Contains(pos)&&Physics2D.OverlapPoint(pos)==null){player.transform.position = pos; return true;}
         }
+        return false;
     }
 }

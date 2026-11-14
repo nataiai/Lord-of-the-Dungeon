@@ -67,6 +67,12 @@ Mini map   top right all the time. M (gamepad Select): the big map, moved with t
            The room you're in is filmed live (enemies, you); a room you left keeps its last picture.
 [TWEAK]    Experimental > miniMap (off: no corner map, M still works), bigMapPauses (on: the big map pauses the game). In Play mode: UI > MiniMap scales, colors, panSpeed
 
+Teleport   chat types "teleport 3 4": the player jumps to tile 3 4 of the room (1 1 = bottom left floor tile;
+           numbers along the room's bottom and left edge show them). One request per chatter, fewest turns first.
+[TWEAK]    Summondb > Teleport Skill > Cooldown (30). Experimental > chatSkills (off: as before), teleportRoomTiles
+[SETUP]    UI > Chat Text: a TMP text. It shows what chat did ("Bob teleports you to 3 4", "Bob: 3 4 is blocked").
+           UI skill slot 3 shows the teleport cooldown. Design of all chat skills: AI/CHAT_SKILLS.md
+
 Summon     each cooldown, the chatter with the fewest turns goes first, then the oldest request (AI/ChatPotion.cs).
            e.g. A A . A B . A B . A B  (. = cooldown done)  spawns  A A B B A ...  One spammer can't make the others wait.
            A new room clears the summon and potion lines (the spawn counts stay).

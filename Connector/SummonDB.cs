@@ -22,6 +22,8 @@ public partial class SimpleSummonDB{ // summon order, potions: AI/ChatPotion.cs
     public int potionsPerRoom = 3;
     public Skill potionSkill = new(){chatType = ChatType.potion, cooldown = 10};
     public List<SummonCommand> potionQ=new();
+    public Skill teleportSkill = new(){chatType = ChatType.teleport, cooldown = 30};
+    public List<SummonCommand> teleportQ=new();
 
     public Enemy GetToSpawn(){
         if(!spawnSkill.isReady)return null;

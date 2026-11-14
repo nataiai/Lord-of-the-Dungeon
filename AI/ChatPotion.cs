@@ -19,10 +19,10 @@ public partial class SimpleSummonDB{
     }
     int Turns(SummonCommand c)=>turns.TryGetValue(c.username,out int n)?n:0;
     SummonCommand Count(SummonCommand c){turns[c.username] = Turns(c)+1; return c;}
-    public void NewRoom(){Reset();potionQ.Clear();}
+    public void NewRoom(){Reset();potionQ.Clear();teleportQ.Clear();}
 
     public void AddPotion(string username, string name){
-        var c = new SummonCommand("potion "+name.Replace("\U000E0000","").ToLowerInvariant(),username); // Chatterino adds that to a repeat
+        var c = new SummonCommand("potion "+name.ToLowerInvariant(),username);
         if(Experimental.I.potionSamePool)Add(username,c);
         else potionQ.Add(c);
     }

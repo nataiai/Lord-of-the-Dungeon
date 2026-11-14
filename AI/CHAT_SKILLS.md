@@ -344,14 +344,18 @@ Each step works alone.
 
 Test each step with one account: need is 1, so every vote closes at once.
 
-## 10. Open questions (with my pick)
+## 10. Decided by the owner
 
-1. **Teleport numbers:** room tiles with a ruler (`1 1` = bottom left), or world positions as today? *Pick: room tiles. Chatters can't know world positions.*
-2. **Magic damage:** add `EnemySO.isMagical` and tick it on Ghost, so the magic shield blocks something? *Pick: yes (3 lines + 1 asset field). If no: remove magicshield from the Chat Skills list.*
-3. **One buff at a time?** As designed the four share a cooldown. *Pick: yes. Stacking is only a `group` number change later, no code.*
-4. **Earthquake mercy rules:** (a) count invincibility frames even while `enableInvincible` is off (the timer runs either way)? (b) is a floating player safe? *Pick: yes to both. Without (a) your frames rule does nothing today; (b) fits "float evades ground impact".*
-5. **Berserk and potions:** a Health Bone walked over during berserk is used up for nothing. *Pick: keep it (0 lines). The streamer can walk around it for 15 s.*
-6. **Weapons room:** fixed until the next weapons room, also through death; nobody votes = free pick; exit closed until the vote ends. *Pick: all three as designed.*
-7. **Vote length:** 20 s. Is your stream on low latency? *Pick: 20 s on Twitch low latency; 30 s otherwise or on YouTube.*
-8. **Which skills are loot?** *Pick: `skillLoot` off while testing. For release: teleport from the start, then float (before the first pit room), earthquake, invincible, shields, berserk last.*
-9. **Player stun from the earthquake:** can't walk but can attack (today's stun), or no attacks either? *Pick: keep today's stun (0 lines).*
+1. **Teleport numbers:** room tiles with a ruler (`1 1` = bottom left). One cell is one Unity unit.
+2. **Magic damage:** yes. `EnemySO.isMagical`, so the magic shield blocks something.
+3. **Buffs stack.** Each of the four buffs is its own vote with its own cooldown (no shared group).
+4. **Earthquake:** a floating player is safe from it. (Knockback wording to confirm before step 2.)
+5. **Weapons room:** fixed until the next weapons room, also through death. The streamer has one voice too.
+   Zero votes or a tie: random.
+
+Still my picks, not asked yet: vote length 20 s, which skills are loot (`skillLoot` off for now),
+the earthquake stun on the player = today's stun (can't walk, can attack).
+
+## Built so far
+
+- Step 1, teleport: `AI/ChatSkill.cs`.

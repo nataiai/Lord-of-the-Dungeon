@@ -61,6 +61,11 @@ public partial class Experimental : MonoBehaviour{ // Weapons switches: AI/Field
     public float testWithoutChatSpawnCooldown = 5f;
     [Tooltip("On: chat potions wait in the summon line with the enemies and use its cooldown. Off: their own line and cooldown (AI/ChatPotion.cs)")]
     public bool potionSamePool = true;
+    [Tooltip("Off: teleport as before (at once, a world position), no other chat skills (AI/ChatSkill.cs)")]
+    public bool chatSkills = true;
+    [ShowIf("chatSkills", true)]
+    [Tooltip("On: \"teleport 3 4\" = tile 3 4 of the room, 1 1 = bottom left (a ruler shows the numbers). Off: a world position")]
+    public bool teleportRoomTiles = true;
 
     [Header("Inspector")]
     [Tooltip("On: [PlayModeOnly] fields show (and can be edited) while playing. Off: always hidden")]
