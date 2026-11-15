@@ -35,7 +35,7 @@ public abstract class Chat : MonoBehaviour
         switch(Categorize(msg)){
             case ChatType.summon: summondb.Add(username,new SummonCommand(words[1],username)); break;
             case ChatType.teleport: if(int.TryParse(words[1],out int x) && int.TryParse(words[2],out int y))GameManager.Instance.TeleportSkill(x,y); break;
-            case ChatType.potion: ChatPotion.Add(summondb,username,words.Length>1?words[1]:""); break;
+            case ChatType.potion: summondb.AddPotion(username,words.Length>1?words[1]:""); break;
             default: ChatSkill.Cast(summondb.skills,username,Categorize(msg),msg); break;
         }
     }
