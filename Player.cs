@@ -189,11 +189,12 @@ public class Player : Character
         base.recieveDamage(dmg,isMagical);
         SoundPlayer.PlaySound(SoundPlayer.instance.sd_player_hit);
         if(enableInvincible && isInvincible)return;
+        if(Has(BuffType.invincible | (isMagical?BuffType.magicShield:BuffType.physicalShield)))return;
         HP-=dmg;
         invincibleTime = invincibleCooldownTime+Time.time;
     }
     public override void receiveKnockback(Vector2 pos,float force){
-        if(enableInvincible && isInvincible)return;
+        if(enableInvincible && isInvincible || Has(BuffType.invincible))return;
         receiveKnockback(pos,force,knockbackResistance);
     }
 }

@@ -64,7 +64,8 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
         stunTime = Time.time + 1;
     }
 
-    public virtual void Heal(int heal=1){HP+=heal;if(HP>maxHP)HP=maxHP;}
+    public bool Has(BuffType t){foreach(var b in GetComponents<BuffEffect>())if((b.buff.type&t)!=0)return true; return false;}
+    public virtual void Heal(int heal=1){if(Has(BuffType.berserk))return; HP+=heal;if(HP>maxHP)HP=maxHP;}
     [PlayModeOnly] public bool isHealing;
     public void HealWithEffect(int amount){
         Heal(amount);

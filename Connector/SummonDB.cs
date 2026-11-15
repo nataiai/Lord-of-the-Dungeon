@@ -10,18 +10,47 @@ public class SummonCommand{
     }
 }
 
+// chat requests, one per cooldown: the chatter with the fewest turns first, then the oldest
 [System.Serializable]
-public partial class SimpleSummonDB{ // summon order, potions: AI/ChatPotion.cs
-    public List<Enemy> summonableEnemy;
-    public int limitPerPlayer = 10;
+public class ChatLine{
     public Skill spawnSkill;
     public List<SummonCommand> summonQ=new();
-    public List<EnemySO> unlocked=new();
     int indexQ=0;
-    public List<Loot> potions=new();
-    public int potionsPerRoom = 3;
-    public Skill potionSkill = new(){chatType = ChatType.potion, cooldown = 10};
-    public List<SummonCommand> potionQ=new();
+    Dictionary<string,int> turns=new(); // per chatter
+
+    public void Reset(){summonQ.Clear();indexQ=0;}
+    public void Add(string name,SummonCommand command){
+        if(summonQ.Count>300)Reset();
+        summonQ.Add(command);
+    }
+    // whose turn it is (moved to summonQ[indexQ]), or null
+    public SummonCommand Next(){
+        if(summonQ.Count<=indexQ)return null;
+        int best = indexQ;
+        for(int i=indexQ+1;i<summonQ.Count;i++)if(Turns(summonQ[i])<Turns(summonQ[best]))best = i;
+        var c = summonQ[best];
+        summonQ.RemoveAt(best);
+        summonQ.Insert(indexQ,c);
+        return c;
+    }
+    // Next, and it's done: counts a turn
+    public SummonCommand Take(){
+        var c = Next();
+        if(c==null)return null;
+        indexQ++;
+        turns[c.username] = Turns(c)+1;
+        return c;
+    }
+    int Turns(SummonCommand c)=>turns.TryGetValue(c.username,out int n)?n:0;
+}
+
+[System.Serializable]
+public class SimpleSummonDB : ChatLine{
+    public List<Enemy> summonableEnemy;
+    public int limitPerPlayer = 10;
+    public List<EnemySO> unlocked=new();
+    public ChatPotion potion=new();
+    public List<ChatSkill> skills = ChatSkill.Defaults();
 
     public Enemy GetToSpawn(){
         if(!spawnSkill.isReady)return null;
@@ -29,12 +58,13 @@ public partial class SimpleSummonDB{ // summon order, potions: AI/ChatPotion.cs
         if(output!=null)spawnSkill.Call();
         return output;
     }
-    public void Reset(){summonQ.Clear();indexQ=0;}
-    public void Add(string name,SummonCommand command){
-        if(summonQ.Count>300)Reset();
-        summonQ.Add(command);
+    public void NewRoom(){Reset();potion.Reset();}
+    public void AddPotion(string username, string name)=>potion.Add(this,username,name);
+    public Loot GetPotionToSpawn()=>potion.Pop(this); // before GetToSpawn
+    public Enemy _Pop(){
+        var c = Take();
+        return c==null?null:getEnemy(c.spawnableName);
     }
-    public Enemy _Pop()=>summonQ.Count>indexQ?getEnemy(Count(Next(summonQ,indexQ++)).spawnableName):null;
     public void Unlock(EnemySO e){if(!unlocked.Contains(e))unlocked.Add(e);}
     public Enemy getEnemy(string enemyName){
         string n = enemyName.ToLowerInvariant().Trim();
