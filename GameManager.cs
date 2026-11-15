@@ -50,7 +50,7 @@ public class GameManager: MonoBehaviour{
     void Update(){
         if(testWithoutChat && !Input.GetKeyDown(KeyCode.L) && tmp<Time.time){Spawn(mockEnemy);tmp = Time.time+testWithoutChatSpawnCooldown;}
         ChatSkill.Keys(summondb.skills); // test keys 1-6
-        var potion = summondb.GetPotionToSpawn(); // before GetToSpawn
+        var potion = ChatPotion.Pop(summondb); // before GetToSpawn
         if(potion!=null)currentRoom.SpawnPotion(potion,playerPos,spawnRangeFromPlayer);
         var summon = summondb.GetToSpawn();
         if(!testWithoutChat && summon!=null)Spawn(summon);
@@ -67,7 +67,7 @@ public class GameManager: MonoBehaviour{
         map.currentRoom.gameObject.SetActive(false);
         initRoom.gameObject.SetActive(true);
         map.currentRoom = initRoom;
-        summondb.NewRoom();
+        ChatPotion.NewRoom(summondb);
     }
     public void TeleportSkill(int x, int y){
         if(true){ // TODO: check cooldown

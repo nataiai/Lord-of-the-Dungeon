@@ -39,7 +39,7 @@ public class DungeonMap : MonoBehaviour // only currentRoom is active
         foreach(var p in FindObjectsByType<Player>(FindObjectsSortMode.None))p.roomEntryPos = p.transform.position;
         GameManager.Instance.UpdateMusic();
         PathFinding.Invalidate();
-        GameManager.Instance.summondb.NewRoom();
+        ChatPotion.NewRoom(GameManager.Instance.summondb);
     }
     public DungeonRoom _findRoom(Vector2 pos){ // buggy, use with care
         foreach(var r in allRooms)if(r.bounds.Contains(pos))return r;

@@ -99,4 +99,4 @@ ShowIf     AI/ShowIf.cs: [ShowIf("skill", WeaponSkill.Big)] on a field = Inspect
            Several on one field: all must match. Experimental > Inspector > useShowIf off: every field shows.
 
 Chat skill a new one: a ChatType at the END of the enum (saved as numbers), a row in Chat.commands,
-           a case in Chat.addToDB. Queued ones: like potions (AI/ChatPotion.cs AddPotion / GetPotionToSpawn).
+           a case in Chat.addToDB. Queued ones: like potions (AI/ChatPotion.cs Add / Pop).
