@@ -67,7 +67,7 @@ public class GameManager: MonoBehaviour{
         map.currentRoom.gameObject.SetActive(false);
         initRoom.gameObject.SetActive(true);
         map.currentRoom = initRoom;
-        ChatPotion.NewRoom(summondb);
+        summondb.NewRoom();
     }
     public void TeleportSkill(int x, int y){
         if(true){ // TODO: check cooldown
