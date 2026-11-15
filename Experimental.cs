@@ -66,6 +66,9 @@ public partial class Experimental : MonoBehaviour{ // Weapons switches: AI/Field
     [ShowIf("chatSkills", true)]
     [Tooltip("On: \"teleport 3 4\" = tile 3 4 of the room, 1 1 = bottom left (a ruler shows the numbers). Off: a world position")]
     public bool teleportRoomTiles = true;
+    [ShowIf("chatSkills", true)]
+    [Tooltip("Test: keys 1-6 cast berserk, invincible, magic shield, physical shield, float, earthquake (Summondb > Skills order)")]
+    public bool skillKeys = true;
 
     [Header("Inspector")]
     [Tooltip("On: [PlayModeOnly] fields show (and can be edited) while playing. Off: always hidden")]

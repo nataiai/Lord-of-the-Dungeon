@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// Chat skills (design: AI/CHAT_SKILLS.md). On/off: Experimental.chatSkills.
+// Chat skills. On/off: Experimental.chatSkills. Experimental.skillKeys: keys 1-6 cast them, for testing.
 // Teleport: "teleport 3 4" = tile 3 4 of the room (1 1 = its bottom left floor tile; a ruler on the room's edge shows the numbers).
 // One request per chatter, the fair line (the chatter with the fewest turns first), teleportSkill's cooldown.
 // Buff words (berserk, invincible, magicshield, physicalshield, floating; 3+ letters): the buff goes on the player. Summondb > Skills
@@ -42,6 +42,9 @@ public partial class SimpleSummonDB{
         var gm = GameManager.Instance;
         if(!Experimental.I.chatSkills || gm.map==null || gm.currentRoom==null)return;
         if(Experimental.I.teleportRoomTiles)Ruler(gm.currentRoom);
+        var keys = UnityEngine.InputSystem.Keyboard.current;
+        if(Experimental.I.skillKeys && keys!=null)for(int i=0;i<skills.Count && i<9;i++)
+            if(keys[UnityEngine.InputSystem.Key.Digit1+i].wasPressedThisFrame)Call("keys", skills[i].chatType, "key"); // as a chatter would
         if(teleportQ.Count==0 || !teleportSkill.isReady || !gm.player.enabled || InDoorway(gm.player))return; // falling, in a doorway: it waits
         var c = Count(Next(teleportQ,0));
         teleportQ.RemoveAt(0);
