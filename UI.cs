@@ -17,7 +17,7 @@ public class UI : MonoBehaviour
     [UnityEngine.Serialization.FormerlySerializedAs("d_textBox")]
     public GameObject enemyNameTextbox; 
     public GameObject dialogueTextbox;
-    [Tooltip("What chat did (it can't be answered in chat): \"Bob teleports you to 3 4\"")]
+    [Tooltip("What chat did (it can't be answered in chat): \"Bob: berserk!\"")]
     public TMP_Text chatText;
     TMP_Text dialogueTextLabel;
     string[] dialogueTextToShow;
@@ -58,7 +58,7 @@ public class UI : MonoBehaviour
             rightCharge.fillAmount=player.rWeapon.getChargePercent();
         }
         UpdateSkill();
-        if(chatText)chatText.text = GameManager.Instance.summondb.ChatText();
+        if(chatText)chatText.text = ChatSkill.Text();
         UpdateDialogue();
     }
 
@@ -80,7 +80,7 @@ public class UI : MonoBehaviour
     public void UpdateHP(int HP){for(int i=0;i<heart.Count;i++)heart[i].sprite = healthSprite[i<HP?0:1];}
     public void UpdateSkill(){
         var db = GameManager.Instance.summondb;
-        Skill[] skill = {db.spawnSkill, Experimental.I.potionSamePool?db.spawnSkill:db.potionSkill, db.teleportSkill}; // summon, potion, teleport
+        Skill[] skill = {db.spawnSkill, Experimental.I.potionSamePool?db.spawnSkill:db.potionSkill}; // summon, potion
         for(int i=0;i<skillsReload.Count && i<skill.Length;i++)skillsReload[i].fillAmount=skill[i].getReloadPercent();
     }
     public void UpdateWeap(){

@@ -61,11 +61,8 @@ public partial class Experimental : MonoBehaviour{ // Weapons switches: AI/Field
     public float testWithoutChatSpawnCooldown = 5f;
     [Tooltip("On: chat potions wait in the summon line with the enemies and use its cooldown. Off: their own line and cooldown (AI/ChatPotion.cs)")]
     public bool potionSamePool = true;
-    [Tooltip("Off: teleport as before (at once, a world position), no other chat skills (AI/ChatSkill.cs)")]
+    [Tooltip("Off: chat skill words (berserk, float, earthquake...) do nothing (AI/ChatSkill.cs)")]
     public bool chatSkills = true;
-    [ShowIf("chatSkills", true)]
-    [Tooltip("On: \"teleport 3 4\" = tile 3 4 of the room, 1 1 = bottom left (a ruler shows the numbers). Off: a world position")]
-    public bool teleportRoomTiles = true;
     [ShowIf("chatSkills", true)]
     [Tooltip("Test: keys 1-6 cast berserk, invincible, magic shield, physical shield, float, earthquake (Summondb > Skills order)")]
     public bool skillKeys = true;

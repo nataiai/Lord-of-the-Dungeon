@@ -67,12 +67,6 @@ Mini map   top right all the time. M (gamepad Select): the big map, moved with t
            The room you're in is filmed live (enemies, you); a room you left keeps its last picture.
 [TWEAK]    Experimental > miniMap (off: no corner map, M still works), bigMapPauses (on: the big map pauses the game). In Play mode: UI > MiniMap scales, colors, panSpeed
 
-Teleport   chat types "teleport 3 4": the player jumps to tile 3 4 of the room (1 1 = bottom left floor tile;
-           numbers along the room's bottom and left edge show them). One request per chatter, fewest turns first.
-[TWEAK]    Summondb > Teleport Skill > Cooldown (30). Experimental > chatSkills (off: as before), teleportRoomTiles
-[SETUP]    UI > Chat Text: a TMP text. It shows what chat did ("Bob teleports you to 3 4", "Bob: 3 4 is blocked").
-           UI skill slot 3 shows the teleport cooldown.
-
 Chat buffs chat types berserk / invincible / magicshield / physicalshield (3+ letters, "ber" works): the buff goes on the player.
              berserk     attack x2 at full HP up to x4, no healing (15 s)
              invincible  no damage, no knockback (10 s)
@@ -82,6 +76,7 @@ Chat buffs chat types berserk / invincible / magicshield / physicalshield (3+ le
              never pushed; not stunned while invincible (buff, or the frames after a hit) or floating. No enemies: no cast
 [TWEAK]    Summondb > Skills: each word's Cooldown and Buff (duration, effect prefab), Knockback (earthquake). One chatter casts for now
 [TWEAK]    Experimental > skillKeys: keys 1-6 cast them (test, cooldowns still count)
+[SETUP]    UI > Chat Text: a TMP text. It shows what chat did ("Bob: berserk!")
 
 Summon     each cooldown, the chatter with the fewest turns goes first, then the oldest request (AI/ChatPotion.cs).
            e.g. A A . A B . A B . A B  (. = cooldown done)  spawns  A A B B A ...  One spammer can't make the others wait.
