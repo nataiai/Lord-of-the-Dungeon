@@ -67,18 +67,18 @@ Mini map   top right all the time. M (gamepad Select): the big map, moved with t
            The room you're in is filmed live (enemies, you); a room you left keeps its last picture.
 [TWEAK]    Experimental > miniMap (off: no corner map, M still works), bigMapPauses (on: the big map pauses the game). In Play mode: UI > MiniMap scales, colors, panSpeed
 
-Summon     each cooldown, the chatter with the fewest turns goes first, then the oldest request (AI/ChatPotion.cs).
+Summon     each cooldown, the chatter with the fewest turns goes first, then the oldest request (ChatLine in Connector/SummonDB.cs).
            e.g. A A . A B . A B . A B  (. = cooldown done)  spawns  A A B B A ...  One spammer can't make the others wait.
            A new room clears the summon and potion lines (the spawn counts stay).
 
 Potions    chat types "potion" (the first one) or "potion health" (how its name starts): it appears near the player.
            A room gets a few, ever (coming back doesn't refill). Full: the request is dropped.
-[SETUP]    TwitchChat > Summondb > Potions: Loot prefabs (Loot Type = Instant Item, Instant Item = HealthBone, a sprite).
+[SETUP]    TwitchChat > Summondb > Potion > Potions: Loot prefabs (Loot Type = Instant Item, Instant Item = HealthBone, a sprite).
            It slides out like dropped loot
-[TWEAK]    Summondb > Potions Per Room (3)
+[TWEAK]    Summondb > Potion > Potions Per Room (3)
            UI: skill slot 2 (the 2nd child of Skill Slot) shows the potion cooldown, like slot 1 shows summon
 [TWEAK]    Experimental > Chat > potionSamePool
-             off  own line, Summondb > Potion Skill > Cooldown (10)
+             off  own line, Summondb > Potion > Spawn Skill > Cooldown (10)
              on   waits in the summon line with the enemies, uses Spawn Skill's cooldown
 
 
@@ -88,4 +88,4 @@ ShowIf     AI/ShowIf.cs: [ShowIf("skill", WeaponSkill.Big)] on a field = Inspect
            Several on one field: all must match. Experimental > Inspector > useShowIf off: every field shows.
 
 Chat skill a new one: a ChatType at the END of the enum (saved as numbers), a row in Chat.commands,
-           a case in Chat.addToDB. Queued ones: like potions (AI/ChatPotion.cs AddPotion / GetPotionToSpawn).
+           a case in Chat.addToDB. Queued ones: a ChatLine child, like AI/ChatPotion.cs.

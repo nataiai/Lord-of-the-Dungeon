@@ -20,6 +20,7 @@ The owner reads code outside `AI/`; inside `AI/` they barely look.
   (UI code in `UI.cs` like `leftFill`, charge logic in `AI/WeaponCharge.cs`, etc.).
   Only logic with no such place goes in `AI/`, with a one-line hook in the owner's files.
 - "Least code" = less logic, not cramming lines.
+- Avoid partial classes across files; use public members instead.
 - Reuse and generalise: call existing functions/classes first; for duplicate code make a shared
   function, a base/child class or an interface instead of writing it again.
 - Keep default usings (`System.Collections`, `System.Collections.Generic`, `UnityEngine`).

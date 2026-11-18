@@ -77,7 +77,7 @@ public class UI : MonoBehaviour
     public void UpdateHP(int HP){for(int i=0;i<heart.Count;i++)heart[i].sprite = healthSprite[i<HP?0:1];}
     public void UpdateSkill(){
         var db = GameManager.Instance.summondb;
-        Skill[] skill = {db.spawnSkill, Experimental.I.potionSamePool?db.spawnSkill:db.potionSkill}; // summon, potion
+        Skill[] skill = {db.spawnSkill, Experimental.I.potionSamePool?db.spawnSkill:db.potion.spawnSkill}; // summon, potion
         for(int i=0;i<skillsReload.Count && i<skill.Length;i++)skillsReload[i].fillAmount=skill[i].getReloadPercent();
     }
     public void UpdateWeap(){
