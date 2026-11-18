@@ -67,6 +67,21 @@ Mini map   top right all the time. M (gamepad Select): the big map, moved with t
            The room you're in is filmed live (enemies, you); a room you left keeps its last picture.
 [TWEAK]    Experimental > miniMap (off: no corner map, M still works), bigMapPauses (on: the big map pauses the game). In Play mode: UI > MiniMap scales, colors, panSpeed
 
+Chat buffs chat types berserk / invincible / magicshield / physicalshield (3+ letters, "ber" works): the buff goes on the player.
+             berserk     attack x2 at full HP up to x4, no healing (15 s)
+             invincible  no damage, no knockback (10 s)
+             shields     block magic / physical damage (15 s). Enemy data > isMagical: its touch is magic (Ghost)
+             floating    holes don't take the player (10 s); if it ends over a hole, the player falls
+           earthquake / quake: every enemy of the room is stunned (3 s) and pushed away. The player is stunned too,
+             never pushed; not stunned while invincible (buff, or the frames after a hit) or floating. No enemies: no cast
+           A vote: it casts when need chatters typed the word within 20 s of the first one. Typing it again does nothing.
+             need = crowdNeed x sqrt(chatters with a command in the last 2 min), at least 1 (1-2: 1, 3-6: 2, 7-12: 3, 100: 10)
+             Time up: nothing, no cooldown used. On cooldown: no votes. Several skills can be voted at once
+[TWEAK]    Summondb > Berserk / Invincible / Magic Shield / Physical Shield / Floating / Earthquake: Cooldown,
+             Buff (duration, effect prefab). Earthquake: Knockback too
+[TWEAK]    Experimental > crowdNeed (1; 0 = one chatter is enough), skillKeys: keys 1-6 cast them (test, one voice: "keys")
+[SETUP]    UI > Chat Text: a TMP text. It shows the votes ("berserk 1/2 +Ann 9s") and what chat did ("Ann +1: berserk!")
+
 Summon     each cooldown, the chatter with the fewest turns goes first, then the oldest request (ChatLine in Connector/SummonDB.cs).
            e.g. A A . A B . A B . A B  (. = cooldown done)  spawns  A A B B A ...  One spammer can't make the others wait.
            A new room clears the summon and potion lines (the spawn counts stay).
@@ -89,3 +104,4 @@ ShowIf     AI/ShowIf.cs: [ShowIf("skill", WeaponSkill.Big)] on a field = Inspect
 
 Chat skill a new one: a ChatType at the END of the enum (saved as numbers), a row in Chat.commands,
            a case in Chat.addToDB. Queued ones: a ChatLine child, like AI/ChatPotion.cs.
+           Voted ones: a ChatSkill child (AI/ChatSkill.cs, override Cast), a Summondb field, in Summondb.skills.
