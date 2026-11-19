@@ -93,28 +93,28 @@ public class Floating : ChatSkill{
         p.rb.sleepMode = RigidbodySleepMode2D.NeverSleep; // so it falls when the float ends over a hole
     }
 }
-// earthquake / quake: its stun goes on every enemy of the room, then shakes push them all at once, each a random way.
-// The player is stunned too, unless invincible (buff or the frames after a hit) or floating. Never pushed.
+// earthquake / quake: its stun goes on every enemy of the room and the player, then shakes push them all at once,
+// each a random way. Not the player while invincible (buff or the frames after a hit) or floating.
 [System.Serializable]
 public class Earthquake : ChatSkill{
-    [Tooltip("How hard each shake pushes the enemies, each a random way")]
+    [Tooltip("How hard each shake pushes the enemies and the player, each a random way")]
     public float knockback = 6;
-    [Tooltip("How many shakes: all enemies pushed at once, the first right away")]
-    public int shakes = 3;
+    [Tooltip("How many shakes: all pushed at once, the first right away")]
+    public int shakes = 30;
     [Tooltip("Seconds the shakes are spread over")]
     public float shakeTime = 1.5f;
     public Earthquake(){Set(ChatType.earthquake, BuffType.stun, 3);}
     public override bool CanCast()=>Enemies().Length>0; // no enemies: it would only stun the player
     public override void Cast(Player p){
-        var enemies = Enemies();
-        foreach(var e in enemies)buff.CopyTo(e.gameObject);
-        p.StartCoroutine(Shake(enemies));
+        var shaken = new List<Character>(Enemies());
         bool immune = Experimental.I.enableInvincible && p.isInvincible || p.Has(BuffType.invincible|BuffType.floating);
-        if(!immune)base.Cast(p);
+        if(!immune)shaken.Add(p);
+        foreach(var c in shaken)buff.CopyTo(c.gameObject);
+        p.StartCoroutine(Shake(shaken));
     }
-    IEnumerator Shake(Enemy[] enemies){
+    IEnumerator Shake(List<Character> shaken){
         for(int i=0;i<shakes;i++){
-            foreach(var e in enemies)if(e)e.receiveKnockback((Vector2)e.transform.position-Random.insideUnitCircle.normalized, knockback);
+            foreach(var c in shaken)if(c)c.receiveKnockback((Vector2)c.transform.position-Random.insideUnitCircle.normalized, knockback);
             yield return new WaitForSeconds(shakeTime/shakes);
         }
     }

@@ -80,10 +80,12 @@ public class Enemy : Character
         movement = target - center;
         if(facesPlayer && canFace && Mathf.Abs(movement.x)>0.01f)sr.flipX = (movement.x<0) != spriteFacesLeft;
         if(movement.magnitude<enemyData.noticeRange)notice=true;
-        if(notice){
-            way = enemyData.ignoreCollide ? movement.normalized : PathFinding.Direction(center,target,GameManager.Instance.currentRoom.bounds,col); // ghosts go straight
+        Vector2 goal = notice ? target : home+center-(Vector2)transform.position; // not seen you: back home (after an earthquake)
+        if(notice || (goal-center).magnitude>.1f){
+            way = enemyData.ignoreCollide ? (goal-center).normalized : PathFinding.Direction(center,goal,GameManager.Instance.currentRoom.bounds,col); // ghosts go straight
             rb.velocity = Vector2.ClampMagnitude(way + PathFinding.Separation(col, LayerMask.GetMask("Enemy")), 1) * enemyData.initSpeed;
         }
+        else rb.velocity = Vector2.zero; // home
         setAnimFacing(movement.normalized);
     }
 
