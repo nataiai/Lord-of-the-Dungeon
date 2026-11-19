@@ -107,8 +107,11 @@ Potions    chat types "potion" (the first one) or "potion health" (how its name 
 Weapons    chat votes the player's right hand: "vote 2" or "vote spear" (again = move your vote), 30 s, while you're in the room.
 room       Time up: the streamer's vote is last (the spot they stand at). Tie or no votes: random. The winner stays in the
            right hand (no swap, no throw) until the next weapons room, also through death. The old one drops on its spot.
-[SETUP]    An object inside the room + WeaponRoom (AI/WeaponRoom.cs): Weapons (not keys), Spots (optional: a SpriteRenderer per
-           weapon, on pedestal art with its number), On Voted (e.g. the exit Door's OpenDoor). UI > Vote Text: a TMP text
+           UI > Chat Text shows it: RIGHT HAND  1 sword 4 · 2 spear 2  22s
+[SETUP]    DungeonRoom > Room Type = weapons, then its Weapon Room: Weapons (not keys), Spots (optional: a SpriteRenderer per
+           weapon, on pedestal art with its number), On Voted (e.g. the exit Door's OpenDoor). Music: SoundPlayer's lists
+[TWEAK]    Weapon Room > Vote > Method: plurality (the most votes) or runoff (ranked "vote 2 3": the fewest drop out until
+           one has over half), Time (30)
 
 
 # Dev (code only)
@@ -122,3 +125,5 @@ Chat skill a new one: a ChatType at the END of the enum (saved as numbers), a ro
            a Summondb field, in Summondb.skills. No case in addToDB: ChatSkill.Read votes.
 
 Sprite     Character.bodySprite: the SpriteRenderer you see (it skips empty ones). Use it, not GetComponentInChildren.
+Vote       AI/ChatVote.cs: every chat vote (skills, weapons room). Open(title, options, need, onEnd), Ballot, Winner by
+           Method (new methods: VoteMethod at the end + a case in Winner). UI: ChatVote.open, each vote's fields or Text().

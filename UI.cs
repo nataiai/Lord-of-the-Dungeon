@@ -19,8 +19,6 @@ public class UI : MonoBehaviour
     public GameObject dialogueTextbox;
     [Tooltip("What chat did and its open votes (it can't be answered in chat): \"Bob: berserk!\" \"berserk 1/2 +Bob 9s\"")]
     public TMP_Text chatText;
-    [Tooltip("The weapons room vote: \"RIGHT HAND  1 sword 4 · 2 spear 2  22s\"")]
-    public TMP_Text voteText;
     TMP_Text dialogueTextLabel;
     string[] dialogueTextToShow;
     public float dialogueSpeed = 30; // typewriter: letters per second
@@ -61,7 +59,6 @@ public class UI : MonoBehaviour
         }
         UpdateSkill();
         if(chatText)chatText.text = ChatSkill.Text();
-        if(voteText)voteText.text = WeaponRoom.Text();
         UpdateDialogue();
     }
 
