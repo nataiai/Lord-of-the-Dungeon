@@ -12,9 +12,8 @@ public class ChatSkill : Skill{
     const float voteTime = 20, activeTime = 120;
     static Dictionary<string,float> seen = new(); // chatter: their last command
     static string said = ""; static float saidAt;
-    float testTime; // its duration in this file (Experimental.testSkillTimes)
     protected void Set(ChatType word, BuffType type, float duration, float cooldown=5){ //test: 60, floating 30, earthquake 45
-        chatType = word; this.cooldown = cooldown; buff = new(){type = type, duration = duration}; testTime = duration;
+        chatType = word; this.cooldown = cooldown; buff = new(){type = type, duration = duration};
     }
     // what it does: its buff on the player. A skill can change it
     public virtual void Cast(Player p){buff.CopyTo(p.gameObject);}
@@ -35,7 +34,6 @@ public class ChatSkill : Skill{
     // Chat.addToDB: a vote. On cooldown: no votes
     public static void Vote(ChatSkill[] skills, string username, ChatType type, string msg){
         var s = System.Array.Find(skills, x=>x.chatType==type);
-        if(s!=null && Experimental.I.testSkillTimes){s.cooldown = 5; s.buff.duration = s.testTime;} // test: this file's times, not Summondb's
         if(!Experimental.I.chatSkills || s==null || msg.Trim().Length<3 || !s.isReady || !s.CanCast())return; // "b" or "i" alone is no cast
         s.AddVote(username);
     }
