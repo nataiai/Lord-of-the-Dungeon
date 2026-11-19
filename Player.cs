@@ -89,6 +89,7 @@ public class Player : Character
     [PlayModeOnly] public float invincibleTime;
     public bool isInvincible => invincibleTime>Time.time;
     [PlayModeOnly] public bool forceAnim;
+    [PlayModeOnly] public Vector2 forceWalk; // not zero: walks this way, not the controller's (weapons room)
     [Tooltip("Fall down animation when it falls in a hole (a state with this clip's name in its Animator). Empty: it shrinks away")]
     public AnimationClip fallClip;
     [PlayModeOnly] public Vector2 roomEntryPos;
@@ -103,7 +104,7 @@ public class Player : Character
     }
     void Update(){
         if(HP<=0)Died();
-        movement = Vector2.ClampMagnitude(controller.movement,1);
+        movement = Vector2.ClampMagnitude(forceWalk!=Vector2.zero ? forceWalk : controller.movement,1);
         if(Experimental.I.stopMoveOnAttack && attackState)movement = Vector2.zero;
         if(Experimental.I.lookFollowMovement){if(isMoving)looking = movement;}
         else if(controller.looking.magnitude>0)looking = controller.looking;

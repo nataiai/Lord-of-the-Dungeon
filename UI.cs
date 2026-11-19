@@ -19,6 +19,8 @@ public class UI : MonoBehaviour
     public GameObject dialogueTextbox;
     [Tooltip("What chat did and its open votes (it can't be answered in chat): \"Bob: berserk!\" \"berserk 1/2 +Bob 9s\"")]
     public TMP_Text chatText;
+    [Tooltip("Who's next in the summon and potion lines, at the screen edge: \"next: Bob skeleton, Ann potion\"")]
+    public TMP_Text queueText;
     TMP_Text dialogueTextLabel;
     string[] dialogueTextToShow;
     public float dialogueSpeed = 30; // typewriter: letters per second
@@ -59,6 +61,7 @@ public class UI : MonoBehaviour
         }
         UpdateSkill();
         if(chatText)chatText.text = ChatSkill.Text();
+        if(queueText)UpdateQueue();
         UpdateDialogue();
     }
 
@@ -83,6 +86,12 @@ public class UI : MonoBehaviour
         var skill = new List<Skill>{db.spawnSkill, Experimental.I.potionSamePool?db.spawnSkill:db.potion.spawnSkill}; // summon, potion
         skill.AddRange(db.skills); // chat skills: slot 3 on
         for(int i=0;i<skillsReload.Count && i<skill.Count;i++)skillsReload[i].fillAmount=skill[i].getReloadPercent();
+    }
+    public void UpdateQueue(){
+        var db = GameManager.Instance.summondb;
+        var next = db.Preview(3);
+        next.AddRange(db.potion.Preview(2));
+        queueText.text = next.Count>0 ? "next: "+string.Join(", ", next.ConvertAll(c=>c.username+" "+c.spawnableName)) : "";
     }
     public void UpdateWeap(){
         if(player.lWeapon.weapon!=null)wepImages[0].sprite = player.lWeapon.weapon.uiWep;

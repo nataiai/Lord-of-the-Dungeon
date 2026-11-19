@@ -69,6 +69,8 @@ public partial class Experimental : MonoBehaviour{ // Weapons switches: AI/Field
     [ShowIf("chatSkills", true)]
     [Tooltip("Skill votes need this x sqrt(chatters with a command in the last 2 min), at least 1. 0 = one is enough")]
     public float crowdNeed = 1;
+    [Tooltip("Weapons room: the weapons chat didn't pick vanish. Off: they stay as loot, for the left hand")]
+    public bool destroyUnpicked = true;
 
     [Header("Inspector")]
     [Tooltip("On: [PlayModeOnly] fields show (and can be edited) while playing. Off: always hidden")]

@@ -33,8 +33,7 @@ public class ChatLine{
     // whose turn it is (moved to summonQ[indexQ]), or null
     public SummonCommand Next(){
         if(summonQ.Count<=indexQ)return null;
-        int best = indexQ;
-        for(int i=indexQ+1;i<summonQ.Count;i++)if(Turns(summonQ[i])<Turns(summonQ[best]))best = i;
+        int best = Fewest(summonQ, indexQ, Turns);
         var c = summonQ[best];
         summonQ.RemoveAt(best);
         summonQ.Insert(indexQ,c);
@@ -49,6 +48,24 @@ public class ChatLine{
         return c;
     }
     int Turns(SummonCommand c)=>turns.TryGetValue(c.username,out int n)?n:0;
+    static int Fewest(List<SummonCommand> q, int from, System.Func<SummonCommand,int> turns){ // the first with the fewest turns
+        int best = from;
+        for(int i=from+1;i<q.Count;i++)if(turns(q[i])<turns(q[best]))best = i;
+        return best;
+    }
+    // the next n, in order, without taking them (for the UI)
+    public List<SummonCommand> Preview(int n){
+        var wait = summonQ.GetRange(indexQ, summonQ.Count-indexQ);
+        var more = new Dictionary<string,int>(); // turns they get on the way
+        int Score(SummonCommand c)=>Turns(c)+(more.TryGetValue(c.username, out int m) ? m : 0);
+        var next = new List<SummonCommand>();
+        while(next.Count<n && wait.Count>0){
+            var c = wait[Fewest(wait, 0, Score)];
+            next.Add(c); wait.Remove(c);
+            more.TryGetValue(c.username, out int had); more[c.username] = had+1;
+        }
+        return next;
+    }
 }
 
 [System.Serializable]
@@ -75,7 +92,9 @@ public class SimpleSummonDB : ChatLine{
     public Loot GetPotionToSpawn()=>potion.Pop(this); // before GetToSpawn
     public Enemy _Pop(){
         var c = Take();
-        return c==null?null:getEnemy(c.spawnableName);
+        var e = c==null?null:getEnemy(c.spawnableName);
+        if(e)ChatFeed.Add(c.username, "summoned "+c.spawnableName);
+        return e;
     }
     public void Unlock(EnemySO e){if(!unlocked.Contains(e))unlocked.Add(e);}
     public Enemy getEnemy(string enemyName){

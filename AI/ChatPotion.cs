@@ -26,6 +26,7 @@ public class ChatPotion : ChatLine
         var p = potions.Find(x=>x && x.name.ToLowerInvariant().StartsWith(name));
         if(p==null || GameManager.Instance.currentRoom.potionsSpawned>=potionsPerRoom)return null; // no cooldown used
         line.spawnSkill.Call();
+        ChatFeed.Add(c.username, "sent a potion");
         return p;
     }
 }

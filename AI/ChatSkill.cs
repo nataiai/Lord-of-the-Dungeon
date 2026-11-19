@@ -11,7 +11,6 @@ public class ChatSkill : Skill{
     const float voteTime = 20, activeTime = 120;
     ChatVote vote = new(){time = voteTime};
     static Dictionary<string,float> seen = new(); // chatter: their last command
-    static string said = ""; static float saidAt;
     protected void Set(ChatType word, BuffType type, float duration, float cooldown=5){ //test: 60, floating 30, earthquake 45
         chatType = word; this.cooldown = cooldown; buff = new(){type = type, duration = duration};
     }
@@ -32,7 +31,7 @@ public class ChatSkill : Skill{
     }
 
     // UI.chatText: what chat did and the open votes. Chat can't be answered, the screen can
-    public static string Text()=>((Time.time<saidAt+4 ? said : "")+"\n"+ChatVote.Texts()).Trim();
+    public static string Text()=>(ChatFeed.Text()+"\n"+ChatVote.Texts()).Trim();
     // Chat.addToDB: a command makes the chatter active; a skill word (3+ letters, "F" isn't one) is a vote
     public static void Read(ChatSkill[] skills, string username, ChatType type, string msg){
         if(type!=ChatType.invalid && (msg.Trim().Length>=3 || !System.Array.Exists(skills, x=>x.chatType==type)))seen[username] = Time.time;
@@ -49,8 +48,7 @@ public class ChatSkill : Skill{
         if(!vote.Ballot(username, "1"))return;
         Call();
         Cast(GameManager.Instance.player);
-        said = vote.first+(vote.voters>1 ? " +"+(vote.voters-1) : "")+": "+chatType+"!"; // Ann +2: earthquake!
-        saidAt = Time.time;
+        ChatFeed.Add(vote.first+(vote.voters>1 ? " +"+(vote.voters-1) : ""), "cast "+chatType); // Ann +2 cast earthquake
     }
     // crowdNeed x sqrt(chatters with a command in the last 2 min), at least 1
     static int Need(){

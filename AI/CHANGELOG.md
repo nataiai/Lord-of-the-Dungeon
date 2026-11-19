@@ -86,7 +86,9 @@ Chat buffs chat types berserk / invincible / magicshield / physicalshield / floa
              For testing now: duration 3 (floating 5), cooldown 5; then the times above, cooldown 60 (floating 30, earthquake 45)
 [TWEAK]    Experimental > Chat > chatSkills (off: the words do nothing), crowdNeed (1; 0 = one chatter is enough),
              skillKeys: keys 1-6 cast them (test, one voice: "keys")
-[SETUP]    UI > Chat Text: a TMP text. It shows the votes ("berserk 1/2 +Ann 9s") and what chat did ("Ann +1: berserk!")
+[SETUP]    UI > Chat Text: a TMP text at the screen edge, not over the fight. What chat did, a few lines for 6 s, the same
+           thing in a row joined ("Bob, Ann summoned skeleton", "Ann +2 cast earthquake"), then the open votes
+           ("berserk 1/2 +Ann 9s"). UI > Queue Text: who's next ("next: Bob skeleton, Ann potion")
            UI: skill slots 3 on (children of Skill Slot, like 1 and 2) show the chat skills' cooldowns, in Summondb order
 
 Summon     each cooldown, the chatter with the fewest turns goes first, then the oldest request (ChatLine in Connector/SummonDB.cs).
@@ -105,8 +107,10 @@ Potions    chat types "potion" (the first one) or "potion health" (how its name 
              on   waits in the summon line with the enemies, uses Spawn Skill's cooldown
 
 Weapons    chat votes the player's right hand: "vote 2" or "vote spear" (again = move your vote), 30 s, while you're in the room.
-room       Time up: the streamer's vote is last (the spot they stand at). Tie or no votes: random. The winner stays in the
-           right hand (no swap, no throw) until the next weapons room, also through death. The old one drops on its spot.
+room       Coming in stuns the player (Stun Time, 3 s). Time up: the streamer's vote is last (the spot they stand at).
+           Tie or no votes: random. The player walks to the winner, then is free. It stays in the right hand (no swap,
+           no throw) until the next weapons room, also through death. The old one drops on its spot.
+[TWEAK]    Experimental > Chat > destroyUnpicked: the weapons chat didn't pick vanish (off: they stay as loot, left hand)
            UI > Chat Text shows it: RIGHT HAND  1 sword 4 · 2 spear 2  22s
 [SETUP]    DungeonRoom > Room Type = weapons, then its Weapon Room: Weapons (not keys), Spots (optional: a SpriteRenderer per
            weapon, on pedestal art with its number), Drop At (an object inside the room: where the old weapon drops
@@ -128,3 +132,4 @@ Chat skill a new one: a ChatType at the END of the enum (saved as numbers), a ro
 Sprite     Character.bodySprite: the SpriteRenderer you see (it skips empty ones). Use it, not GetComponentInChildren.
 Vote       AI/ChatVote.cs: every chat vote (skills, weapons room). Open(title, options, need, onEnd), Ballot, Winner by
            Method (new methods: VoteMethod at the end + a case in Winner). UI: ChatVote.open, each vote's fields or Text().
+Feed       AI/ChatFeed.cs: ChatFeed.Add(who, what) for anything chat did. ChatLine.Preview(n): who's next, without taking.
