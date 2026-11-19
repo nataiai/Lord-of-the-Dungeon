@@ -19,6 +19,7 @@ public class ChatSkill : Skill{
     // what it does: its buff on the player. A skill can change it
     public virtual void Cast(Player p){buff.CopyTo(p.gameObject);}
     public virtual bool CanCast()=>true; // false: no votes
+    protected static SpriteRenderer Body(Player p)=>System.Array.Find(p.GetComponentsInChildren<SpriteRenderer>(), s=>s.sprite); // the sprite you see
 
     // UI.chatText: chat can't be answered, the screen can
     public static string Text(){
@@ -70,6 +71,8 @@ public class ChatSkill : Skill{
 public class Berserk : ChatSkill{
     public Berserk(){Set(ChatType.berserk, BuffType.berserk, 3);} //test: 15
     public static float Damage(Character by)=>by.Has(BuffType.berserk) ? 4-2f*by.HP/by.maxHP : 1;
+    public override void Cast(Player p){base.Cast(p); var sr = Body(p); if(sr)p.StartCoroutine(Red(sr, p));}
+    IEnumerator Red(SpriteRenderer sr, Player p){while(p.Has(BuffType.berserk)){sr.color = new Color(1,.5f,.5f); yield return null;} sr.color = Color.white;} // redder, for now
 }
 // no damage, no knockback (Player)
 [System.Serializable]
@@ -109,7 +112,7 @@ public class Floating : ChatSkill{
     IEnumerator Lift(Player p){
         var sr = p.GetComponentInChildren<SpriteRenderer>(); // its sorting layer, like a thrown weapon's shadow
         if(sr==null)yield break;
-        var body = System.Array.Find(p.GetComponentsInChildren<SpriteRenderer>(), s=>s.sprite) ?? sr; // the one you see
+        var body = Body(p) ?? sr;
         up = true;
         var shadow = ThrownWeapon.Shadow(sr, body.transform.parent);
         shadow.transform.localScale = body.transform.localScale;

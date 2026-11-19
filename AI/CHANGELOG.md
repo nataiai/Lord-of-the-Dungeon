@@ -68,7 +68,7 @@ Mini map   top right all the time. M (gamepad Select): the big map, moved with t
 [TWEAK]    Experimental > miniMap (off: no corner map, M still works), bigMapPauses (on: the big map pauses the game). In Play mode: UI > MiniMap scales, colors, panSpeed
 
 Chat buffs chat types berserk / invincible / magicshield / physicalshield (3+ letters, "ber" works): the buff goes on the player.
-             berserk     attack x2 at full HP up to x4, no healing (15 s)
+             berserk     attack x2 at full HP up to x4, no healing (15 s). The player is redder (for now)
              invincible  no damage, no knockback (10 s)
              shields     block magic / physical damage (15 s). Enemy data > isMagical: its touch is magic (Ghost)
              floating    holes don't take the player (10 s); if it ends over a hole, the player falls.
