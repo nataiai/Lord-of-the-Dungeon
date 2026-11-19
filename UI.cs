@@ -91,7 +91,8 @@ public class UI : MonoBehaviour
         var db = GameManager.Instance.summondb;
         var next = db.Preview(3);
         next.AddRange(db.potion.Preview(2));
-        queueText.text = next.Count>0 ? "next: "+string.Join(", ", next.ConvertAll(c=>c.username+" "+c.spawnableName)) : "";
+        next.RemoveAll(c=>c.spawnableName.StartsWith("potion ") ? !db.potion.Get(c.spawnableName) : !db.getEnemy(c.spawnableName)); // only what can come
+        queueText.text = next.Count>0 ? "next: "+string.Join(", ", next.ConvertAll(c=>c.username+" "+c.spawnableName.ToLowerInvariant())) : "";
     }
     public void UpdateWeap(){
         if(player.lWeapon.weapon!=null)wepImages[0].sprite = player.lWeapon.weapon.uiWep;

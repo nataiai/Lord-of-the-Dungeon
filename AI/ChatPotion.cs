@@ -16,14 +16,14 @@ public class ChatPotion : ChatLine
         if(Experimental.I.potionSamePool)db.Add(username,c);
         else Add(username,c);
     }
+    public Loot Get(string request)=>potions.Find(x=>x && x.name.ToLowerInvariant().StartsWith(request.Replace("potion ",""))); // "potion health"
     // the potion whose turn it is, or null
     public Loot Pop(SimpleSummonDB db)=>PopFrom(this) ?? PopFrom(db);
     Loot PopFrom(ChatLine line){
         var c = line.spawnSkill.isReady ? line.Next() : null;
         if(c==null || !c.spawnableName.StartsWith("potion "))return null;
         line.Take();
-        string name = c.spawnableName.Replace("potion ","");
-        var p = potions.Find(x=>x && x.name.ToLowerInvariant().StartsWith(name));
+        var p = Get(c.spawnableName);
         if(p==null || GameManager.Instance.currentRoom.potionsSpawned>=potionsPerRoom)return null; // no cooldown used
         line.spawnSkill.Call();
         ChatFeed.Add(c.username, "sent a potion");

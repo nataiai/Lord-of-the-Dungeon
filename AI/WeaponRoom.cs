@@ -42,7 +42,7 @@ public class WeaponRoom{
     }
     IEnumerator WalkTo(Player p, Transform spot, System.Action then){ // the player walks to the winner, then is free
         var room = GameManager.Instance.currentRoom;
-        for(float t=0; spot && t<5 && Vector2.Distance(p.center, spot.position)>.3f; t+=Time.deltaTime){ // 5 s: stuck, it's given anyway
+        for(float t=0; spot && t<5 && GameManager.Instance.currentRoom==room && Vector2.Distance(p.center, spot.position)>.3f; t+=Time.deltaTime){ // stuck 5 s or died: it's given anyway
             p.forceWalk = PathFinding.Direction(p.center, spot.position, room.bounds, p.bodyCollider);
             yield return null;
         }

@@ -93,7 +93,7 @@ public class SimpleSummonDB : ChatLine{
     public Enemy _Pop(){
         var c = Take();
         var e = c==null?null:getEnemy(c.spawnableName);
-        if(e)ChatFeed.Add(c.username, "summoned "+c.spawnableName);
+        if(e)ChatFeed.Add(c.username, "summoned "+c.spawnableName.ToLowerInvariant());
         return e;
     }
     public void Unlock(EnemySO e){if(!unlocked.Contains(e))unlocked.Add(e);}
