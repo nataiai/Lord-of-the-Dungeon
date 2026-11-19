@@ -33,7 +33,7 @@ public class ChatVote{
     // GameManager.Update
     public static void Tick(){foreach(var v in open.ToArray())if(v.timeLeft<0){v.Close(); v.onEnd?.Invoke();}}
 
-    // words: option numbers (1, 2...) or how their names start, first choice first. true: it passed (need)
+    // words: option numbers (1, 2...) or how their names start (3+ letters), first choice first. true: it passed (need)
     public bool Ballot(string username, params string[] words){
         var picks = new List<int>();
         foreach(var w in words){int i = Option(w); if(i>=0 && !picks.Contains(i))picks.Add(i);}
@@ -47,7 +47,7 @@ public class ChatVote{
     }
     public void Add(string username, int option){ballots[username] = new(){option}; last = username;} // e.g. the streamer, after time up
     int Option(string w)=>int.TryParse(w, out int n) ? (n>0 && n<=options.Count ? n-1 : -1)
-        : options.FindIndex(o=>o.StartsWith(w.ToLowerInvariant()));
+        : w.Length<3 ? -1 : options.FindIndex(o=>o.StartsWith(w.ToLowerInvariant())); // "vote a spear": "a" isn't a name
     public int[] Counts(){var c = new int[options.Count]; foreach(var b in ballots.Values)c[b[0]]++; return c;} // first choices
 
     // the winner by method; tie or no votes: random. -1 = no options

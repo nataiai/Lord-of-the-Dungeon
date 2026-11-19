@@ -11,6 +11,8 @@ public class WeaponRoom{
     public List<Weapon> weapons = new();
     [Tooltip("Optional: one SpriteRenderer per weapon (a pedestal with its number). Shows it; the streamer votes by standing there")]
     public List<SpriteRenderer> spots = new();
+    [Tooltip("Where the old weapon drops when its spot is empty: an object inside the room")]
+    public Transform dropAt;
     public ChatVote vote = new();
     [Tooltip("When chat has picked, e.g. the exit Door's OpenDoor")]
     public UnityEngine.Events.UnityEvent onVoted;
@@ -30,7 +32,7 @@ public class WeaponRoom{
         if(at>=0 && at<weapons.Count)vote.Add("(streamer)", at); // the last vote; "(" isn't in Twitch names
         int win = vote.Winner();
         var hand = p.rWeapon;
-        var spot = win<spots.Count && spots[win] ? spots[win].transform : p.transform;
+        var spot = win<spots.Count && spots[win] ? spots[win].transform : dropAt ? dropAt : p.transform;
         if(hand.weapon!=null && hand.weapon!=PrefabDatabase.Instance.fist)Loot.Drop(null, hand.weapon, spot);
         hand.weapon = weapons[win]; hand.chatFixed = true;
         foreach(var s in spots)if(s)s.sprite = null;

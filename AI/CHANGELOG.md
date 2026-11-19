@@ -109,7 +109,8 @@ room       Time up: the streamer's vote is last (the spot they stand at). Tie or
            right hand (no swap, no throw) until the next weapons room, also through death. The old one drops on its spot.
            UI > Chat Text shows it: RIGHT HAND  1 sword 4 · 2 spear 2  22s
 [SETUP]    DungeonRoom > Room Type = weapons, then its Weapon Room: Weapons (not keys), Spots (optional: a SpriteRenderer per
-           weapon, on pedestal art with its number), On Voted (e.g. the exit Door's OpenDoor). Music: SoundPlayer's lists
+           weapon, on pedestal art with its number), Drop At (an object inside the room: where the old weapon drops
+           without a spot), On Voted (e.g. the exit Door's OpenDoor). Music: SoundPlayer's lists
 [TWEAK]    Weapon Room > Vote > Method: plurality (the most votes) or runoff (ranked "vote 2 3": the fewest drop out until
            one has over half), Time (30)
 
