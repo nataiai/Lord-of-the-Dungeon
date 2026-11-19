@@ -28,7 +28,7 @@ public partial class Weapon{
     public string keyId;
     public bool isKey => !string.IsNullOrEmpty(keyId);
     // damage x times x the user's attack stat, rounded down: swings, charge skills, throws
-    public int Damage(Character by, float times=1) => (int)(damage*times*(isMagical ? by.combatStat.attackMagic : by.combatStat.attackPhysic));
+    public int Damage(Character by, float times=1) => (int)(damage*times*(isMagical ? by.combatStat.attackMagic : by.combatStat.attackPhysic)*Berserk.Damage(by));
 
     [Tooltip("Charge skill (AI/WeaponCharge.cs): hold this weapon's button, let go to use the skill")]
     public ChargeSettings chargeSettings = new();

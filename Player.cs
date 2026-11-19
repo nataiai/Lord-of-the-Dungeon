@@ -108,7 +108,7 @@ public class Player : Character
         if(Experimental.I.lookFollowMovement){if(isMoving)looking = movement;}
         else if(controller.looking.magnitude>0)looking = controller.looking;
         else if(!isLooking)looking = movement;
-        if(!StuntMech(8))rb.velocity = movement * initSpeed;
+        if(!StuntMech(8*Floating.Friction(this)))rb.velocity = movement * initSpeed;
         if(ThrownWeapon.TryThrow(this)){UpdateAnim(); return;}
         TryAttack(lWeapon, controller.attackLeft);
         TryAttack(rWeapon, controller.attackRight);
@@ -189,11 +189,13 @@ public class Player : Character
         base.recieveDamage(dmg,isMagical);
         SoundPlayer.PlaySound(SoundPlayer.instance.sd_player_hit);
         if(enableInvincible && isInvincible)return;
+        if(Has(BuffType.invincible | (isMagical?BuffType.magicShield:BuffType.physicalShield)))return;
         HP-=dmg;
         invincibleTime = invincibleCooldownTime+Time.time;
     }
     public override void receiveKnockback(Vector2 pos,float force){
         if(enableInvincible && isInvincible)return;
+        if(Has(BuffType.invincible))return;
         receiveKnockback(pos,force,knockbackResistance);
     }
 }

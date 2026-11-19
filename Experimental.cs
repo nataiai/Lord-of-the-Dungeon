@@ -61,6 +61,14 @@ public partial class Experimental : MonoBehaviour{ // Weapons switches: AI/Field
     public float testWithoutChatSpawnCooldown = 5f;
     [Tooltip("On: chat potions wait in the summon line with the enemies and use its cooldown. Off: their own line and cooldown (AI/ChatPotion.cs)")]
     public bool potionSamePool = true;
+    [Tooltip("Off: chat skill words (berserk, float, earthquake...) do nothing (AI/ChatSkill.cs)")]
+    public bool chatSkills = true;
+    [ShowIf("chatSkills", true)]
+    [Tooltip("Test: keys 1-6 vote, like one chatter, for berserk, invincible, magic shield, physical shield, float, earthquake (Summondb order)")]
+    public bool skillKeys = true;
+    [ShowIf("chatSkills", true)]
+    [Tooltip("Skill votes need this x sqrt(chatters with a command in the last 2 min), at least 1. 0 = one is enough")]
+    public float crowdNeed = 1;
 
     [Header("Inspector")]
     [Tooltip("On: [PlayModeOnly] fields show (and can be edited) while playing. Off: always hidden")]

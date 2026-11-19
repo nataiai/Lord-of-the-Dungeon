@@ -49,6 +49,7 @@ public class GameManager: MonoBehaviour{
     }
     void Update(){
         if(testWithoutChat && !Input.GetKeyDown(KeyCode.L) && tmp<Time.time){Spawn(mockEnemy);tmp = Time.time+testWithoutChatSpawnCooldown;}
+        ChatSkill.Keys(summondb.skills); // test keys 1-6
         var potion = summondb.GetPotionToSpawn(); // before GetToSpawn
         if(potion!=null)currentRoom.SpawnPotion(potion,playerPos,spawnRangeFromPlayer);
         var summon = summondb.GetToSpawn();

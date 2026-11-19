@@ -10,6 +10,8 @@ public class EnemySO : ScriptableObject
     public int maxHP;
     public float cooldown; // seconds between hits on the player
     public CombatStat combatStat;
+    [Tooltip("Its touch is magic damage (attackMagic): the magic shield blocks it, not the physical one")]
+    public bool isMagical;
     public float knockbackResistance; // 1 = immune to knockback; 0 = get full knockback
     public float knocbackRecovery = 4;
     [Tooltip("Buffs that don't work on it (tick several); the rest of a buff still does")]

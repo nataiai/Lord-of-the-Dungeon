@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-[System.Flags] public enum BuffType{none=0,burn=1,heal=2,slow=4,stun=8,stopMovement=16,stopFacing=32,stopAnim=64}
+[System.Flags] public enum BuffType{none=0,burn=1,heal=2,slow=4,stun=8,stopMovement=16,stopFacing=32,stopAnim=64,berserk=128,invincible=256,magicShield=512,physicalShield=1024,floating=2048}
 
 // if on ... do ...
 // weapons -> copy to hitbox
@@ -13,13 +13,13 @@ public class BuffEffect : MonoBehaviour
     [System.Serializable]
     public class Buff{
         public BuffType type = BuffType.none; // none = no effect
-        [ShowIf("type", BuffType.burn, BuffType.heal, BuffType.slow, BuffType.stun, BuffType.stopMovement, BuffType.stopFacing, BuffType.stopAnim)]
+        [ShowIf("type", ~BuffType.none)]
         public float duration=1f;
         [ShowIf("type", BuffType.burn, BuffType.heal)]
         public int power = 1; // burn, heal: HP per second
-        [ShowIf("type", BuffType.burn, BuffType.heal, BuffType.slow, BuffType.stun, BuffType.stopMovement, BuffType.stopFacing, BuffType.stopAnim)]
+        [ShowIf("type", ~BuffType.none)]
         public bool isStackable;
-        [ShowIf("type", BuffType.burn, BuffType.heal, BuffType.slow, BuffType.stun, BuffType.stopMovement, BuffType.stopFacing, BuffType.stopAnim)]
+        [ShowIf("type", ~BuffType.none)]
         [Tooltip("Shown on the one who has the buff while it lasts (an ice cube, a heal glow...)")]
         public GameObject effect;
         public void CopyTo(GameObject go){

@@ -37,7 +37,7 @@ public class Enemy : Character
         var x = Experimental.I;
         float away = Time.time-leftAt;
         if(x.resetPosition && x.walkBack)StartCoroutine(WalkHome(initSpeed*away));
-        else if(x.resetPosition)transform.position = home;
+        else if(x.resetPosition){transform.position = home; Physics2D.SyncTransforms();}
         if(x.resetHealth)Heal(x.enemyRegen>0 ? (int)(x.enemyRegen*away) : maxHP);
         if(x.forgetPlayer)notice = false;
         if(x.clearBuffs)foreach(var b in GetComponents<BuffEffect>())Destroy(b);
@@ -53,6 +53,8 @@ public class Enemy : Character
             distance -= step;
         }
         transform.position = at + off;
+        Physics2D.SyncTransforms(); // its collider (center) moves now, not at the next physics step
+        if(Experimental.I.forgetPlayer)notice = false; // it saw you at the door the frame before it got here
     }
     protected virtual void Start(){
         HP = enemyData.maxHP;
@@ -80,10 +82,12 @@ public class Enemy : Character
         movement = target - center;
         if(facesPlayer && canFace && Mathf.Abs(movement.x)>0.01f)sr.flipX = (movement.x<0) != spriteFacesLeft;
         if(movement.magnitude<enemyData.noticeRange)notice=true;
-        if(notice){
-            way = enemyData.ignoreCollide ? movement.normalized : PathFinding.Direction(center,target,GameManager.Instance.currentRoom.bounds,col); // ghosts go straight
+        Vector2 goal = notice ? target : home+center-(Vector2)transform.position; // not seen you: back home (after an earthquake)
+        if(notice || (goal-center).magnitude>.1f){
+            way = enemyData.ignoreCollide ? (goal-center).normalized : PathFinding.Direction(center,goal,GameManager.Instance.currentRoom.bounds,col); // ghosts go straight
             rb.velocity = Vector2.ClampMagnitude(way + PathFinding.Separation(col, LayerMask.GetMask("Enemy")), 1) * enemyData.initSpeed;
         }
+        else rb.velocity = Vector2.zero; // home
         setAnimFacing(movement.normalized);
     }
 
@@ -129,7 +133,7 @@ public class Enemy : Character
     public virtual void OnTriggerStay2D(Collider2D other){
         if(cooldownTimer>Time.time || deathBreathTime!=0 || !other.TryGetComponent(out Character victim) || !IsEnemyOf(victim))return;
         victim.receiveKnockback(transform.position,enemyData.attackKnockback);
-        victim.recieveDamage(enemyData.combatStat.attackPhysic);
+        victim.recieveDamage(enemyData.isMagical?enemyData.combatStat.attackMagic:enemyData.combatStat.attackPhysic, enemyData.isMagical);
         cooldownTimer = Time.time+enemyData.cooldown;
     }
 }

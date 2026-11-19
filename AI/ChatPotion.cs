@@ -9,10 +9,10 @@ public class ChatPotion : ChatLine
 {
     public List<Loot> potions=new();
     public int potionsPerRoom = 3;
-    public ChatPotion(){spawnSkill = new(){chatType = ChatType.potion, cooldown = 10};}
+    public ChatPotion(){spawnSkill = new(){chatType = ChatType.potion, cooldown = 5};} //test: 10
 
     public void Add(SimpleSummonDB db, string username, string name){
-        var c = new SummonCommand("potion "+name.Replace("\U000E0000","").ToLowerInvariant(),username); // Chatterino adds that to a repeat
+        var c = new SummonCommand("potion "+name.ToLowerInvariant(),username);
         if(Experimental.I.potionSamePool)db.Add(username,c);
         else Add(username,c);
     }

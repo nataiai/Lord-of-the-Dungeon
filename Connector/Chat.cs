@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ChatType{summon=0,teleport=1,vote,work,invalid,potion} // new ones at the end (saved as numbers)
+public enum ChatType{summon=0,teleport=1,vote,work,invalid,potion,berserk,invincible,magicShield,physicalShield,earthquake,floating} // new ones at the end (saved as numbers)
 
 public abstract class Chat : MonoBehaviour
 {
@@ -14,6 +14,13 @@ public abstract class Chat : MonoBehaviour
         ("vote",2,2,ChatType.vote), // vote leftdoor
         ("work",2,2,ChatType.work), // work smith
         ("potion",1,3,ChatType.potion), // potion (healthbone)
+        ("berserk",1,1,ChatType.berserk),
+        ("invincible",1,1,ChatType.invincible),
+        ("magicshield",1,1,ChatType.magicShield),
+        ("physicalshield",1,1,ChatType.physicalShield),
+        ("earthquake",1,1,ChatType.earthquake),
+        ("quake",1,1,ChatType.earthquake),
+        ("floating",1,1,ChatType.floating), // float
     };
 
     public ChatType Categorize(string message){
@@ -23,7 +30,9 @@ public abstract class Chat : MonoBehaviour
         return ChatType.invalid;
     }
     public void addToDB(string username,string msg){
+        msg = msg.Replace("\U000E0000",""); // Chatterino adds that to a repeat
         string[] words = msg.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
+        ChatSkill.Read(summondb.skills,username,Categorize(msg),msg); // skill votes (and who's active)
         switch(Categorize(msg)){
             case ChatType.summon: summondb.Add(username,new SummonCommand(words[1],username)); break;
             case ChatType.teleport: if(int.TryParse(words[1],out int x) && int.TryParse(words[2],out int y))GameManager.Instance.TeleportSkill(x,y); break;

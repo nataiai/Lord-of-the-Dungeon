@@ -50,6 +50,13 @@ public class SimpleSummonDB : ChatLine{
     public int limitPerPlayer = 10;
     public List<EnemySO> unlocked=new();
     public ChatPotion potion=new();
+    public Berserk berserk = new();
+    public Invincible invincible = new();
+    public MagicShield magicShield = new();
+    public PhysicalShield physicalShield = new();
+    public Floating floating = new();
+    public Earthquake earthquake = new();
+    public ChatSkill[] skills => new ChatSkill[]{berserk, invincible, magicShield, physicalShield, floating, earthquake}; // keys 1-6
 
     public Enemy GetToSpawn(){
         if(!spawnSkill.isReady)return null;

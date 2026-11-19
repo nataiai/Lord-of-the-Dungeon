@@ -10,9 +10,10 @@ public class Hole : MonoBehaviour
         if(!TryGetComponent(out Rigidbody2D rb))rb = gameObject.AddComponent<Rigidbody2D>();
         rb.bodyType = RigidbodyType2D.Kinematic;
     }
-    void OnTriggerEnter2D(Collider2D other){
+    void OnTriggerStay2D(Collider2D other){
         Behaviour faller = other.TryGetComponent(out Character c) ? c : (Behaviour)other.GetComponent<Loot>();
         if(faller==null || !faller.enabled || c is Enemy e && e.enemyData.ignoreCollide)return;
+        if(c!=null && c.Has(BuffType.floating))return;
         StartCoroutine(Fall(faller, other));
     }
     IEnumerator Fall(Behaviour faller, Collider2D col){
