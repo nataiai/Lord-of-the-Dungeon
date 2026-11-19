@@ -42,6 +42,7 @@ public abstract class Character : MonoBehaviour // remove abstract and fix comba
     Collider2D _col;
     public Collider2D bodyCollider{get{if(!_col)_col = GetComponent<Collider2D>(); return _col;}}
     public Vector2 center => bodyCollider?(Vector2)bodyCollider.bounds.center:(Vector2)transform.position;
+    public SpriteRenderer bodySprite => System.Array.Find(GetComponentsInChildren<SpriteRenderer>(), s=>s.sprite); // the sprite you see
     public virtual Team team => Team.Neutral;
     public bool IsEnemyOf(Character c) => c!=null && c.team!=team;
 

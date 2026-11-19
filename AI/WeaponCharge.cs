@@ -36,7 +36,7 @@ public static class WeaponCharge
     }
     static bool IsCharged(HoldingWeapons hand)=>hand.getChargePercent()>=1;
     static void Glow(Player p){ // yellow while a hand is charged
-        var sr = p.GetComponentInChildren<SpriteRenderer>();
+        var sr = p.bodySprite;
         if(sr==null)return;
         if(!baseColor.ContainsKey(sr))baseColor[sr] = sr.color;
         bool on = IsCharged(p.lWeapon) || IsCharged(p.rWeapon);

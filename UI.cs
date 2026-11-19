@@ -19,6 +19,8 @@ public class UI : MonoBehaviour
     public GameObject dialogueTextbox;
     [Tooltip("What chat did and its open votes (it can't be answered in chat): \"Bob: berserk!\" \"berserk 1/2 +Bob 9s\"")]
     public TMP_Text chatText;
+    [Tooltip("The weapons room vote: \"RIGHT HAND  1 sword 4 · 2 spear 2  22s\"")]
+    public TMP_Text voteText;
     TMP_Text dialogueTextLabel;
     string[] dialogueTextToShow;
     public float dialogueSpeed = 30; // typewriter: letters per second
@@ -59,6 +61,7 @@ public class UI : MonoBehaviour
         }
         UpdateSkill();
         if(chatText)chatText.text = ChatSkill.Text();
+        if(voteText)voteText.text = WeaponRoom.Text();
         UpdateDialogue();
     }
 
@@ -80,8 +83,9 @@ public class UI : MonoBehaviour
     public void UpdateHP(int HP){for(int i=0;i<heart.Count;i++)heart[i].sprite = healthSprite[i<HP?0:1];}
     public void UpdateSkill(){
         var db = GameManager.Instance.summondb;
-        Skill[] skill = {db.spawnSkill, Experimental.I.potionSamePool?db.spawnSkill:db.potion.spawnSkill}; // summon, potion
-        for(int i=0;i<skillsReload.Count && i<skill.Length;i++)skillsReload[i].fillAmount=skill[i].getReloadPercent();
+        var skill = new List<Skill>{db.spawnSkill, Experimental.I.potionSamePool?db.spawnSkill:db.potion.spawnSkill}; // summon, potion
+        skill.AddRange(db.skills); // chat skills: slot 3 on
+        for(int i=0;i<skillsReload.Count && i<skill.Count;i++)skillsReload[i].fillAmount=skill[i].getReloadPercent();
     }
     public void UpdateWeap(){
         if(player.lWeapon.weapon!=null)wepImages[0].sprite = player.lWeapon.weapon.uiWep;

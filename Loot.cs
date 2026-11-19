@@ -50,13 +50,13 @@ public class Loot : MonoBehaviour
         else if(c.attackRight.isPressed)Swap(player.rWeapon);
     }
     bool TryFill(HoldingWeapons hand){
-        if(hand.weapon!=null && hand.weapon.type!=WeaponType.CQC)return false;
+        if(hand.chatFixed || hand.weapon!=null && hand.weapon.type!=WeaponType.CQC)return false;
         hand.weapon = weaponLoot; hand.lootScale = sr.transform.lossyScale;
         SoundPlayer.PlaySound(SoundPlayer.instance.sd_pickup_wep);
         Destroy(gameObject);
         return true;
     }
-    void Swap(HoldingWeapons hand){(hand.weapon,weaponLoot) = (weaponLoot,hand.weapon);UpdateImage();Yoink();}
+    void Swap(HoldingWeapons hand){if(hand.chatFixed)return; (hand.weapon,weaponLoot) = (weaponLoot,hand.weapon);UpdateImage();Yoink();}
     void PickChatSkillHandle(Player player){
         if(skill!=ChatType.invalid && !GameManager.Instance.availableSkill.Contains(skill))GameManager.Instance.availableSkill.Add(skill);
         Destroy(gameObject);

@@ -128,4 +128,5 @@ public partial class HoldingWeapons{
     [System.NonSerialized] public Vector3 lootScale; // size of the loot it was picked up from: a throw keeps that size (zero = 1)
     [System.NonSerialized] public bool charging;
     [System.NonSerialized] public float chargeStart;
+    [System.NonSerialized] public bool chatFixed; // chat picked it in a weapons room: no swap, no throw (AI/WeaponRoom.cs)
 }

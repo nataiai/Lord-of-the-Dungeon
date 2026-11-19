@@ -18,7 +18,6 @@ public class ChatSkill : Skill{
     // what it does: its buff on the player. A skill can change it
     public virtual void Cast(Player p){buff.CopyTo(p.gameObject);}
     public virtual bool CanCast()=>true; // false: no votes
-    protected static SpriteRenderer Body(Player p)=>System.Array.Find(p.GetComponentsInChildren<SpriteRenderer>(), s=>s.sprite); // the sprite you see
     protected static void Copy(SpriteRenderer copy, SpriteRenderer of, Vector3 offset){ // it walks too
         copy.transform.position = of.transform.position+offset; copy.transform.localScale = of.transform.localScale;
         copy.sprite = of.sprite; copy.flipX = of.flipX;
@@ -74,7 +73,7 @@ public class ChatSkill : Skill{
 public class Berserk : ChatSkill{
     public Berserk(){Set(ChatType.berserk, BuffType.berserk, 3);} //test: 15
     public static float Damage(Character by)=>by.Has(BuffType.berserk) ? 4-2f*by.HP/by.maxHP : 1;
-    public override void Cast(Player p){base.Cast(p); var sr = Body(p); if(sr)p.StartCoroutine(Red(sr, p));}
+    public override void Cast(Player p){base.Cast(p); var sr = p.bodySprite; if(sr)p.StartCoroutine(Red(sr, p));}
     IEnumerator Red(SpriteRenderer sr, Player p){ // a red copy on top, for now (the Animator keeps the sprite's own color)
         var red = ThrownWeapon.Shadow(sr, sr.transform.parent);
         red.name = "berserk"; red.color = new Color(1,0,0,.5f); red.sortingOrder = sr.sortingOrder+1;
@@ -120,7 +119,7 @@ public class Floating : ChatSkill{
     IEnumerator Lift(Player p){
         var sr = p.GetComponentInChildren<SpriteRenderer>(); // its sorting layer, like a thrown weapon's shadow
         if(sr==null)yield break;
-        var body = Body(p) ?? sr;
+        var body = p.bodySprite ?? sr;
         up = true;
         var shadow = ThrownWeapon.Shadow(sr, body.transform.parent);
         float rise = Mathf.Max(riseTime,.01f), t = 0, h = 0, left = 1; // t: 0 = on the ground, 1 = up

@@ -17,10 +17,17 @@ public class ChatLine{
     public List<SummonCommand> summonQ=new();
     int indexQ=0;
     Dictionary<string,int> turns=new(); // per chatter
+    [UnityEngine.Tooltip("Requests one chatter can have waiting. 0 = no limit")]
+    public int limitPerPlayer = 10;
+    [UnityEngine.Tooltip("Requests the whole line can have waiting; more are turned away. 0 = no limit")]
+    public int limitTotal = 300;
 
     public void Reset(){summonQ.Clear();indexQ=0;}
     public void Add(string name,SummonCommand command){
-        if(summonQ.Count>300)Reset();
+        if(indexQ>limitTotal){summonQ.RemoveRange(0,indexQ);indexQ=0;} // forget what's done, not what waits
+        int mine = 0;
+        for(int i=indexQ;i<summonQ.Count;i++)if(summonQ[i].username==command.username)mine++;
+        if(limitPerPlayer>0 && mine>=limitPerPlayer || limitTotal>0 && summonQ.Count-indexQ>=limitTotal)return; // full: turned away
         summonQ.Add(command);
     }
     // whose turn it is (moved to summonQ[indexQ]), or null
@@ -47,7 +54,6 @@ public class ChatLine{
 [System.Serializable]
 public class SimpleSummonDB : ChatLine{
     public List<Enemy> summonableEnemy;
-    public int limitPerPlayer = 10;
     public List<EnemySO> unlocked=new();
     public ChatPotion potion=new();
     public Berserk berserk = new();
