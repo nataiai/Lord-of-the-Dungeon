@@ -19,6 +19,7 @@ public class ChatSkill : Skill{
     public virtual void Cast(Player p){buff.CopyTo(p.gameObject);}
     public virtual bool CanCast()=>true; // false: no votes
     protected static SpriteRenderer Body(Player p)=>System.Array.Find(p.GetComponentsInChildren<SpriteRenderer>(), s=>s.sprite); // the sprite you see
+    protected static void Copy(SpriteRenderer copy, SpriteRenderer of, Vector3 offset){copy.transform.position = of.transform.position+offset; copy.sprite = of.sprite; copy.flipX = of.flipX;} // it walks too
 
     // UI.chatText: chat can't be answered, the screen can
     public static string Text(){
@@ -70,7 +71,12 @@ public class Berserk : ChatSkill{
     public Berserk(){Set(ChatType.berserk, BuffType.berserk, 3);} //test: 15
     public static float Damage(Character by)=>by.Has(BuffType.berserk) ? 4-2f*by.HP/by.maxHP : 1;
     public override void Cast(Player p){base.Cast(p); var sr = Body(p); if(sr)p.StartCoroutine(Red(sr, p));}
-    IEnumerator Red(SpriteRenderer sr, Player p){while(p.Has(BuffType.berserk)){sr.color = new Color(1,.5f,.5f); yield return null;} sr.color = Color.white;} // redder, for now
+    IEnumerator Red(SpriteRenderer sr, Player p){ // a red copy on top, for now (the Animator keeps the sprite's own color)
+        var red = ThrownWeapon.Shadow(sr, sr.transform.parent);
+        red.name = "berserk"; red.color = new Color(1,0,0,.5f); red.sortingOrder = sr.sortingOrder+1; red.transform.localScale = sr.transform.localScale;
+        while(p.Has(BuffType.berserk)){Copy(red, sr, Vector3.zero); yield return null;}
+        Object.Destroy(red.gameObject);
+    }
 }
 // no damage, no knockback (Player)
 [System.Serializable]
@@ -121,8 +127,7 @@ public class Floating : ChatSkill{
             float was = h;
             h = height*Mathf.SmoothStep(0, 1, t);
             p.rb.position += Vector2.up*(h-was); // the player, not its sprite: the Animator moves that
-            shadow.transform.position = body.transform.position+Vector3.down*h;
-            shadow.sprite = body.sprite; shadow.flipX = body.flipX; // it walks too
+            Copy(shadow, body, Vector3.down*h);
             yield return null;
         }
         Object.Destroy(shadow.gameObject);
