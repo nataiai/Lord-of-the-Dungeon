@@ -17,7 +17,7 @@ public class UI : MonoBehaviour
     [UnityEngine.Serialization.FormerlySerializedAs("d_textBox")]
     public GameObject enemyNameTextbox; 
     public GameObject dialogueTextbox;
-    [Tooltip("What chat did (it can't be answered in chat): \"Bob: berserk!\"")]
+    [Tooltip("What chat did and its open votes (it can't be answered in chat): \"Bob: berserk!\" \"berserk 1/2 +Bob 9s\"")]
     public TMP_Text chatText;
     TMP_Text dialogueTextLabel;
     string[] dialogueTextToShow;

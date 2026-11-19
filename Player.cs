@@ -194,7 +194,8 @@ public class Player : Character
         invincibleTime = invincibleCooldownTime+Time.time;
     }
     public override void receiveKnockback(Vector2 pos,float force){
-        if(enableInvincible && isInvincible || Has(BuffType.invincible))return;
+        if(enableInvincible && isInvincible)return;
+        if(Has(BuffType.invincible))return;
         receiveKnockback(pos,force,knockbackResistance);
     }
 }

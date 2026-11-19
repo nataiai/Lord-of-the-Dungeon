@@ -32,12 +32,11 @@ public abstract class Chat : MonoBehaviour
     public void addToDB(string username,string msg){
         msg = msg.Replace("\U000E0000",""); // Chatterino adds that to a repeat
         string[] words = msg.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
-        ChatSkill.Seen(summondb.skills,username,Categorize(msg),msg); // active chatters: skill votes need more of them
+        ChatSkill.Read(summondb.skills,username,Categorize(msg),msg); // skill votes (and who's active)
         switch(Categorize(msg)){
             case ChatType.summon: summondb.Add(username,new SummonCommand(words[1],username)); break;
             case ChatType.teleport: if(int.TryParse(words[1],out int x) && int.TryParse(words[2],out int y))GameManager.Instance.TeleportSkill(x,y); break;
             case ChatType.potion: summondb.AddPotion(username,words.Length>1?words[1]:""); break;
-            default: ChatSkill.Vote(summondb.skills,username,Categorize(msg),msg); break;
         }
     }
 }

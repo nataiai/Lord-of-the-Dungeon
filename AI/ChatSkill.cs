@@ -19,7 +19,10 @@ public class ChatSkill : Skill{
     public virtual void Cast(Player p){buff.CopyTo(p.gameObject);}
     public virtual bool CanCast()=>true; // false: no votes
     protected static SpriteRenderer Body(Player p)=>System.Array.Find(p.GetComponentsInChildren<SpriteRenderer>(), s=>s.sprite); // the sprite you see
-    protected static void Copy(SpriteRenderer copy, SpriteRenderer of, Vector3 offset){copy.transform.position = of.transform.position+offset; copy.sprite = of.sprite; copy.flipX = of.flipX;} // it walks too
+    protected static void Copy(SpriteRenderer copy, SpriteRenderer of, Vector3 offset){ // it walks too
+        copy.transform.position = of.transform.position+offset; copy.transform.localScale = of.transform.localScale;
+        copy.sprite = of.sprite; copy.flipX = of.flipX;
+    }
 
     // UI.chatText: chat can't be answered, the screen can
     public static string Text(){
@@ -28,11 +31,12 @@ public class ChatSkill : Skill{
             t += $"\n{s.chatType} {s.votes.Count}/{s.need} +{s.votes[s.votes.Count-1]} {s.until-Time.time:0}s"; // berserk 1/2 +Ann 9s
         return t.Trim();
     }
-    // Chat.addToDB: any command makes the chatter active. A skill word needs 3+ letters ("F" isn't one)
-    public static void Seen(ChatSkill[] skills, string username, ChatType type, string msg){
+    // Chat.addToDB: a command makes the chatter active; a skill word (3+ letters, "F" isn't one) is a vote
+    public static void Read(ChatSkill[] skills, string username, ChatType type, string msg){
         if(type!=ChatType.invalid && (msg.Trim().Length>=3 || !System.Array.Exists(skills, x=>x.chatType==type)))seen[username] = Time.time;
+        Vote(skills, username, type, msg);
     }
-    // Chat.addToDB: a vote. On cooldown: no votes
+    // a vote (Read, Keys). On cooldown: no votes
     public static void Vote(ChatSkill[] skills, string username, ChatType type, string msg){
         var s = System.Array.Find(skills, x=>x.chatType==type);
         if(!Experimental.I.chatSkills || s==null || msg.Trim().Length<3 || !s.isReady || !s.CanCast())return; // "b" or "i" alone is no cast
@@ -73,7 +77,7 @@ public class Berserk : ChatSkill{
     public override void Cast(Player p){base.Cast(p); var sr = Body(p); if(sr)p.StartCoroutine(Red(sr, p));}
     IEnumerator Red(SpriteRenderer sr, Player p){ // a red copy on top, for now (the Animator keeps the sprite's own color)
         var red = ThrownWeapon.Shadow(sr, sr.transform.parent);
-        red.name = "berserk"; red.color = new Color(1,0,0,.5f); red.sortingOrder = sr.sortingOrder+1; red.transform.localScale = sr.transform.localScale;
+        red.name = "berserk"; red.color = new Color(1,0,0,.5f); red.sortingOrder = sr.sortingOrder+1;
         while(p.Has(BuffType.berserk)){Copy(red, sr, Vector3.zero); yield return null;}
         Object.Destroy(red.gameObject);
     }
@@ -103,13 +107,13 @@ public class Floating : ChatSkill{
     public float riseTime = 1;
     [Tooltip("How fast knockback slows down while floating, x the ground's: 1 = like the ground, 0 = no friction (slides on)")]
     public float friction = .2f;
-    bool up; float until; // lifted now; when it ends
+    bool up; float ends; // lifted now; when it ends
     public Floating(){Set(ChatType.floating, BuffType.floating, 5);} //test: 10
     // Player.Update: knockback slows down less in the air
     public static float Friction(Character c)=>c.Has(BuffType.floating) ? GameManager.Instance.summondb.floating.friction : 1;
     public override void Cast(Player p){
         base.Cast(p);
-        until = Time.time+buff.duration;
+        ends = Time.time+buff.duration;
         p.rb.sleepMode = RigidbodySleepMode2D.NeverSleep; // so it falls when the float ends over a hole
         if(!up)p.StartCoroutine(Lift(p));
     }
@@ -119,10 +123,9 @@ public class Floating : ChatSkill{
         var body = Body(p) ?? sr;
         up = true;
         var shadow = ThrownWeapon.Shadow(sr, body.transform.parent);
-        shadow.transform.localScale = body.transform.localScale;
         float rise = Mathf.Max(riseTime,.01f), t = 0, h = 0, left = 1; // t: 0 = on the ground, 1 = up
         while(left>0){
-            left = p.Has(BuffType.floating) ? until-Time.time : 0;
+            left = p.Has(BuffType.floating) ? ends-Time.time : 0;
             t = Mathf.Min(Mathf.MoveTowards(t, 1, Time.deltaTime/rise), left/rise); // up at the start, lands as it ends
             float was = h;
             h = height*Mathf.SmoothStep(0, 1, t);

@@ -37,7 +37,7 @@ public class Enemy : Character
         var x = Experimental.I;
         float away = Time.time-leftAt;
         if(x.resetPosition && x.walkBack)StartCoroutine(WalkHome(initSpeed*away));
-        else if(x.resetPosition){transform.position = home; Physics2D.SyncTransforms();} // its collider (center) moves now, not at the next physics step
+        else if(x.resetPosition){transform.position = home; Physics2D.SyncTransforms();}
         if(x.resetHealth)Heal(x.enemyRegen>0 ? (int)(x.enemyRegen*away) : maxHP);
         if(x.forgetPlayer)notice = false;
         if(x.clearBuffs)foreach(var b in GetComponents<BuffEffect>())Destroy(b);

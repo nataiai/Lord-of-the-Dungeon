@@ -57,7 +57,7 @@ public class ThrownWeapon : MonoBehaviour
         if(weapon.useSound!=null)SoundPlayer.PlaySound(weapon.useSound);
         return t;
     }
-    // a dark copy of sr under it. Floating (AI/ChatSkill.cs) uses it too
+    // a dark copy of sr under it. Floating and Berserk (AI/ChatSkill.cs) use it too
     public static SpriteRenderer Shadow(SpriteRenderer sr, Transform parent){
         var shadow = new GameObject("shadow").AddComponent<SpriteRenderer>();
         shadow.transform.SetParent(parent, false);
