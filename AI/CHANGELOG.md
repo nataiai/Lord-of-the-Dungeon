@@ -94,7 +94,7 @@ Potions    chat types "potion" (the first one) or "potion health" (how its name 
 [TWEAK]    Summondb > Potion > Potions Per Room (3)
            UI: skill slot 2 (the 2nd child of Skill Slot) shows the potion cooldown, like slot 1 shows summon
 [TWEAK]    Experimental > Chat > potionSamePool
-             off  own line, Summondb > Potion > Spawn Skill > Cooldown (10)
+             off  own line, Summondb > Potion > Spawn Skill > Cooldown (5 for testing, then 10)
              on   waits in the summon line with the enemies, uses Spawn Skill's cooldown
 
 
