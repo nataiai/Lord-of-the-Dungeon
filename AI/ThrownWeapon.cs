@@ -46,15 +46,7 @@ public class ThrownWeapon : MonoBehaviour
         var bySr = by.GetComponentInChildren<SpriteRenderer>();
         if(bySr!=null){sr.sortingLayerID = bySr.sortingLayerID; sr.sortingOrder = bySr.sortingOrder+1;}
         var t = go.AddComponent<ThrownWeapon>();
-        if(weapon.throwSettings.shadowHeight>0){
-            var shadow = new GameObject("shadow").AddComponent<SpriteRenderer>();
-            shadow.transform.SetParent(go.transform, false);
-            shadow.sprite = sr.sprite;
-            shadow.color = new Color(0,0,0,.4f);
-            shadow.sortingLayerID = sr.sortingLayerID;
-            shadow.sortingOrder = 3; // Order in Layer 3, like the other shadows
-            t.shadow = shadow.transform;
-        }
+        if(weapon.throwSettings.shadowHeight>0)t.shadow = Shadow(sr, go.transform).transform;
         t.radius = Mathf.Max(weapon.throwSettings.size,0.05f);
         var col = go.AddComponent<CircleCollider2D>();
         col.radius = t.radius/Mathf.Max(go.transform.lossyScale.x,0.01f); col.isTrigger = true; // throwSettings.size stays its real size
@@ -64,6 +56,16 @@ public class ThrownWeapon : MonoBehaviour
         t.velocity = dir.normalized*weapon.throwSettings.initSpeed;
         if(weapon.useSound!=null)SoundPlayer.PlaySound(weapon.useSound);
         return t;
+    }
+    // a dark copy of sr under it. Floating (AI/ChatSkill.cs) uses it too
+    public static SpriteRenderer Shadow(SpriteRenderer sr, Transform parent){
+        var shadow = new GameObject("shadow").AddComponent<SpriteRenderer>();
+        shadow.transform.SetParent(parent, false);
+        shadow.sprite = sr.sprite;
+        shadow.color = new Color(0,0,0,.4f);
+        shadow.sortingLayerID = sr.sortingLayerID;
+        shadow.sortingOrder = 3; // Order in Layer 3, like the other shadows
+        return shadow;
     }
 
     void FixedUpdate(){

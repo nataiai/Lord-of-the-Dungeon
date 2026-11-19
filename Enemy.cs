@@ -37,7 +37,7 @@ public class Enemy : Character
         var x = Experimental.I;
         float away = Time.time-leftAt;
         if(x.resetPosition && x.walkBack)StartCoroutine(WalkHome(initSpeed*away));
-        else if(x.resetPosition)transform.position = home;
+        else if(x.resetPosition){transform.position = home; Physics2D.SyncTransforms();} // its collider (center) moves now, not at the next physics step
         if(x.resetHealth)Heal(x.enemyRegen>0 ? (int)(x.enemyRegen*away) : maxHP);
         if(x.forgetPlayer)notice = false;
         if(x.clearBuffs)foreach(var b in GetComponents<BuffEffect>())Destroy(b);
@@ -53,6 +53,8 @@ public class Enemy : Character
             distance -= step;
         }
         transform.position = at + off;
+        Physics2D.SyncTransforms(); // its collider (center) moves now, not at the next physics step
+        if(Experimental.I.forgetPlayer)notice = false; // it saw you at the door the frame before it got here
     }
     protected virtual void Start(){
         HP = enemyData.maxHP;

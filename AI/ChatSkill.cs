@@ -84,13 +84,35 @@ public class MagicShield : ChatSkill{
 public class PhysicalShield : ChatSkill{
     public PhysicalShield(){Set(ChatType.physicalShield, BuffType.physicalShield, 15);}
 }
-// holes don't take the player (Map/Hole.cs); if it ends over a hole, the player falls
+// holes don't take the player (Map/Hole.cs); if it ends over a hole, the player falls.
+// The player's sprite goes up, a shadow stays below (like a thrown weapon's)
 [System.Serializable]
 public class Floating : ChatSkill{
+    [Tooltip("How high the player floats above its shadow")]
+    public float height = .5f;
+    bool up; // lifted now
     public Floating(){Set(ChatType.floating, BuffType.floating, 10);}
     public override void Cast(Player p){
         base.Cast(p);
         p.rb.sleepMode = RigidbodySleepMode2D.NeverSleep; // so it falls when the float ends over a hole
+        if(!up)p.StartCoroutine(Lift(p));
+    }
+    IEnumerator Lift(Player p){
+        var sr = p.GetComponentInChildren<SpriteRenderer>();
+        if(sr==null || sr.transform==p.transform)yield break; // the sprite must be a child, or the whole player would move
+        up = true;
+        Vector3 ground = sr.transform.localPosition;
+        var shadow = ThrownWeapon.Shadow(sr, sr.transform.parent);
+        shadow.transform.localPosition = ground;
+        for(float h=0; h>0 || p.Has(BuffType.floating);){
+            h = Mathf.MoveTowards(h, p.Has(BuffType.floating) ? height : 0, height*4*Time.deltaTime); // up and down in 1/4 s
+            sr.transform.localPosition = ground+Vector3.up*h;
+            shadow.sprite = sr.sprite; shadow.flipX = sr.flipX; // it walks too
+            yield return null;
+        }
+        sr.transform.localPosition = ground;
+        Object.Destroy(shadow.gameObject);
+        up = false;
     }
 }
 // earthquake / quake: its stun goes on every enemy of the room and the player, then shakes push them all at once,

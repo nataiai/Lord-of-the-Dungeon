@@ -71,7 +71,8 @@ Chat buffs chat types berserk / invincible / magicshield / physicalshield (3+ le
              berserk     attack x2 at full HP up to x4, no healing (15 s)
              invincible  no damage, no knockback (10 s)
              shields     block magic / physical damage (15 s). Enemy data > isMagical: its touch is magic (Ghost)
-             floating    holes don't take the player (10 s); if it ends over a hole, the player falls
+             floating    holes don't take the player (10 s); if it ends over a hole, the player falls.
+                         The player goes up (Summondb > Floating > Height), a shadow stays below like a thrown weapon's
            earthquake / quake: every enemy of the room and the player are stunned (3 s) and shaken: pushed all at once,
              each a random way, 30 times in 1.5 s. Not the player while invincible (buff, or the frames after a hit)
              or floating. No enemies: no cast. An enemy that hasn't seen you walks back to where it was
