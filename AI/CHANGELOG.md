@@ -72,13 +72,14 @@ Chat buffs chat types berserk / invincible / magicshield / physicalshield (3+ le
              invincible  no damage, no knockback (10 s)
              shields     block magic / physical damage (15 s). Enemy data > isMagical: its touch is magic (Ghost)
              floating    holes don't take the player (10 s); if it ends over a hole, the player falls
-           earthquake / quake: every enemy of the room is stunned (3 s) and pushed away. The player is stunned too,
+           earthquake / quake: every enemy of the room is stunned (3 s) and shaken: pushed all at once, each a random way,
+             3 times in 1.5 s. The player is stunned too,
              never pushed; not stunned while invincible (buff, or the frames after a hit) or floating. No enemies: no cast
            A vote: it casts when need chatters typed the word within 20 s of the first one. Typing it again does nothing.
              need = crowdNeed x sqrt(chatters with a command in the last 2 min), at least 1 (1-2: 1, 3-6: 2, 7-12: 3, 100: 10)
              Time up: nothing, no cooldown used. On cooldown: no votes. Several skills can be voted at once
 [TWEAK]    Summondb > Berserk / Invincible / Magic Shield / Physical Shield / Floating / Earthquake: Cooldown,
-             Buff (duration, effect prefab). Earthquake: Knockback too
+             Buff (duration, effect prefab). Earthquake: Knockback, Shakes, Shake Time too
 [TWEAK]    Experimental > crowdNeed (1; 0 = one chatter is enough), skillKeys: keys 1-6 cast them (test, one voice: "keys")
 [SETUP]    UI > Chat Text: a TMP text. It shows the votes ("berserk 1/2 +Ann 9s") and what chat did ("Ann +1: berserk!")
 

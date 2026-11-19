@@ -93,18 +93,30 @@ public class Floating : ChatSkill{
         p.rb.sleepMode = RigidbodySleepMode2D.NeverSleep; // so it falls when the float ends over a hole
     }
 }
-// earthquake / quake: its stun and a push go on every enemy of the room; the player is stunned too,
-// unless invincible (buff or the frames after a hit) or floating. Never pushed.
+// earthquake / quake: its stun goes on every enemy of the room, then shakes push them all at once, each a random way.
+// The player is stunned too, unless invincible (buff or the frames after a hit) or floating. Never pushed.
 [System.Serializable]
 public class Earthquake : ChatSkill{
-    [Tooltip("How hard enemies are pushed away from the player")]
+    [Tooltip("How hard each shake pushes the enemies, each a random way")]
     public float knockback = 6;
+    [Tooltip("How many shakes: all enemies pushed at once, the first right away")]
+    public int shakes = 3;
+    [Tooltip("Seconds the shakes are spread over")]
+    public float shakeTime = 1.5f;
     public Earthquake(){Set(ChatType.earthquake, BuffType.stun, 3, 45);}
     public override bool CanCast()=>Enemies().Length>0; // no enemies: it would only stun the player
     public override void Cast(Player p){
-        foreach(var e in Enemies()){buff.CopyTo(e.gameObject); e.receiveKnockback(p.center, knockback);}
+        var enemies = Enemies();
+        foreach(var e in enemies)buff.CopyTo(e.gameObject);
+        p.StartCoroutine(Shake(enemies));
         bool immune = Experimental.I.enableInvincible && p.isInvincible || p.Has(BuffType.invincible|BuffType.floating);
         if(!immune)base.Cast(p);
+    }
+    IEnumerator Shake(Enemy[] enemies){
+        for(int i=0;i<shakes;i++){
+            foreach(var e in enemies)if(e)e.receiveKnockback((Vector2)e.transform.position-Random.insideUnitCircle.normalized, knockback);
+            yield return new WaitForSeconds(shakeTime/shakes);
+        }
     }
     static Enemy[] Enemies()=>System.Array.FindAll(GameManager.Instance.currentRoom.GetComponentsInChildren<Enemy>(), e=>!(e is Chest));
 }
