@@ -12,8 +12,9 @@ public class ChatSkill : Skill{
     const float voteTime = 20, activeTime = 120;
     static Dictionary<string,float> seen = new(); // chatter: their last command
     static string said = ""; static float saidAt;
+    float testTime; // its duration in this file (Experimental.testSkillTimes)
     protected void Set(ChatType word, BuffType type, float duration, float cooldown=5){ //test: 60, floating 30, earthquake 45
-        chatType = word; this.cooldown = cooldown; buff = new(){type = type, duration = duration};
+        chatType = word; this.cooldown = cooldown; buff = new(){type = type, duration = duration}; testTime = duration;
     }
     // what it does: its buff on the player. A skill can change it
     public virtual void Cast(Player p){buff.CopyTo(p.gameObject);}
@@ -33,7 +34,7 @@ public class ChatSkill : Skill{
     // Chat.addToDB: a vote. On cooldown: no votes
     public static void Vote(ChatSkill[] skills, string username, ChatType type, string msg){
         var s = System.Array.Find(skills, x=>x.chatType==type);
-        if(s!=null && Experimental.I.testSkillTimes){s.cooldown = 5; s.buff.duration = 3;} // test: Summondb's times don't count
+        if(s!=null && Experimental.I.testSkillTimes){s.cooldown = 5; s.buff.duration = s.testTime;} // test: this file's times, not Summondb's
         if(!Experimental.I.chatSkills || s==null || msg.Trim().Length<3 || !s.isReady || !s.CanCast())return; // "b" or "i" alone is no cast
         s.AddVote(username);
     }
@@ -67,36 +68,36 @@ public class ChatSkill : Skill{
 // attack x2 at full HP up to x4 (Weapon.Damage), no healing (Character.Heal)
 [System.Serializable]
 public class Berserk : ChatSkill{
-    public Berserk(){Set(ChatType.berserk, BuffType.berserk, 15);}
+    public Berserk(){Set(ChatType.berserk, BuffType.berserk, 3);} //test: 15
     public static float Damage(Character by)=>by.Has(BuffType.berserk) ? 4-2f*by.HP/by.maxHP : 1;
 }
 // no damage, no knockback (Player)
 [System.Serializable]
 public class Invincible : ChatSkill{
-    public Invincible(){Set(ChatType.invincible, BuffType.invincible, 10);}
+    public Invincible(){Set(ChatType.invincible, BuffType.invincible, 3);} //test: 10
 }
 // blocks magic damage (Player.recieveDamage). Enemy data > isMagical: its touch is magic
 [System.Serializable]
 public class MagicShield : ChatSkill{
-    public MagicShield(){Set(ChatType.magicShield, BuffType.magicShield, 15);}
+    public MagicShield(){Set(ChatType.magicShield, BuffType.magicShield, 3);} //test: 15
 }
 // blocks physical damage (Player.recieveDamage)
 [System.Serializable]
 public class PhysicalShield : ChatSkill{
-    public PhysicalShield(){Set(ChatType.physicalShield, BuffType.physicalShield, 15);}
+    public PhysicalShield(){Set(ChatType.physicalShield, BuffType.physicalShield, 3);} //test: 15
 }
 // holes don't take the player (Map/Hole.cs); if it ends over a hole, the player falls.
 // The player floats up, a shadow stays below (like a thrown weapon's). Knockback slides further (friction)
 [System.Serializable]
 public class Floating : ChatSkill{
     [Tooltip("How high the player floats above its shadow")]
-    public float height = .5f;
+    public float height = 1;
     [Tooltip("Seconds to float up, and to come down before it ends")]
     public float riseTime = 1;
     [Tooltip("How fast knockback slows down while floating, x the ground's: 1 = like the ground, 0 = no friction (slides on)")]
     public float friction = .2f;
     bool up; float until; // lifted now; when it ends
-    public Floating(){Set(ChatType.floating, BuffType.floating, 10);}
+    public Floating(){Set(ChatType.floating, BuffType.floating, 5);} //test: 10
     // Player.Update: knockback slows down less in the air
     public static float Friction(Character c)=>c.Has(BuffType.floating) ? GameManager.Instance.summondb.floating.friction : 1;
     public override void Cast(Player p){

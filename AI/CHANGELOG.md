@@ -84,7 +84,7 @@ Chat buffs chat types berserk / invincible / magicshield / physicalshield (3+ le
 [TWEAK]    Summondb > Berserk / Invincible / Magic Shield / Physical Shield / Floating / Earthquake: Cooldown,
              Buff (duration, effect prefab). Earthquake: Knockback, Shakes, Shake Time too
 [TWEAK]    Experimental > crowdNeed (1; 0 = one chatter is enough), skillKeys: keys 1-6 cast them (test, one voice: "keys"),
-             testSkillTimes: every chat skill 5 s cooldown, 3 s long (test; off: Summondb's times)
+             testSkillTimes: the times in AI/ChatSkill.cs, 5 s cooldowns, 3 s long (float 5) (test; off: Summondb's)
 [SETUP]    UI > Chat Text: a TMP text. It shows the votes ("berserk 1/2 +Ann 9s") and what chat did ("Ann +1: berserk!")
 
 Summon     each cooldown, the chatter with the fewest turns goes first, then the oldest request (ChatLine in Connector/SummonDB.cs).
