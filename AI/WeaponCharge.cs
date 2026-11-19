@@ -8,7 +8,7 @@ public enum WeaponSkill{None, Big, Spin, Volley, Flurry, Lunge, Multi}
 
 public static class WeaponCharge
 {
-    static readonly Dictionary<SpriteRenderer,Color> baseColor = new();
+    static bool glowing;
 
     // Player.TryAttack: true = no normal attack this frame
     public static bool Blocks(Player p, HoldingWeapons hand, ControllerButton button){
@@ -37,10 +37,9 @@ public static class WeaponCharge
     static bool IsCharged(HoldingWeapons hand)=>hand.getChargePercent()>=1;
     static void Glow(Player p){ // yellow while a hand is charged
         var sr = p.bodySprite;
-        if(sr==null)return;
-        if(!baseColor.ContainsKey(sr))baseColor[sr] = sr.color;
-        bool on = IsCharged(p.lWeapon) || IsCharged(p.rWeapon);
-        sr.color = on ? Color.Lerp(baseColor[sr], Color.yellow, .5f) : baseColor[sr];
+        if(sr==null || glowing || !IsCharged(p.lWeapon) && !IsCharged(p.rWeapon))return;
+        glowing = true;
+        p.StartCoroutine(ChatSkill.Tint(sr, new Color(1,1,0,.5f), ()=>glowing = IsCharged(p.lWeapon) || IsCharged(p.rWeapon))); // false: it ends
     }
 
     static void Fire(Player p, HoldingWeapons hand){

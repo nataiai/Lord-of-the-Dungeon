@@ -23,6 +23,14 @@ public class ChatSkill : Skill{
         copy.sprite = of.sprite; copy.flipX = of.flipX;
     }
 
+    // a colored copy on top while on() (the Animator keeps the sprite's own color). Berserk, WeaponCharge.Glow
+    public static IEnumerator Tint(SpriteRenderer sr, Color c, System.Func<bool> on){
+        var tint = ThrownWeapon.Shadow(sr, sr.transform.parent);
+        tint.name = "tint"; tint.color = c; tint.sortingOrder = sr.sortingOrder+1;
+        while(on()){Copy(tint, sr, Vector3.zero); yield return null;}
+        Object.Destroy(tint.gameObject);
+    }
+
     // UI.chatText: chat can't be answered, the screen can
     public static string Text(){
         string t = Time.time<saidAt+4 ? said : "";
@@ -73,12 +81,10 @@ public class ChatSkill : Skill{
 public class Berserk : ChatSkill{
     public Berserk(){Set(ChatType.berserk, BuffType.berserk, 3);} //test: 15
     public static float Damage(Character by)=>by.Has(BuffType.berserk) ? 4-2f*by.HP/by.maxHP : 1;
-    public override void Cast(Player p){base.Cast(p); var sr = p.bodySprite; if(sr)p.StartCoroutine(Red(sr, p));}
-    IEnumerator Red(SpriteRenderer sr, Player p){ // a red copy on top, for now (the Animator keeps the sprite's own color)
-        var red = ThrownWeapon.Shadow(sr, sr.transform.parent);
-        red.name = "berserk"; red.color = new Color(1,0,0,.5f); red.sortingOrder = sr.sortingOrder+1;
-        while(p.Has(BuffType.berserk)){Copy(red, sr, Vector3.zero); yield return null;}
-        Object.Destroy(red.gameObject);
+    public override void Cast(Player p){ // looks red, for now
+        base.Cast(p);
+        var sr = p.bodySprite;
+        if(sr)p.StartCoroutine(Tint(sr, new Color(1,0,0,.5f), ()=>p.Has(BuffType.berserk)));
     }
 }
 // no damage, no knockback (Player)
