@@ -108,7 +108,7 @@ public class Player : Character
         if(Experimental.I.lookFollowMovement){if(isMoving)looking = movement;}
         else if(controller.looking.magnitude>0)looking = controller.looking;
         else if(!isLooking)looking = movement;
-        if(!StuntMech(8))rb.velocity = movement * initSpeed;
+        if(!StuntMech(8*Floating.Friction(this)))rb.velocity = movement * initSpeed;
         if(ThrownWeapon.TryThrow(this)){UpdateAnim(); return;}
         TryAttack(lWeapon, controller.attackLeft);
         TryAttack(rWeapon, controller.attackRight);

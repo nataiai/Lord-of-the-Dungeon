@@ -72,7 +72,9 @@ Chat buffs chat types berserk / invincible / magicshield / physicalshield (3+ le
              invincible  no damage, no knockback (10 s)
              shields     block magic / physical damage (15 s). Enemy data > isMagical: its touch is magic (Ghost)
              floating    holes don't take the player (10 s); if it ends over a hole, the player falls.
-                         The player goes up (Summondb > Floating > Height), a shadow stays below like a thrown weapon's
+                         The player floats up (Summondb > Floating > Height, Rise Time), a shadow stays below like a
+                         thrown weapon's, and lands as it ends. Friction: how fast knockback slows down in the air
+                         (1 = like the ground, 0 = slides on)
            earthquake / quake: every enemy of the room and the player are stunned (3 s) and shaken: pushed all at once,
              each a random way, 30 times in 1.5 s. Not the player while invincible (buff, or the frames after a hit)
              or floating. No enemies: no cast. An enemy that hasn't seen you walks back to where it was
@@ -81,7 +83,8 @@ Chat buffs chat types berserk / invincible / magicshield / physicalshield (3+ le
              Time up: nothing, no cooldown used. On cooldown: no votes. Several skills can be voted at once
 [TWEAK]    Summondb > Berserk / Invincible / Magic Shield / Physical Shield / Floating / Earthquake: Cooldown,
              Buff (duration, effect prefab). Earthquake: Knockback, Shakes, Shake Time too
-[TWEAK]    Experimental > crowdNeed (1; 0 = one chatter is enough), skillKeys: keys 1-6 cast them (test, one voice: "keys")
+[TWEAK]    Experimental > crowdNeed (1; 0 = one chatter is enough), skillKeys: keys 1-6 cast them (test, one voice: "keys"),
+             testSkillTimes: every chat skill 5 s cooldown, 3 s long (test; off: Summondb's times)
 [SETUP]    UI > Chat Text: a TMP text. It shows the votes ("berserk 1/2 +Ann 9s") and what chat did ("Ann +1: berserk!")
 
 Summon     each cooldown, the chatter with the fewest turns goes first, then the oldest request (ChatLine in Connector/SummonDB.cs).

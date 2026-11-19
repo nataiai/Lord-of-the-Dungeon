@@ -33,6 +33,7 @@ public class ChatSkill : Skill{
     // Chat.addToDB: a vote. On cooldown: no votes
     public static void Vote(ChatSkill[] skills, string username, ChatType type, string msg){
         var s = System.Array.Find(skills, x=>x.chatType==type);
+        if(s!=null && Experimental.I.testSkillTimes){s.cooldown = 5; s.buff.duration = 3;} // test: Summondb's times don't count
         if(!Experimental.I.chatSkills || s==null || msg.Trim().Length<3 || !s.isReady || !s.CanCast())return; // "b" or "i" alone is no cast
         s.AddVote(username);
     }
@@ -85,30 +86,41 @@ public class PhysicalShield : ChatSkill{
     public PhysicalShield(){Set(ChatType.physicalShield, BuffType.physicalShield, 15);}
 }
 // holes don't take the player (Map/Hole.cs); if it ends over a hole, the player falls.
-// The player goes up, a shadow stays below (like a thrown weapon's)
+// The player floats up, a shadow stays below (like a thrown weapon's). Knockback slides further (friction)
 [System.Serializable]
 public class Floating : ChatSkill{
     [Tooltip("How high the player floats above its shadow")]
     public float height = .5f;
-    bool up; // lifted now
+    [Tooltip("Seconds to float up, and to come down before it ends")]
+    public float riseTime = 1;
+    [Tooltip("How fast knockback slows down while floating, x the ground's: 1 = like the ground, 0 = no friction (slides on)")]
+    public float friction = .2f;
+    bool up; float until; // lifted now; when it ends
     public Floating(){Set(ChatType.floating, BuffType.floating, 10);}
+    // Player.Update: knockback slows down less in the air
+    public static float Friction(Character c)=>c.Has(BuffType.floating) ? GameManager.Instance.summondb.floating.friction : 1;
     public override void Cast(Player p){
         base.Cast(p);
+        until = Time.time+buff.duration;
         p.rb.sleepMode = RigidbodySleepMode2D.NeverSleep; // so it falls when the float ends over a hole
         if(!up)p.StartCoroutine(Lift(p));
     }
     IEnumerator Lift(Player p){
-        var sr = p.GetComponentInChildren<SpriteRenderer>();
+        var sr = p.GetComponentInChildren<SpriteRenderer>(); // its sorting layer, like a thrown weapon's shadow
         if(sr==null)yield break;
+        var body = System.Array.Find(p.GetComponentsInChildren<SpriteRenderer>(), s=>s.sprite) ?? sr; // the one you see
         up = true;
-        var shadow = ThrownWeapon.Shadow(sr, sr.transform.parent);
-        shadow.transform.localScale = sr.transform.localScale;
-        for(float h=0; h!=0 || p.Has(BuffType.floating);){
+        var shadow = ThrownWeapon.Shadow(sr, body.transform.parent);
+        shadow.transform.localScale = body.transform.localScale;
+        float rise = Mathf.Max(riseTime,.01f), t = 0, h = 0, left = 1; // t: 0 = on the ground, 1 = up
+        while(left>0){
+            left = p.Has(BuffType.floating) ? until-Time.time : 0;
+            t = Mathf.Min(Mathf.MoveTowards(t, 1, Time.deltaTime/rise), left/rise); // up at the start, lands as it ends
             float was = h;
-            h = Mathf.MoveTowards(h, p.Has(BuffType.floating) ? height : 0, height*4*Time.deltaTime); // up and down in 1/4 s
-            p.transform.position += Vector3.up*(h-was); // the player, not its sprite: the Animator moves that
-            shadow.transform.position = sr.transform.position+Vector3.down*h;
-            shadow.sprite = sr.sprite; shadow.flipX = sr.flipX; // it walks too
+            h = height*Mathf.SmoothStep(0, 1, t);
+            p.rb.position += Vector2.up*(h-was); // the player, not its sprite: the Animator moves that
+            shadow.transform.position = body.transform.position+Vector3.down*h;
+            shadow.sprite = body.sprite; shadow.flipX = body.flipX; // it walks too
             yield return null;
         }
         Object.Destroy(shadow.gameObject);
