@@ -12,7 +12,7 @@ public class ChatSkill : Skill{
     const float voteTime = 20, activeTime = 120;
     static Dictionary<string,float> seen = new(); // chatter: their last command
     static string said = ""; static float saidAt;
-    protected void Set(ChatType word, BuffType type, float duration, float cooldown=60){
+    protected void Set(ChatType word, BuffType type, float duration, float cooldown=5){ //test: 60, floating 30, earthquake 45
         chatType = word; this.cooldown = cooldown; buff = new(){type = type, duration = duration};
     }
     // what it does: its buff on the player. A skill can change it
@@ -87,7 +87,7 @@ public class PhysicalShield : ChatSkill{
 // holes don't take the player (Map/Hole.cs); if it ends over a hole, the player falls
 [System.Serializable]
 public class Floating : ChatSkill{
-    public Floating(){Set(ChatType.floating, BuffType.floating, 10, 30);}
+    public Floating(){Set(ChatType.floating, BuffType.floating, 10);}
     public override void Cast(Player p){
         base.Cast(p);
         p.rb.sleepMode = RigidbodySleepMode2D.NeverSleep; // so it falls when the float ends over a hole
@@ -103,7 +103,7 @@ public class Earthquake : ChatSkill{
     public int shakes = 3;
     [Tooltip("Seconds the shakes are spread over")]
     public float shakeTime = 1.5f;
-    public Earthquake(){Set(ChatType.earthquake, BuffType.stun, 3, 45);}
+    public Earthquake(){Set(ChatType.earthquake, BuffType.stun, 3);}
     public override bool CanCast()=>Enemies().Length>0; // no enemies: it would only stun the player
     public override void Cast(Player p){
         var enemies = Enemies();
