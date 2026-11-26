@@ -2,200 +2,292 @@
 "_about": "Data for the Dungeon Flow page (Claude writes it, the page reads it with the .cs files). kids: boxes one layer down. steps: a list, top to bottom. flow: steps left to right, p = the step that calls it, fn = its function. code: [file, first line, last line] from the repo root. Unity skips Flow~ (no .meta).",
 "nodes": {
 "root": {"t":"Lord of the Dungeon","s":"What Unity calls, in the order it calls it","kids":["title","awake","start","physics","update","coroutines","late","onoff"]},
-"title": {"g":"once","t":"Title scene","s":"Type a channel, press Enter Dungeon","in":["channel name typed","button click"],"out":["Data.cn","scene DungeonRoom"],"seq":true,"steps":[
-  {"t":"Save the channel","d":"The input field's button calls this. Data is a static class that is not in this repo.","in":["text box"],"out":["Data.cn"],"code":["ChannelBtn.cs",6,10]},
-  {"t":"Load the dungeon","d":"The Enter button. The scene change starts Awake on every object in DungeonRoom.","in":["button click"],"out":["scene DungeonRoom"],"code":["Title.cs",14,15]},
-  {"t":"The channel is read later","d":"Not at load: the first enemy death or first weapon pickup calls this, once.","in":["Data.cn"],"out":["chat connection"],"code":["GameManager.cs",60,65]}
+"title": {"g":"once","t":"Title scene","s":"Type a channel, press Enter Dungeon","in":["channel name typed","button click"],"out":["Data.cn","scene DungeonRoom"],"seq":true,"flow":[
+  {"k":"save","fn":"ChannelBtn.Call()","t":"Save the channel","d":"The input field's button calls this. Data is a static class that is not in this repo.","in":["text box"],"out":["Data.cn"],"code":["ChannelBtn.cs",8,9]},
+  {"k":"load","fn":"Title.EnterDungeon()","t":"Load the dungeon","d":"The Enter button. The scene change starts Awake on every object in DungeonRoom.","in":["button click"],"out":["scene DungeonRoom"],"code":["Title.cs",15,15]},
+  {"k":"show","p":"load","fn":"Title.SubmitInput()","t":"Show what was typed","d":"Writes \"You entered:\" and the typed text on screen, then the scene loads.","in":["userInput"],"out":["resultDisplay"],"code":["Title.cs",14,14]},
+  {"k":"read","fn":"GameManager._Connect()","t":"The channel is read later","d":"Not at load: the first enemy death or first weapon pickup calls this, once.","in":["Data.cn"],"out":["chat connection"],"code":["GameManager.cs",60,65]},
+  {"k":"try","p":"read","fn":"UnifiedChat.TryConnect()","t":"Our own reader","d":"Only with unifiedChat on: opens a Twitch or YouTube reader. False falls back to Lexone.","in":["Data.cn","unifiedChat"],"out":["true = opened"],"code":["AI/UnifiedChat.cs",23,23]},
+  {"k":"lex","p":"read","fn":"TwitchChat.Connect()","t":"Lexone backup","d":"Joins the channel through the Lexone IRC package, and listens for its chat lines.","in":["chat.channel"],"out":["OnChatMessage"],"code":["Connector/TwitchChat.cs",21,24]},
+  {"k":"keep","p":"lex","fn":"UnifiedChat.KeepLexone()","t":"Keep Lexone up","d":"Sets irc.channel and reconnects when chat is quiet. No Lexone or WebGL: our own reader.","in":["irc","channel"],"out":["irc.channel","false = no Lexone"],"code":["AI/UnifiedChat.cs",36,44]}
 ]},
 "awake": {"par":true,"g":"once","t":"Awake","s":"Each object sets itself up","in":["scene objects","Inspector fields"],"out":["singletons","UI lists","room bounds"],"kids":["gm-awake","ui-awake","spawner-awake","small-awake"]},
-"gm-awake": {"t":"GameManager.Awake","s":"The singleton, cameras, the UI, frame rate","in":["Camera.main","uiPrefab","FPS"],"out":["GameManager.Instance","ui, mainCam, uiCam"],"seq":true,"steps":[
-  {"t":"Be the only one","d":"A second GameManager removes itself. This one stays across scenes.","out":["GameManager.Instance"],"code":["GameManager.cs",34,37]},
-  {"t":"Find the cameras","d":"UI Cam is a child of the main camera.","in":["Camera.main"],"out":["mainCam","uiCam"],"code":["GameManager.cs",38,39]},
-  {"t":"Find or make the UI","d":"Uses the UI in the scene; if there is none, makes one from uiPrefab. That runs UI.Awake right away.","in":["uiPrefab"],"out":["ui"],"code":["GameManager.cs",40,41],"open":"ui-awake"},
-  {"t":"Set the frame rate","d":"vSync off so targetFrameRate counts.","in":["FPS = 60"],"out":["Application.targetFrameRate"],"code":["GameManager.cs",42,44]}
+"gm-awake": {"t":"GameManager.Awake","s":"The singleton, cameras, the UI, frame rate","in":["Camera.main","uiPrefab","FPS"],"out":["GameManager.Instance","ui, mainCam, uiCam"],"seq":true,"flow":[
+  {"k":"one","fn":"GameManager.Awake()","t":"Be the only one","d":"A second GameManager removes itself. This one stays across scenes.","in":[],"out":["GameManager.Instance"],"code":["GameManager.cs",34,37]},
+  {"k":"cams","fn":"GameManager.Awake()","t":"Find the cameras","d":"UI Cam is a child of the main camera.","in":["Camera.main"],"out":["mainCam","uiCam"],"code":["GameManager.cs",38,39]},
+  {"k":"ui","fn":"GameManager.Awake()","t":"Find or make the UI","d":"Uses the scene's UI, or makes one from uiPrefab. That runs UI.Awake right away.","in":["uiPrefab"],"out":["ui"],"code":["GameManager.cs",40,41],"open":"ui-awake"},
+  {"k":"fps","fn":"GameManager.Awake()","t":"Set the frame rate","d":"vSync off so targetFrameRate counts.","in":["FPS = 60"],"out":["Application.targetFrameRate"],"code":["GameManager.cs",42,44]}
 ]},
-"ui-awake": {"t":"UI.Awake","s":"Collects its own child images","in":["healthUI children","skillSlot children","weapon icons"],"out":["heart","skills","leftFill, rightFill"],"seq":true,"steps":[
-  {"t":"Hearts","d":"One Image per child of healthUI.","in":["healthUI"],"out":["heart list"],"code":["UI.cs",33,35]},
-  {"t":"Skill slots","d":"Each slot image, and its first child as the reload image.","in":["skillSlot"],"out":["skills","skillsReload"],"code":["UI.cs",36,36]},
-  {"t":"Text labels","d":"The enemy name box and the dialogue box.","out":["enemyNameTextLabel","dialogueTextLabel"],"code":["UI.cs",37,38]},
-  {"t":"Weapon cooldown fills","d":"The child named \"Fill\" under each weapon icon.","in":["leftWeapon","rightWeapon"],"out":["leftFill","rightFill"],"code":["UI.cs",39,40]},
-  {"t":"Charge fills (off)","d":"Only when showCharge is on: the child named \"Charge\".","in":["showCharge = false"],"out":["leftCharge","rightCharge"],"code":["UI.cs",41,45]}
+"ui-awake": {"t":"UI.Awake","s":"Collects its own child images","in":["healthUI children","skillSlot children","weapon icons"],"out":["heart","skills","leftFill, rightFill"],"seq":true,"flow":[
+  {"k":"hearts","fn":"UI.Awake()","t":"Hearts","d":"One Image per child of healthUI.","in":["healthUI"],"out":["heart list"],"code":["UI.cs",33,35]},
+  {"k":"skills","fn":"UI.Awake()","t":"Skill slots","d":"Each slot image, and its first child as the reload image.","in":["skillSlot"],"out":["skills","skillsReload"],"code":["UI.cs",36,36]},
+  {"k":"labels","fn":"UI.Awake()","t":"Text labels","d":"The enemy name box and the dialogue box.","in":[],"out":["enemyNameTextLabel","dialogueTextLabel"],"code":["UI.cs",37,38]},
+  {"k":"fills","fn":"UI.Awake()","t":"Weapon cooldown fills","d":"The child named \"Fill\" under each weapon icon.","in":["leftWeapon","rightWeapon"],"out":["leftFill","rightFill"],"code":["UI.cs",39,40]},
+  {"k":"charge","fn":"UI.Awake()","t":"Charge fills (off)","d":"Only when showCharge is on: the child named \"Charge\".","in":["showCharge = false"],"out":["leftCharge","rightCharge"],"code":["UI.cs",41,45]}
 ]},
-"spawner-awake": {"t":"Spawner.Awake","s":"Measures the room floor","in":["floor Tilemap"],"out":["bounds"],"seq":true,"steps":[
-  {"t":"Measure the floor","d":"On each room's floor tilemap. DungeonRoom.bounds reads this; spawning and pathfinding stay inside it.","in":["Tilemap","TilemapRenderer"],"out":["bounds"],"code":["Spawner.cs",5,14]},
-  {"t":"Who reads it","d":"The room hands it on.","in":["spawner.bounds"],"out":["DungeonRoom.bounds"],"code":["Map/DungeonRoom.cs",7,10]}
+"spawner-awake": {"t":"Spawner.Awake","s":"Measures the room floor","in":["floor Tilemap"],"out":["bounds"],"seq":true,"flow":[
+  {"k":"floor","fn":"Spawner.Awake()","t":"Measure the floor","d":"On each room's floor tilemap. DungeonRoom.bounds reads this; spawning and pathfinding stay inside it.","in":["Tilemap","TilemapRenderer"],"out":["bounds"],"code":["Spawner.cs",10,14]},
+  {"k":"reads","fn":"DungeonRoom.bounds","t":"Who reads it","d":"The room hands it on.","in":["spawner.bounds"],"out":["DungeonRoom.bounds"],"code":["Map/DungeonRoom.cs",10,10]}
 ]},
-"small-awake": {"t":"Small ones","s":"One line each","in":["their own components"],"out":["SoundPlayer.instance","Experimental.I","PrefabDatabase.Instance"],"steps":[
-  {"t":"SoundPlayer","d":"The static everyone plays sounds through.","out":["SoundPlayer.instance"],"code":["SoundPlayer.cs",13,14]},
-  {"t":"Hole","d":"Gets a kinematic body so it receives trigger events.","out":["Rigidbody2D"],"code":["Map/Hole.cs",9,12]},
-  {"t":"BaseWeapon","d":"Runs when a weapon animation is made in an attack, not at load.","out":["anim"],"code":["Player/Weapons/BaseWeapon.cs",9,9]},
-  {"t":"Experimental.I","d":"No Awake: found (or made) the first time anything reads a switch.","out":["Experimental.I"],"code":["Experimental.cs",3,5]},
-  {"t":"PrefabDatabase.Instance","d":"No Awake: loaded from Resources on first use (the fist).","in":["Resources/PrefabDatabase.asset"],"out":["fist"],"code":["Data Types/PrefabDatabase.cs",9,13]}
+"small-awake": {"t":"Small ones","s":"One line each","in":["their own components"],"out":["SoundPlayer.instance","Experimental.I","PrefabDatabase.Instance"],"seq":false,"flow":[
+  {"k":"sound","fn":"SoundPlayer.Awake()","t":"SoundPlayer","d":"The static everyone plays sounds through.","in":[],"out":["SoundPlayer.instance"],"code":["SoundPlayer.cs",13,14]},
+  {"k":"hole","fn":"Hole.Awake()","t":"Hole","d":"Gets a kinematic body so it receives trigger events.","in":[],"out":["Rigidbody2D"],"code":["Map/Hole.cs",9,12]},
+  {"k":"weap","fn":"BaseWeapon.Awake()","t":"BaseWeapon","d":"Runs when a weapon animation is made in an attack, not at load.","in":[],"out":["anim"],"code":["Player/Weapons/BaseWeapon.cs",9,9]},
+  {"k":"exp","fn":"Experimental.I","t":"Experimental.I","d":"No Awake: found (or made) the first time anything reads a switch.","in":[],"out":["Experimental.I"],"code":["Experimental.cs",4,5]},
+  {"k":"prefab","fn":"PrefabDatabase.Instance","t":"PrefabDatabase.Instance","d":"No Awake: loaded from Resources on first use (the fist).","in":["Resources/PrefabDatabase.asset"],"out":["fist"],"code":["Data Types/PrefabDatabase.cs",9,13]}
 ]},
 "start": {"par":true,"g":"once","t":"Start","s":"Objects read each other, before their first Update","in":["GameManager.Instance","enemyData","Inspector links"],"out":["hearts shown","door pairs","mini map","camera follow"],"kids":["gm-start","player-start","enemy-start","map-start","ui-start","small-start"]},
-"gm-start": {"t":"GameManager.Start","s":"Shows the player's hearts","in":["player.maxHP","player.HP"],"out":["hearts on screen","soundPlayer"],"seq":true,"steps":[
-  {"t":"Hearts and the sound player","d":"Hands the player's HP to the UI, and finds the SoundPlayer for room music.","in":["player.maxHP","player.HP"],"out":["ui hearts","soundPlayer"],"code":["GameManager.cs",45,49]},
-  {"t":"How the hearts are drawn","d":"Copies heart[0] until there are enough, shows maxHP of them, then picks full or empty sprites.","in":["maxHP","HP"],"out":["heart images"],"code":["UI.cs",75,80]}
+"gm-start": {"t":"GameManager.Start","s":"Shows the player's hearts","in":["player.maxHP","player.HP"],"out":["hearts on screen","soundPlayer"],"seq":true,"flow":[
+  {"k":"hearts","fn":"GameManager.Start()","t":"Show the hearts","d":"Hands the player's max HP and HP to the UI.","in":["player.maxHP","player.HP"],"out":["ui hearts"],"code":["GameManager.cs",46,47]},
+  {"k":"max","p":"hearts","fn":"UI.UpdateMaxHP()","t":"Enough hearts","d":"Copies heart[0] until there are enough, then shows maxHP of them.","in":["maxHP"],"out":["heart images"],"code":["UI.cs",75,79]},
+  {"k":"hp","p":"hearts","fn":"UI.UpdateHP()","t":"Full or empty","d":"Hearts below HP get the full sprite, the rest the empty one.","in":["HP"],"out":["heart sprites"],"code":["UI.cs",80,80]},
+  {"k":"sound","fn":"GameManager.Start()","t":"Find the sound player","d":"Finds the SoundPlayer; UpdateMusic uses it for room music when the room changes.","in":[],"out":["soundPlayer"],"code":["GameManager.cs",48,48]}
 ]},
-"player-start": {"t":"Player.Start","s":"Full HP, links the controller","in":["maxHP","GameManager.controller"],"out":["HP","controller","roomEntryPos"],"seq":true,"steps":[
-  {"t":"Set up the player","d":"Full HP (the setter also updates the hearts). Remembers where it stands as the respawn point.","in":["maxHP","controller"],"out":["HP","roomEntryPos","invincibleTime"],"code":["Player.cs",98,103]},
-  {"t":"The HP setters","d":"Every HP or maxHP change goes straight to the UI. No event, just a call.","in":["HP","maxHP"],"out":["ui.UpdateHP","ui.UpdateMaxHP"],"code":["Player.cs",96,96]}
+"player-start": {"t":"Player.Start","s":"Full HP, links the controller","in":["maxHP","GameManager.controller"],"out":["HP","controller","roomEntryPos"],"seq":true,"flow":[
+  {"k":"hp","fn":"Player.Start()","t":"Full HP","d":"HP starts at maxHP; the setter also updates the hearts.","in":["maxHP"],"out":["HP"],"code":["Player.cs",99,99]},
+  {"k":"max","p":"hp","fn":"Player.maxHP","t":"Max HP","d":"_maxHP from the Inspector (4 by default); setting it changes the heart count.","in":["_maxHP"],"out":["maxHP"],"code":["Player.cs",68,69]},
+  {"k":"set","p":"hp","fn":"Player.HP","t":"The HP setter","d":"Every HP change goes straight to the UI. No event, just a call.","in":["HP"],"out":["ui.UpdateHP"],"code":["Player.cs",96,96]},
+  {"k":"ui","p":"set","fn":"UI.UpdateHP()","t":"Full or empty hearts","d":"Hearts below HP get the full sprite, the rest the empty one.","in":["HP"],"out":["heart sprites"],"code":["UI.cs",80,80]},
+  {"k":"link","fn":"Player.Start()","t":"Controller and respawn point","d":"Takes GameManager's Controller and remembers where it stands as the respawn point.","in":["GameManager.controller","position"],"out":["controller","roomEntryPos"],"code":["Player.cs",100,101]},
+  {"k":"inv","fn":"Player.Start()","t":"Not invincible yet","d":"invincibleTime is now, so isInvincible starts false.","in":["Time.time"],"out":["invincibleTime"],"code":["Player.cs",102,102]}
 ]},
-"enemy-start": {"t":"Enemy.Start","s":"HP, home, sprite, layer, spawn as trigger","in":["enemyData","its own sprite"],"out":["HP","home","sr","justSpawn"],"seq":true,"steps":[
-  {"t":"Set up the enemy","d":"HP from EnemySO. Finds the sprite it tints. Spawns as a trigger so it does not shove things; Update turns that off once it is free.","in":["enemyData.maxHP","SpriteRenderer"],"out":["HP","born","home","originalSRcolor","layer Enemy"],"code":["Enemy.cs",59,74]},
-  {"t":"What EnemySO holds","d":"The asset each enemy reads: speed, HP, stats, knockback, notice range.","in":["Database/Enemies/*.asset"],"out":["enemyData"],"code":["Data Types/Enemy.cs",5,24]}
+"enemy-start": {"t":"Enemy.Start","s":"HP, home, sprite, layer, spawn as trigger","in":["enemyData","its own sprite"],"out":["HP","home","sr","justSpawn"],"seq":true,"flow":[
+  {"k":"hp","fn":"Enemy.Start()","t":"HP, birth and home","d":"HP from EnemySO. born starts its 24 h life; home is where it walks back to.","in":["enemyData.maxHP"],"out":["HP","born","home"],"code":["Enemy.cs",60,62]},
+  {"k":"so","p":"hp","fn":"EnemySO.maxHP","t":"What EnemySO holds","d":"The asset each enemy reads: speed, HP, stats, knockback, notice range.","in":["Database/Enemies/*.asset"],"out":["enemyData"],"code":["Data Types/Enemy.cs",5,24]},
+  {"k":"sr","fn":"Enemy.Start()","t":"Find its sprite","d":"Finds the sprite it tints red when hurt, and keeps its color to go back to.","in":["SpriteRenderer"],"out":["sr","originalSRcolor"],"code":["Enemy.cs",63,68]},
+  {"k":"body","fn":"Enemy.Start()","t":"Body and layer","d":"It never rotates, and goes on the Enemy layer.","in":["Rigidbody2D"],"out":["freezeRotation","layer Enemy"],"code":["Enemy.cs",69,70]},
+  {"k":"trig","fn":"Enemy.Start()","t":"Spawn as a trigger","d":"A trigger so it does not shove things; Update turns that off once it is free.","in":["Collider2D"],"out":["col.isTrigger","justSpawn"],"code":["Enemy.cs",71,73]}
 ]},
-"map-start": {"t":"DungeonMap.Start","s":"Pairs doors, finds the room you are in","in":["RoomTrigger objects","allRooms"],"out":["triggerMap","currentRoom"],"seq":true,"steps":[
-  {"t":"All rooms","d":"Filled in the editor (OnValidate), inactive rooms too.","out":["allRooms"],"code":["Map/DungeonMap.cs",13,13]},
-  {"t":"Find doors and the first room","d":"Every RoomTrigger, inactive ones too. The room holding the player becomes currentRoom.","in":["RoomTrigger","player position"],"out":["roomTrigger","currentRoom"],"code":["Map/DungeonMap.cs",15,19]},
-  {"t":"Pair each door","d":"Each door's partner is the nearest door in another room.","in":["roomTrigger"],"out":["triggerMap"],"code":["Map/DungeonMap.cs",20,30]}
+"map-start": {"t":"DungeonMap.Start","s":"Pairs doors, finds the room you are in","in":["RoomTrigger objects","allRooms"],"out":["triggerMap","currentRoom"],"seq":true,"flow":[
+  {"k":"rooms","fn":"DungeonMap.OnValidate()","t":"All rooms","d":"Filled in the editor (OnValidate), inactive rooms too.","in":[],"out":["allRooms"],"code":["Map/DungeonMap.cs",13,13]},
+  {"k":"doors","fn":"DungeonMap.Start()","t":"Find and pair doors","d":"Every RoomTrigger, inactive ones too, then each one gets a partner door.","in":["RoomTrigger"],"out":["roomTrigger","triggerMap"],"code":["Map/DungeonMap.cs",16,17]},
+  {"k":"pair","p":"doors","fn":"DungeonMap.fillTriggerMap()","t":"Pair each door","d":"Each door's partner is the nearest door in another room.","in":["roomTrigger"],"out":["triggerMap"],"code":["Map/DungeonMap.cs",20,30]},
+  {"k":"room","fn":"DungeonMap.Start()","t":"Find the first room","d":"The active room holding the player becomes currentRoom.","in":["allRooms","player position"],"out":["currentRoom"],"code":["Map/DungeonMap.cs",18,18]},
+  {"k":"bounds","p":"room","fn":"DungeonRoom.bounds","t":"Room bounds","d":"The room's floor area, measured by its Spawner in Awake.","in":["spawner.bounds"],"out":["Bounds"],"code":["Map/DungeonRoom.cs",10,10],"open":"spawner-awake"}
 ]},
-"ui-start": {"t":"UI.Start","s":"Canvas camera, mini map, weapon icons","in":["uiCam","player weapons"],"out":["canvas","MiniMap","weapon sprites"],"seq":true,"steps":[
-  {"t":"Set up the canvas","d":"Draws through the UI camera, adds the mini map, shows the weapons.","in":["GameManager.uiCam"],"out":["Canvas.worldCamera","MiniMap component"],"code":["UI.cs",46,52]},
-  {"t":"Weapon icons","d":"The held weapon's uiWep sprite in each slot. Called again on every pickup or throw.","in":["lWeapon.weapon","rWeapon.weapon"],"out":["wepImages"],"code":["UI.cs",86,89]},
-  {"t":"Mini map is built","d":"Two panels (corner, big), and a content layer for room pictures.","out":["mini","big","content"],"code":["AI/MiniMap.cs",36,46]}
+"ui-start": {"t":"UI.Start","s":"Canvas camera, mini map, weapon icons","in":["uiCam","player weapons"],"out":["canvas","MiniMap","weapon sprites"],"seq":true,"flow":[
+  {"k":"cam","fn":"UI.Start()","t":"Canvas on the UI camera","d":"Draws through the UI camera that GameManager found in Awake.","in":["GameManager.uiCam"],"out":["Canvas.worldCamera"],"code":["UI.cs",47,49]},
+  {"k":"mm","fn":"UI.Start()","t":"Add the mini map","d":"Adds the MiniMap component; it builds itself in its own Start.","in":[],"out":["MiniMap component"],"code":["UI.cs",50,50]},
+  {"k":"wep","fn":"UI.Start()","t":"Show the weapons","d":"Puts each hand's weapon icon in its slot.","in":["player weapons"],"out":["wepImages"],"code":["UI.cs",51,51]},
+  {"k":"uw","p":"wep","fn":"UI.UpdateWeap()","t":"Weapon icons","d":"The held weapon's uiWep sprite in each slot. Called again on every pickup or throw.","in":["lWeapon.weapon","rWeapon.weapon"],"out":["wepImages"],"code":["UI.cs",86,89]},
+  {"k":"build","fn":"MiniMap.Start()","t":"Mini map is built","d":"Its own Start: two panels (corner, big), a content layer for room pictures, and you.","in":[],"out":["mini","big","content"],"code":["AI/MiniMap.cs",36,46]}
 ]},
-"small-start": {"t":"Small ones","s":"Camera, chat object, dialogue, items, locks","in":["their links"],"out":["camera target","irc","dialogue"],"steps":[
-  {"t":"FollowPlayer","d":"The Cinemachine camera follows the player.","in":["player.transform"],"out":["cinCam.Follow"],"code":["FollowPlayer.cs",9,9]},
-  {"t":"TwitchChat","d":"Grabs the Lexone IRC object. It does not connect yet.","out":["irc"],"code":["Connector/TwitchChat.cs",15,19]},
-  {"t":"Dialogue","d":"OnStart dialogue boxes call the UI right away (the first room's intro).","in":["sequence","dialogueText"],"out":["ui.Dialogue"],"code":["Dialogue.cs",30,38]},
-  {"t":"The dialogue text","d":"The named sequences.","out":["Dialogues.text"],"code":["Dialogue.cs",4,20]},
-  {"t":"Loot","d":"Gets a sprite and a trigger collider if the prefab has none.","out":["sprite","BoxCollider2D"],"code":["Loot.cs",22,27]},
-  {"t":"InstantItemOnFloor","d":"Plays the item's idle animation.","in":["itemSO.anim_item"],"out":["anim.Play"],"code":["Map/InstantItemOnFloor.cs",12,16]},
-  {"t":"HitBox","d":"Runs on the first frame of each attack. No timer and no speed: gone after two physics steps.","in":["weapon.destroyTimer","weapon.velocity"],"out":["Destroy timer"],"code":["HitBox.cs",25,28]},
-  {"t":"BuffEffect","d":"On a character: finds it and shows the buff's effect.","in":["buff.effect"],"out":["cha","shown"],"code":["BuffEffect.cs",41,46]},
-  {"t":"Lock","d":"With locks off in Experimental, every lock starts open.","in":["Experimental.locks"],"out":["Unlock()"],"code":["AI/Lock.cs",19,19]}
+"small-start": {"t":"Small ones","s":"Camera, chat object, dialogue, items, locks","in":["their links"],"out":["camera target","irc","dialogue"],"seq":false,"flow":[
+  {"k":"cam","fn":"FollowPlayer.Start()","t":"FollowPlayer","d":"The Cinemachine camera follows the player.","in":["player.transform"],"out":["cinCam.Follow"],"code":["FollowPlayer.cs",9,9]},
+  {"k":"irc","fn":"TwitchChat.Start()","t":"TwitchChat","d":"Grabs the Lexone IRC object. It does not connect yet.","in":[],"out":["irc"],"code":["Connector/TwitchChat.cs",15,19]},
+  {"k":"dlg","fn":"Dialogue.Start()","t":"Dialogue","d":"OnStart dialogue boxes call the UI right away (the first room's intro).","in":["tt"],"out":["Call()"],"code":["Dialogue.cs",30,34]},
+  {"k":"call","p":"dlg","fn":"Dialogue.Call()","t":"Pick the lines","d":"Its own dialogueText when sequence is None, else that named sequence.","in":["sequence","dialogueText"],"out":["ui.Dialogue"],"code":["Dialogue.cs",36,38]},
+  {"k":"text","p":"call","fn":"Dialogues.text","t":"The dialogue text","d":"The named sequences.","in":[],"out":["Dialogues.text"],"code":["Dialogue.cs",4,20]},
+  {"k":"ui","p":"call","fn":"UI.Dialogue()","t":"Hand it to the UI","d":"Keeps the lines and when they started; UI.Update types them out.","in":["text"],"out":["dialogueTextToShow"],"code":["UI.cs",90,94],"open":"ui-update"},
+  {"k":"loot","fn":"Loot.Start()","t":"Loot","d":"Gets a sprite and a trigger collider if the prefab has none.","in":[],"out":["sprite","BoxCollider2D"],"code":["Loot.cs",22,27]},
+  {"k":"img","p":"loot","fn":"Loot.UpdateImage()","t":"Weapon picture","d":"Weapon loot shows the weapon's uiWep sprite.","in":["weaponLoot.uiWep"],"out":["sr.sprite"],"code":["Loot.cs",29,29]},
+  {"k":"item","fn":"InstantItemOnFloor.Start()","t":"InstantItemOnFloor","d":"Plays the item's idle animation.","in":["itemSO.anim_item"],"out":["anim.Play"],"code":["Map/InstantItemOnFloor.cs",12,16]},
+  {"k":"hb","fn":"HitBox.Start()","t":"HitBox","d":"Runs on the first frame of each attack. No timer and no speed: gone after two physics steps.","in":["weapon.destroyTimer","weapon.velocity"],"out":["Destroy timer"],"code":["HitBox.cs",25,28]},
+  {"k":"buff","fn":"BuffEffect.Start()","t":"BuffEffect","d":"On a character: finds it and shows the buff's effect.","in":["buff.effect"],"out":["cha","shown"],"code":["BuffEffect.cs",41,46]},
+  {"k":"lock","fn":"Lock.Start()","t":"Lock","d":"With locks off in Experimental, every lock starts open.","in":["Experimental.locks"],"out":["Unlock()"],"code":["AI/Lock.cs",19,19]}
 ]},
 "physics": {"par":true,"g":"every frame","t":"Physics","s":"FixedUpdate, then trigger events (triggers come in no fixed order)","in":["rb.velocity","colliders"],"out":["damage","pickups","room switch","falls"],"kids":["fixed","hitbox-hit","enemy-touch","loot-pick","room-trigger","hole","healing"]},
-"fixed": {"t":"FixedUpdate","s":"Things that slide: thrown weapons, boomerangs, loot","in":["velocity","deceleration"],"out":["rb.MovePosition"],"steps":[
-  {"t":"Thrown weapon flies","d":"Slides, bounces, then lands as loot.","in":["throwSettings"],"out":["position","Land()"],"code":["AI/ThrownWeapon.cs",71,77]},
-  {"t":"Boomerang flies","d":"Out until it stops, then back to the owner.","in":["weapon.velocity","owner.center"],"out":["position","Destroy when caught"],"code":["AI/Boomerang.cs",35,44]},
-  {"t":"Dropped loot slides","d":"Slows down and stops.","in":["velocity"],"out":["position"],"code":["AI/Yoink.cs",24,28]},
-  {"t":"The shared slide step","d":"A circle cast ahead; walls stop or bounce it.","in":["rb","velocity","radius"],"out":["rb.MovePosition","velocity"],"code":["AI/Slide.cs",28,46]}
+"fixed": {"t":"FixedUpdate","s":"Things that slide: thrown weapons, boomerangs, loot","in":["velocity","deceleration"],"out":["rb.MovePosition"],"seq":false,"flow":[
+  {"k":"tw","fn":"ThrownWeapon.FixedUpdate()","t":"Thrown weapon flies","d":"Slides, bounces, then lands as loot.","in":["throwSettings"],"out":["position","Land()"],"code":["AI/ThrownWeapon.cs",71,77]},
+  {"k":"step","p":"tw","fn":"Slide.Step()","t":"The shared slide step","d":"A circle cast ahead; walls stop or bounce it.","in":["rb","velocity","radius"],"out":["rb.MovePosition","velocity"],"code":["AI/Slide.cs",28,46]},
+  {"k":"touch","p":"tw","fn":"ThrownWeapon.Touch()","t":"What it hits","d":"Keys open locks. Enemies take damage; a crate or maxHits stops it.","in":["other"],"out":["AIHooks.Hit","Land"],"code":["AI/ThrownWeapon.cs",85,90]},
+  {"k":"land","p":"tw","fn":"ThrownWeapon.Land()","t":"Land as loot","d":"Only once: BecomeLoot makes it Loot after this physics step.","in":["done"],"out":["BecomeLoot"],"code":["AI/ThrownWeapon.cs",91,95]},
+  {"k":"turn","p":"tw","fn":"Slide.Turn()","t":"Spin or point","d":"Spins slower as it slows, or points the way it flies.","in":["spinSpeed","spriteAngle"],"out":["rb rotation"],"code":["AI/Slide.cs",59,62]},
+  {"k":"boom","fn":"Boomerang.FixedUpdate()","t":"Boomerang flies","d":"Out until it stops, then back to the owner.","in":["weapon.velocity","owner.center"],"out":["position","Destroy when caught"],"code":["AI/Boomerang.cs",35,44]},
+  {"k":"back","p":"boom","fn":"Slide.Toward()","t":"Fly back","d":"Straight at the owner through walls, speeding up; returns the distance left.","in":["target","acceleration"],"out":["velocity","distance left"],"code":["AI/Slide.cs",49,55]},
+  {"k":"loot","fn":"LootYoink.FixedUpdate()","t":"Dropped loot slides","d":"Slows down and stops.","in":["velocity"],"out":["position"],"code":["AI/Yoink.cs",24,28]}
 ]},
-"hitbox-hit": {"t":"HitBox hits","s":"An attack touches someone","in":["HitBox","other collider"],"out":["recieveDamage","receiveKnockback","buff"],"seq":true,"steps":[
-  {"t":"Who it may hit","d":"An enemy of its owner's team.","in":["owner.team"],"out":["CanHit"],"code":["HitBox.cs",19,19]},
-  {"t":"On touch","d":"Each character once. Sound, effect, damage, knockback. A crate takes the hit and ends a physical attack.","in":["damage","knockback","weapon.maxHits"],"out":["enemy.recieveDamage","enemy.receiveKnockback","Destroy"],"code":["HitBox.cs",31,44],"open":"damage"},
-  {"t":"The buff goes too","d":"The HitBox carries the weapon's BuffEffect. Its own trigger copies it onto the one hit.","in":["HitBox BuffEffect"],"out":["BuffEffect on the victim"],"code":["BuffEffect.cs",48,51]},
-  {"t":"Copying a buff","d":"Removes what the enemy resists. Not stackable: renews the old one instead.","in":["buff","enemyData.buffResistance"],"out":["new BuffEffect","end time"],"code":["BuffEffect.cs",25,32]},
-  {"t":"Timer and lifetime","d":"A HitBox with a destroyTimer is removed by Update when time is up.","in":["destroyTimer"],"out":["Destroy"],"code":["HitBox.cs",29,29]}
+"hitbox-hit": {"t":"HitBox hits","s":"An attack touches someone","in":["HitBox","other collider"],"out":["recieveDamage","receiveKnockback","buff"],"seq":true,"flow":[
+  {"k":"who","fn":"HitBox.OnTriggerEnter2D()","t":"A new victim?","d":"A character it may hit, and each character only once.","in":["other collider","hitEnemy"],"out":["enemy"],"code":["HitBox.cs",31,33]},
+  {"k":"can","p":"who","fn":"HitBox.CanHit()","t":"Who it may hit","d":"An enemy of its owner's team. With no owner, any character.","in":["owner.team"],"out":["CanHit"],"code":["HitBox.cs",19,19]},
+  {"k":"team","p":"can","fn":"Character.IsEnemyOf()","t":"Team check","d":"Different team = enemy.","in":["team"],"out":["IsEnemyOf"],"code":["Character.cs",45,46]},
+  {"k":"fx","fn":"HitBox.OnTriggerEnter2D()","t":"Sound and effect","d":"The weapon's hit sound, and its hit effect on the victim.","in":["weapon.hitSound","hitEffect"],"out":["sound","effect"],"code":["HitBox.cs",34,35]},
+  {"k":"eff","p":"fx","fn":"PlayOnce.Spawn()","t":"Effect plays once","d":"Made on the victim, gone when its animation ends (0.5 s without one).","in":["prefab","pos","parent"],"out":["effect object"],"code":["AI/PlayOnce.cs",22,26]},
+  {"k":"hit","fn":"HitBox.OnTriggerEnter2D()","t":"Damage and knockback","d":"The victim takes the damage, then is pushed away from the attacker.","in":["damage","knockback","playerPos"],"out":["enemy.recieveDamage","enemy.receiveKnockback"],"code":["HitBox.cs",36,37],"open":"damage"},
+  {"k":"max","fn":"HitBox.OnTriggerEnter2D()","t":"Max hits reached?","d":"With weapon.maxHits set, the HitBox is gone after hitting that many characters.","in":["weapon.maxHits","hitCount"],"out":["Destroy"],"code":["HitBox.cs",38,38]},
+  {"k":"crate","fn":"HitBox.OnTriggerEnter2D()","t":"A crate takes it","d":"Only a physical attack hurts a crate; then the HitBox is gone.","in":["weapon.isMagical"],"out":["des.recieveDamage","Destroy"],"code":["HitBox.cs",39,42],"open":"damage"},
+  {"k":"end","fn":"HitBox.OnTriggerEnter2D()","t":"No timer: gone","d":"Without a destroyTimer, the HitBox ends at its first touch.","in":["destroyTimer"],"out":["Destroy"],"code":["HitBox.cs",43,44]},
+  {"k":"buff","fn":"BuffEffect.OnTriggerEnter2D()","t":"The buff goes too","d":"The HitBox carries the weapon's BuffEffect. Its own trigger copies it onto the one hit.","in":["HitBox BuffEffect"],"out":["BuffEffect on the victim"],"code":["BuffEffect.cs",48,51]},
+  {"k":"copy","p":"buff","fn":"Buff.CopyTo()","t":"Copying a buff","d":"Removes what the enemy resists. Not stackable: renews the old one instead.","in":["buff","enemyData.buffResistance"],"out":["new BuffEffect","end time"],"code":["BuffEffect.cs",25,32]},
+  {"k":"timer","fn":"HitBox.Update()","t":"Timer and lifetime","d":"A HitBox with a destroyTimer is removed by Update when time is up.","in":["destroyTimer"],"out":["Destroy"],"code":["HitBox.cs",29,29]}
 ]},
-"damage": {"t":"Taking a hit","s":"What each kind of target does with damage","in":["dmg","isMagical","knockback"],"out":["HP","stun","hurt color"],"steps":[
-  {"t":"Enemy","d":"Shows its name, turns red, takes damage minus defense (at least 1). At 0 HP, its Update calls Died.","in":["dmg","defensePhysic / defenseMagic"],"out":["HP","name text","red tint"],"code":["Enemy.cs",121,129],"open":"enemy-died"},
-  {"t":"Player","d":"Hit sound. Then skipped while invincible or shielded. Otherwise HP drops and the hearts update.","in":["dmg","buffs","invincibleTime"],"out":["HP","invincibleTime"],"code":["Player.cs",188,195]},
-  {"t":"Chest","d":"One unlocked hit opens it: HP straight to 0.","in":["keyId"],"out":["HP = 0"],"code":["Map/Chest.cs",27,27]},
-  {"t":"Knockback","d":"A push away from the hitter, slightly random, minus resistance. Stuns until it slows down.","in":["pos","force","resistance"],"out":["rb.velocity","stunTime"],"code":["Character.cs",60,65]},
-  {"t":"Player knockback","d":"Skipped while invincible.","in":["knockbackResistance"],"out":["receiveKnockback"],"code":["Player.cs",196,200]},
-  {"t":"Crate (Destructable)","d":"Physical hits only. Changes sprite per hit, drops loot when broken.","in":["hitUntillBreak"],"out":["sprite","Loot.Drop"],"code":["DestructableObj.cs",18,28]}
+"damage": {"t":"Taking a hit","s":"What each kind of target does with damage","in":["dmg","isMagical","knockback"],"out":["HP","stun","hurt color"],"seq":false,"flow":[
+  {"k":"enemy","fn":"Enemy.recieveDamage()","t":"Enemy takes damage","d":"Shows its name, turns red, takes damage minus defense (at least 1). At 0 HP, Update calls Died.","in":["dmg","defensePhysic / defenseMagic"],"out":["HP","name text","red tint"],"code":["Enemy.cs",121,129],"open":"enemy-died"},
+  {"k":"player","fn":"Player.recieveDamage()","t":"Player takes damage","d":"Hit sound. Then skipped while invincible or shielded. Otherwise HP drops and the hearts update.","in":["dmg","buffs","invincibleTime"],"out":["HP","invincibleTime"],"code":["Player.cs",188,195]},
+  {"k":"has","p":"player","fn":"Character.Has()","t":"Has a buff?","d":"True if any BuffEffect on it has one of these types.","in":["BuffType"],"out":["bool"],"code":["Character.cs",67,67]},
+  {"k":"chest","fn":"Chest.recieveDamage()","t":"Chest takes a hit","d":"One unlocked hit opens it: HP straight to 0.","in":["keyId"],"out":["HP = 0"],"code":["Map/Chest.cs",27,27]},
+  {"k":"lock","p":"chest","fn":"Lock.IsLocked()","t":"Is it locked?","d":"Locked while its keyId is not empty.","in":["keyId"],"out":["bool"],"code":["AI/Lock.cs",23,23]},
+  {"k":"kb","fn":"Character.receiveKnockback()","t":"Pushed back","d":"A push away from the hitter, slightly random, minus resistance. Stuns until it slows down.","in":["pos","force","resistance"],"out":["rb.velocity","stunTime"],"code":["Character.cs",60,65]},
+  {"k":"ekb","fn":"Enemy.receiveKnockback()","t":"Enemy knockback","d":"Pushed like any Character, weakened by its enemyData.knockbackResistance.","in":["enemyData.knockbackResistance"],"out":["receiveKnockback"],"code":["Enemy.cs",131,131]},
+  {"k":"pkb","fn":"Player.receiveKnockback()","t":"Player knockback","d":"Skipped while invincible.","in":["knockbackResistance"],"out":["receiveKnockback"],"code":["Player.cs",196,200]},
+  {"k":"crate","fn":"Destructable.recieveDamage()","t":"Crate (Destructable)","d":"Physical hits only. Changes sprite per hit, drops loot when broken.","in":["hitUntillBreak"],"out":["sprite","Died()"],"code":["DestructableObj.cs",23,28]},
+  {"k":"broke","p":"crate","fn":"Destructable.Died()","t":"Crate breaks","d":"Paths are redone, it may be destroyed, and its loot drops.","in":["destroyAfterDead","loot","weaponLoot"],"out":["Loot.Drop()","Destroy"],"code":["DestructableObj.cs",18,22]},
+  {"k":"inval","p":"broke","fn":"PathFinding.Invalidate()","t":"Walls changed","d":"Path grids re-read the walls from the next frame.","in":[],"out":["dirtyFrame"],"code":["AI/PathFinding.cs",35,35]},
+  {"k":"drop","p":"broke","fn":"Loot.Drop()","t":"Make the loot","d":"The Loot prefab, and/or the weapon as new Loot.","in":["prefab","weapon"],"out":["Loot in the room"],"code":["Loot.cs",65,80]}
 ]},
-"enemy-died": {"t":"Enemy dies","s":"Loot, unlock for chat, then gone","in":["HP <= 0","lifeSpan"],"out":["loot","unlocked","summon template"],"seq":true,"steps":[
-  {"t":"Die once, wait half a second","d":"Also connects chat the first time. Drops loot, unlocks this enemy for chat summons, then disappears after 0.5 s.","in":["isDead"],"out":["Loot.Drop","summondb.Unlock","Destroy"],"code":["Enemy.cs",100,112]},
-  {"t":"A copy chat can summon","d":"The first kill of a kind keeps a hidden copy without loot.","in":["enemyData.enemyName"],"out":["summonableEnemy"],"code":["Enemy.cs",113,120]},
-  {"t":"Drop the loot","d":"The loot prefab, and/or a weapon as a new Loot object.","in":["loot","weaponLoot"],"out":["Loot in the room"],"code":["Loot.cs",65,80]},
-  {"t":"Chest instead","d":"A chest does not disappear: it opens, drops its loot once, shows the open sprite.","in":["opened"],"out":["Loot.Drop","openSprite"],"code":["Map/Chest.cs",19,26]},
-  {"t":"Unlocked for chat","d":"Only unlocked enemies can be summoned.","in":["EnemySO"],"out":["unlocked"],"code":["Connector/SummonDB.cs",74,74]}
+"enemy-died": {"t":"Enemy dies","s":"Loot, unlock for chat, then gone","in":["HP <= 0","lifeSpan"],"out":["loot","unlocked","summon template"],"seq":true,"flow":[
+  {"k":"con","fn":"Enemy.Died()","t":"Connect chat","d":"The first death anywhere connects chat. The sprite's tint is cleared.","in":[],"out":["_Connect()","sr.color"],"code":["Enemy.cs",100,102]},
+  {"k":"conn","p":"con","fn":"GameManager._Connect()","t":"Connect once","d":"Reads the channel typed on the title screen.","in":["Data.cn"],"out":["chat connection"],"code":["GameManager.cs",60,65]},
+  {"k":"once","fn":"Enemy.Died()","t":"Die once: drop loot","d":"Only on the first frame it is dying.","in":["deathBreathTime","loot","weaponLoot"],"out":["Loot.Drop()"],"code":["Enemy.cs",103,104]},
+  {"k":"drop","p":"once","fn":"Loot.Drop()","t":"Drop the loot","d":"The loot prefab, and/or a weapon as a new Loot object.","in":["loot","weaponLoot"],"out":["Loot in the room"],"code":["Loot.cs",65,80]},
+  {"k":"slide","p":"drop","fn":"AIHooks.OnDrop()","t":"Loot slides out","d":"Each new loot slides away; a landing thrown weapon keeps its size instead.","in":["loot","from"],"out":["LootYoink"],"code":["AI/Hooks.cs",15,19]},
+  {"k":"unl","fn":"Enemy.Died()","t":"Unlock for chat","d":"A real death (not old age) unlocks this enemy for chat summons.","in":["isDead"],"out":["Unlock()","AddSummonTemplate()"],"code":["Enemy.cs",105,108]},
+  {"k":"unlock","p":"unl","fn":"SimpleSummonDB.Unlock()","t":"Unlocked for chat","d":"Only unlocked enemies can be summoned.","in":["EnemySO"],"out":["unlocked"],"code":["Connector/SummonDB.cs",74,74]},
+  {"k":"tmpl","p":"unl","fn":"Enemy.AddSummonTemplate()","t":"A copy chat can summon","d":"The first kill of a kind keeps a hidden copy without loot.","in":["enemyData.enemyName"],"out":["summonableEnemy"],"code":["Enemy.cs",113,120]},
+  {"k":"get","p":"tmpl","fn":"SimpleSummonDB.getEnemy()","t":"Find by name","d":"An unlocked summonable enemy with this name, or null if none yet.","in":["enemyName"],"out":["Enemy or null"],"code":["Connector/SummonDB.cs",75,79]},
+  {"k":"gone","fn":"Enemy.Died()","t":"Gone after 0.5 s","d":"Waits half a second, Died running each frame, then it disappears.","in":["deathBreathTime"],"out":["Destroy"],"code":["Enemy.cs",109,112]},
+  {"k":"chest","fn":"Chest.Died() override","t":"Chest instead","d":"A chest does not disappear: it opens, drops its loot once, shows the open sprite.","in":["opened"],"out":["Loot.Drop","openSprite"],"code":["Map/Chest.cs",19,26]}
 ]},
-"enemy-touch": {"t":"Enemy touches","s":"Contact damage on a cooldown","in":["other collider","enemyData.cooldown"],"out":["player.recieveDamage","knockback"],"seq":true,"steps":[
-  {"t":"Touch the player","d":"While overlapping, once per cooldown: knockback first, then damage (magic or physical).","in":["attackPhysic / attackMagic","attackKnockback"],"out":["victim.receiveKnockback","victim.recieveDamage"],"code":["Enemy.cs",133,138],"open":"damage"},
-  {"t":"Team check","d":"Different team = enemy.","in":["team"],"out":["IsEnemyOf"],"code":["Character.cs",45,46]}
+"enemy-touch": {"t":"Enemy touches","s":"Contact damage on a cooldown","in":["other collider","enemyData.cooldown"],"out":["player.recieveDamage","knockback"],"seq":true,"flow":[
+  {"k":"ready","fn":"Enemy.OnTriggerStay2D()","t":"Ready to touch?","d":"While overlapping: off cooldown, not dying, and the other is a Character of another team.","in":["other collider","cooldownTimer","deathBreathTime"],"out":["victim"],"code":["Enemy.cs",133,134]},
+  {"k":"team","p":"ready","fn":"Character.IsEnemyOf()","t":"Team check","d":"Different team = enemy.","in":["team"],"out":["IsEnemyOf"],"code":["Character.cs",45,46]},
+  {"k":"hit","fn":"Enemy.OnTriggerStay2D()","t":"Touch the player","d":"Knockback first, then damage (magic or physical).","in":["attackPhysic / attackMagic","attackKnockback"],"out":["victim.receiveKnockback","victim.recieveDamage"],"code":["Enemy.cs",135,136],"open":"damage"},
+  {"k":"cd","fn":"Enemy.OnTriggerStay2D()","t":"Wait the cooldown","d":"Once per cooldown: the next touch waits enemyData.cooldown seconds.","in":["enemyData.cooldown"],"out":["cooldownTimer"],"code":["Enemy.cs",137,138]}
 ]},
-"loot-pick": {"t":"Loot touched","s":"The player walks onto loot","in":["Player collider","lootType"],"out":["weapon in hand","skill","heal"],"seq":true,"steps":[
-  {"t":"By type","d":"Weapon, chat skill or instant item. The weapon icons refresh after.","in":["lootType"],"out":["ui.UpdateWeap"],"code":["Loot.cs",31,39]},
-  {"t":"Weapon: fill or swap","d":"An empty (fist) hand takes it. Both full: hold the attack button of the hand to swap.","in":["lWeapon","rWeapon","attackLeft / Right"],"out":["hand.weapon"],"code":["Loot.cs",45,59]},
-  {"t":"Chat skill","d":"Adds the skill to availableSkill.","in":["skill"],"out":["availableSkill"],"code":["Loot.cs",60,63]},
-  {"t":"Instant item","d":"Heals now.","in":["instantItem.healAmount"],"out":["HealWithEffect"],"code":["Player.cs",131,134]},
-  {"t":"Heal","d":"No heal while berserk. Capped at maxHP. The effect plays once.","in":["heal"],"out":["HP","heal effect"],"code":["Character.cs",68,74]},
-  {"t":"Item on the floor","d":"The same item placed in a level, without Loot.","in":["itemSO"],"out":["InstantItemUse"],"code":["Map/InstantItemOnFloor.cs",17,24]}
+"loot-pick": {"t":"Loot touched","s":"The player walks onto loot","in":["Player collider","lootType"],"out":["weapon in hand","skill","heal"],"seq":true,"flow":[
+  {"k":"weap","fn":"Loot.OnTriggerEnter2D()","t":"Weapon loot","d":"Only the player picks loot up. By type: a weapon goes to a hand.","in":["Player collider","lootType"],"out":["PickWeaponHandle()"],"code":["Loot.cs",31,34]},
+  {"k":"pick","p":"weap","fn":"Loot.PickWeaponHandle()","t":"Weapon: fill or swap","d":"An empty (fist) hand takes it. Both full: hold the attack button of the hand to swap.","in":["lWeapon","rWeapon","attackLeft / Right"],"out":["hand.weapon"],"code":["Loot.cs",45,51]},
+  {"k":"fill","p":"pick","fn":"Loot.TryFill()","t":"Fill a free hand","d":"A hand with no weapon or a CQC one takes it. Pickup sound, loot gone.","in":["hand.weapon"],"out":["hand.weapon","lootScale"],"code":["Loot.cs",52,58]},
+  {"k":"conn","p":"pick","fn":"GameManager._Connect()","t":"Connect chat once","d":"Filling the left hand connects chat, to the channel typed on the title screen.","in":["Data.cn"],"out":["chat connection"],"code":["GameManager.cs",60,65]},
+  {"k":"swap","p":"pick","fn":"Loot.Swap()","t":"Swap weapons","d":"Hand and loot trade weapons; the loot shows the old one and is pushed away.","in":["hand.weapon","weaponLoot"],"out":["hand.weapon","weaponLoot"],"code":["Loot.cs",59,59]},
+  {"k":"skill","fn":"Loot.OnTriggerEnter2D()","t":"Chat skill loot","d":"By type: a chat skill is learned.","in":["lootType"],"out":["PickChatSkillHandle()"],"code":["Loot.cs",35,35]},
+  {"k":"learn","p":"skill","fn":"Loot.PickChatSkillHandle()","t":"Chat skill","d":"Adds the skill to availableSkill if new, then the loot is gone.","in":["skill"],"out":["availableSkill","Destroy"],"code":["Loot.cs",60,63]},
+  {"k":"item","fn":"Loot.OnTriggerEnter2D()","t":"Instant item loot","d":"By type: an instant item is used at once.","in":["lootType"],"out":["InstantItemUse()"],"code":["Loot.cs",36,36]},
+  {"k":"use","p":"item","fn":"Loot.InstantItemUse()","t":"Use, then gone","d":"The player uses the item, then the loot is destroyed.","in":["instantItem"],"out":["player.InstantItemUse()","Destroy"],"code":["Loot.cs",40,44]},
+  {"k":"pitem","p":"use","fn":"Player.InstantItemUse()","t":"Instant item","d":"A Heal item heals now.","in":["instantItem.healAmount"],"out":["HealWithEffect"],"code":["Player.cs",131,134]},
+  {"k":"heal","p":"pitem","fn":"Character.HealWithEffect()","t":"Heal with effect","d":"No heal while berserk. Capped at maxHP. The effect plays once.","in":["heal"],"out":["HP","heal effect"],"code":["Character.cs",68,74]},
+  {"k":"icons","fn":"Loot.OnTriggerEnter2D()","t":"Refresh weapon icons","d":"After any pick, the weapon icons refresh.","in":[],"out":["ui.UpdateWeap()"],"code":["Loot.cs",37,39]},
+  {"k":"upd","p":"icons","fn":"UI.UpdateWeap()","t":"Weapon icons","d":"Each hand's weapon sprite is shown in the UI.","in":["lWeapon","rWeapon"],"out":["wepImages"],"code":["UI.cs",86,89]},
+  {"k":"floor","fn":"InstantItemOnFloor.OnTriggerEnter2D()","t":"Item on the floor","d":"The same item placed in a level, without Loot.","in":["itemSO"],"out":["InstantItemUse"],"code":["Map/InstantItemOnFloor.cs",17,24]}
 ]},
-"room-trigger": {"t":"Door crossed","s":"Leaving a door trigger switches room","in":["player leaves trigger","rb.velocity"],"out":["currentRoom","music","summon line reset"],"seq":true,"steps":[
-  {"t":"Leave the trigger","d":"Only the player counts.","in":["Player"],"out":["roomTriggerExit"],"code":["Map/RoomTrigger.cs",8,12]},
-  {"t":"Moving toward the partner?","d":"Only if the player walks toward the paired door.","in":["triggerMap","velocity"],"out":["switchRoom"],"code":["Map/DungeonMap.cs",31,34]},
-  {"t":"Switch room","d":"The new room turns on, the old one off (its enemies get OnDisable). New respawn point, music, pathfinding, chat lines reset.","in":["triggerMap"],"out":["currentRoom","SetActive","roomEntryPos"],"code":["Map/DungeonMap.cs",35,43]},
-  {"t":"Room music","d":"The clip for the room's type.","in":["roomType"],"out":["musicSource"],"code":["SoundPlayer.cs",15,27]},
-  {"t":"Chat lines reset","d":"Summons and potions waiting are dropped in a new room.","out":["summonQ cleared"],"code":["Connector/SummonDB.cs",67,67]},
-  {"t":"Knockback can't push through","d":"While stunned, speed toward the next room is cut, like a wall.","in":["isStunned"],"out":["rb.velocity"],"code":["Map/RoomTrigger.cs",13,20]}
+"room-trigger": {"t":"Door crossed","s":"Leaving a door trigger switches room","in":["player leaves trigger","rb.velocity"],"out":["currentRoom","music","summon line reset"],"seq":true,"flow":[
+  {"k":"stay","fn":"RoomTrigger.OnTriggerStay2D()","t":"Knockback can't push through","d":"While stunned, speed toward the next room is cut, like a wall.","in":["isStunned"],"out":["rb.velocity"],"code":["Map/RoomTrigger.cs",13,20]},
+  {"k":"exit","fn":"RoomTrigger.OnTriggerExit2D()","t":"Leave the trigger","d":"Only the player counts.","in":["Player"],"out":["roomTriggerExit"],"code":["Map/RoomTrigger.cs",8,12]},
+  {"k":"toward","p":"exit","fn":"DungeonMap.roomTriggerExit()","t":"Moving toward the partner?","d":"Only if the player walks toward the paired door.","in":["triggerMap","velocity"],"out":["switchRoom"],"code":["Map/DungeonMap.cs",31,34]},
+  {"k":"switch","p":"toward","fn":"DungeonMap.switchRoom()","t":"Switch room","d":"The new room turns on, the old one off (its enemies get OnDisable). New respawn point.","in":["triggerMap"],"out":["currentRoom","SetActive","roomEntryPos"],"code":["Map/DungeonMap.cs",35,43]},
+  {"k":"music","p":"switch","fn":"SoundPlayer.UpdateMusic()","t":"Room music","d":"The clip for the room's type.","in":["roomType"],"out":["musicSource"],"code":["SoundPlayer.cs",15,22]},
+  {"k":"walls","p":"switch","fn":"PathFinding.Invalidate()","t":"Walls re-read","d":"Cached walls and paths are dropped next frame, so enemies find ways in the new room.","in":[],"out":["dirtyFrame"],"code":["AI/PathFinding.cs",35,35]},
+  {"k":"reset","p":"switch","fn":"SimpleSummonDB.NewRoom()","t":"Chat lines reset","d":"Summons and potions waiting are dropped in a new room.","in":[],"out":["summonQ cleared"],"code":["Connector/SummonDB.cs",67,67]}
 ]},
-"hole": {"t":"Hole","s":"Falling in","in":["Character or Loot overlap"],"out":["respawn","Destroy"],"seq":true,"steps":[
-  {"t":"Who falls","d":"Not ghosts (ignoreCollide), not floating characters.","in":["ignoreCollide","floating buff"],"out":["Fall coroutine"],"code":["Map/Hole.cs",13,17]},
-  {"t":"Fall","d":"Fall clip or shrink. Others are destroyed; the player respawns at the room entry.","in":["fallClip"],"out":["Destroy","player.Respawn"],"code":["Map/Hole.cs",19,32]},
-  {"t":"Respawn","d":"Back to where it entered the room.","in":["roomEntryPos"],"out":["position"],"code":["Player.cs",135,138]}
+"hole": {"t":"Hole","s":"Falling in","in":["Character or Loot overlap"],"out":["respawn","Destroy"],"seq":true,"flow":[
+  {"k":"who","fn":"Hole.OnTriggerStay2D()","t":"Who falls","d":"Not ghosts (ignoreCollide), not floating characters.","in":["ignoreCollide","floating buff"],"out":["Fall coroutine"],"code":["Map/Hole.cs",13,18]},
+  {"k":"has","p":"who","fn":"Character.Has()","t":"Has the buff?","d":"True if any BuffEffect on it has that type; here, floating.","in":["BuffType.floating"],"out":["bool"],"code":["Character.cs",67,67]},
+  {"k":"fall","p":"who","fn":"Hole.Fall()","t":"Fall","d":"Fall clip or shrink. Others are destroyed; the player respawns at the room entry.","in":["fallClip"],"out":["Destroy","player.Respawn"],"code":["Map/Hole.cs",19,32]},
+  {"k":"resp","p":"fall","fn":"Player.Respawn()","t":"Respawn","d":"Back to where it entered the room.","in":["roomEntryPos"],"out":["position"],"code":["Player.cs",135,138]}
 ]},
-"healing": {"t":"Healing room","s":"Heals who stands in it","in":["Characters inside","HPHealPerSecond"],"out":["HP","isHealing"],"seq":true,"steps":[
-  {"t":"Enter","d":"Only the teams it heals. isHealing picks the water animation.","in":["heals team"],"out":["inside","isHealing"],"code":["Map/HealingRoom.cs",14,19]},
-  {"t":"Exit","d":"Leaves: no more heals, normal animation.","in":["heals team"],"out":["isHealing = false"],"code":["Map/HealingRoom.cs",20,23]},
-  {"t":"Heal tick","d":"In its Update: 1 HP each tick to everyone inside.","in":["nextHeal"],"out":["HealWithEffect(1)","heal sound"],"code":["Map/HealingRoom.cs",24,30]}
+"healing": {"t":"Healing room","s":"Heals who stands in it","in":["Characters inside","HPHealPerSecond"],"out":["HP","isHealing"],"seq":true,"flow":[
+  {"k":"enter","fn":"HealingRoom.OnTriggerEnter2D()","t":"Enter","d":"Only the teams it heals. isHealing picks the water animation.","in":["heals team"],"out":["inside","isHealing"],"code":["Map/HealingRoom.cs",14,19]},
+  {"k":"team","p":"enter","fn":"HealingRoom.Heals()","t":"Heals this team?","d":"The heals flags must hold the character's team; Player only by default.","in":["heals","c.team"],"out":["bool"],"code":["Map/HealingRoom.cs",12,12]},
+  {"k":"tick","fn":"HealingRoom.Update()","t":"Heal tick","d":"In its Update: 1 HP each tick to everyone inside.","in":["nextHeal"],"out":["HealWithEffect(1)","heal sound"],"code":["Map/HealingRoom.cs",24,30]},
+  {"k":"hwe","p":"tick","fn":"Character.HealWithEffect()","t":"Heal with effect","d":"Heals, then plays the heal animation (GameManager.healEffect) on it.","in":["amount"],"out":["HP","healEffect"],"code":["Character.cs",70,74]},
+  {"k":"heal","p":"hwe","fn":"Character.Heal()","t":"Add HP","d":"Berserk blocks it; HP never goes past maxHP.","in":["heal","berserk"],"out":["HP"],"code":["Character.cs",68,68]},
+  {"k":"fx","p":"hwe","fn":"PlayOnce.Spawn()","t":"Play the effect","d":"Makes the effect on the character and destroys it after its animation (0.5 s if none).","in":["prefab","parent"],"out":["effect object"],"code":["AI/PlayOnce.cs",22,26]},
+  {"k":"exit","fn":"HealingRoom.OnTriggerExit2D()","t":"Exit","d":"Leaves: no more heals, normal animation.","in":["heals team"],"out":["isHealing = false"],"code":["Map/HealingRoom.cs",20,23]}
 ]},
 "update": {"g":"every frame","t":"Update","s":"Input, chat, player, enemies, UI","in":["keys, gamepad, mouse","chat lines"],"out":["rb.velocity","hitboxes","spawned enemies","UI fills"],"kids":["input","chat","gm-update","player-update","enemy-update","room-events","ui-update"]},
-"input": {"t":"Controller.Update","s":"Devices into plain fields","in":["gamepad","keyboard","mouse"],"out":["movement","looking","attackLeft, attackRight","throwHold, map"],"seq":true,"steps":[
-  {"t":"Every frame","d":"Old Input axes first, then the new Input System overrides them. Hides the cursor when the mouse is idle.","in":["Input.GetAxisRaw"],"out":["movement","looking = 0"],"code":["Controller.cs",34,39]},
-  {"t":"Gamepad wins","d":"A gamepad sets everything and returns: keyboard and mouse are not read.","in":["Gamepad.current"],"out":["movement","looking","buttons"],"code":["Controller.cs",40,54]},
-  {"t":"Keyboard","d":"WASD moves, arrows look, O/P attack, Q throw, M map.","in":["Keyboard.current"],"out":["movement","looking","buttons"],"code":["Controller.cs",55,65]},
-  {"t":"Mouse","d":"Off by default (Experimental.disableMouse). When on: aim at the cursor, clicks attack.","in":["Mouse.current","disableMouse"],"out":["looking","attackLeft","attackRight"],"code":["Controller.cs",66,75]},
-  {"t":"Mouse wakes and sleeps","d":"It turns on when moved far enough, off after a second still.","in":["mousePos"],"out":["mouseActive"],"code":["Controller.cs",76,82]},
-  {"t":"ControllerButton","d":"isPressedOnce gives true once per press, per name (\"dialogue\", \"throw\", \"minimap\").","in":["isPressed"],"out":["isPressedOnce"],"code":["Controller.cs",6,15]}
+"input": {"t":"Controller.Update","s":"Devices into plain fields","in":["gamepad","keyboard","mouse"],"out":["movement","looking","attackLeft, attackRight","throwHold, map"],"seq":true,"flow":[
+  {"k":"frame","fn":"Controller.Update()","t":"Every frame","d":"Old Input axes first; the new Input System overrides them. Hides the cursor when the mouse is idle.","in":["Input.GetAxisRaw"],"out":["movement","looking = 0"],"code":["Controller.cs",34,39]},
+  {"k":"pad","p":"frame","fn":"Controller.UpdateInput()","t":"Gamepad wins","d":"A gamepad sets everything and returns: keyboard and mouse are not read.","in":["Gamepad.current"],"out":["movement","looking","buttons"],"code":["Controller.cs",40,54]},
+  {"k":"btn","p":"pad","fn":"ControllerButton.isPressed()","t":"ControllerButton","d":"isPressedOnce gives true once per press, per name (\"dialogue\", \"throw\", \"minimap\").","in":["isPressed"],"out":["isPressedOnce"],"code":["Controller.cs",6,15]},
+  {"k":"keys","p":"frame","fn":"Controller.UpdateInput()","t":"Keyboard","d":"WASD moves, arrows look, O/P attack, Q throw, M map.","in":["Keyboard.current"],"out":["movement","looking","buttons"],"code":["Controller.cs",55,65]},
+  {"k":"axis","p":"keys","fn":"Controller.Axis()","t":"Two keys, one axis","d":"-1, 0 or 1 from a pair of keys.","in":["negative","positive"],"out":["-1, 0, 1"],"code":["Controller.cs",75,75]},
+  {"k":"mouse","p":"frame","fn":"Controller.UpdateInput()","t":"Mouse","d":"Off by default (Experimental.disableMouse). When on: aim at the cursor, clicks attack.","in":["Mouse.current","disableMouse"],"out":["looking","attackLeft","attackRight"],"code":["Controller.cs",66,74]},
+  {"k":"wake","p":"mouse","fn":"Controller.CheckMouseEnable()","t":"Mouse wakes and sleeps","d":"It turns on when moved far enough, off after a second still.","in":["mousePos"],"out":["mouseActive"],"code":["Controller.cs",76,82]}
 ]},
-"chat": {"t":"Chat inbox","s":"Chat lines into queues and votes","in":["Twitch / YouTube lines"],"out":["summonQ","potion line","skill votes","teleport"],"seq":true,"steps":[
-  {"t":"Connect, once","d":"The first kill or first weapon pickup connects to the channel typed on the title screen.","in":["Data.cn"],"out":["UnifiedChat or Lexone"],"code":["GameManager.cs",60,65]},
-  {"t":"Our own reader","d":"Twitch or YouTube, picked from the channel text.","in":["channel"],"out":["UnifiedChat object"],"code":["AI/UnifiedChat.cs",23,33]},
-  {"t":"Lines reach the main thread","d":"Its Update empties the queue the reader thread fills.","in":["inbox"],"out":["OnIrcLine"],"code":["AI/UnifiedChat.cs",46,48]},
-  {"t":"Lexone backup","d":"When unifiedChat is off: the IRC package's events.","in":["Chatter"],"out":["addToDB(name,msg)"],"code":["Connector/TwitchChat.cs",21,37]},
-  {"t":"What kind of command","d":"The first word (or its start) and the word count pick the type.","in":["message"],"out":["ChatType"],"code":["Connector/Chat.cs",10,31]},
-  {"t":"Into the database","d":"Skill votes first. Then summon to the line, teleport right away, potion to its line.","in":["username","msg"],"out":["summondb.Add","TeleportSkill","AddPotion"],"code":["Connector/Chat.cs",32,41]},
-  {"t":"Teleport","d":"Only inside the current room, onto an empty spot.","in":["x","y"],"out":["player position"],"code":["GameManager.cs",72,77]},
-  {"t":"The line","d":"Waits in summonQ. Too long (300): cleared.","in":["SummonCommand"],"out":["summonQ"],"code":["Connector/SummonDB.cs",22,25]},
-  {"t":"Skill votes","d":"A skill word is a vote. Enough voters: the skill casts on the player.","in":["ChatType","username"],"out":["votes","Cast"],"code":["AI/ChatSkill.cs",35,56]}
+"chat": {"t":"Chat inbox","s":"Chat lines into queues and votes","in":["Twitch / YouTube lines"],"out":["summonQ","potion line","skill votes","teleport"],"seq":true,"flow":[
+  {"k":"conn","fn":"GameManager._Connect()","t":"Connect, once","d":"The first kill or first weapon pickup connects to the channel typed on the title screen.","in":["Data.cn"],"out":["UnifiedChat or Lexone"],"code":["GameManager.cs",60,65]},
+  {"k":"own","p":"conn","fn":"UnifiedChat.TryConnect()","t":"Our own reader","d":"Twitch or YouTube, picked from the channel text.","in":["channel"],"out":["UnifiedChat object"],"code":["AI/UnifiedChat.cs",23,33]},
+  {"k":"lex","p":"conn","fn":"TwitchChat.Connect()","t":"Lexone backup","d":"When unifiedChat is off: the IRC package's events.","in":["channel"],"out":["OnChatMessage"],"code":["Connector/TwitchChat.cs",21,24]},
+  {"k":"keep","p":"lex","fn":"UnifiedChat.KeepLexone()","t":"Keep Lexone up","d":"Pings and reconnects Lexone; with no Lexone (or WebGL) it opens our own reader.","in":["irc","channel"],"out":["Keep loop","true / false"],"code":["AI/UnifiedChat.cs",36,44]},
+  {"k":"lexm","p":"lex","fn":"TwitchChat.OnChatMessage()","t":"Lexone messages","d":"Lexone calls it for each chat message; the display name and text go to addToDB.","in":["Chatter"],"out":["addToDB(name,msg)"],"code":["Connector/TwitchChat.cs",26,37]},
+  {"k":"lines","fn":"UnifiedChat.Update()","t":"Lines reach the main thread","d":"Its Update empties the queue the reader thread fills.","in":["inbox"],"out":["OnIrcLine"],"code":["AI/UnifiedChat.cs",46,46]},
+  {"k":"db","fn":"Chat.addToDB()","t":"Into the database","d":"Skill votes first. Then summon to the line, teleport right away, potion to its line.","in":["username","msg"],"out":["summondb.Add","TeleportSkill","AddPotion"],"code":["Connector/Chat.cs",32,41]},
+  {"k":"kind","p":"db","fn":"Chat.Categorize()","t":"What kind of command","d":"The first word (or its start) and the word count pick the type.","in":["message"],"out":["ChatType"],"code":["Connector/Chat.cs",10,31]},
+  {"k":"vote","p":"db","fn":"ChatSkill.Read()","t":"Skill votes","d":"A skill word is a vote. Enough voters: the skill casts on the player.","in":["ChatType","username"],"out":["votes","Cast"],"code":["AI/ChatSkill.cs",35,56]},
+  {"k":"line","p":"db","fn":"ChatLine.Add()","t":"The line","d":"Waits in summonQ. Too long (300): cleared.","in":["SummonCommand"],"out":["summonQ"],"code":["Connector/SummonDB.cs",22,25]},
+  {"k":"tp","p":"db","fn":"GameManager.TeleportSkill()","t":"Teleport","d":"Only inside the current room, onto an empty spot.","in":["x","y"],"out":["player position"],"code":["GameManager.cs",72,77]},
+  {"k":"fr","p":"tp","fn":"DungeonMap._findRoom()","t":"Which room","d":"The first room whose bounds hold the spot.","in":["pos","allRooms"],"out":["DungeonRoom"],"code":["Map/DungeonMap.cs",44,47]},
+  {"k":"pot","p":"db","fn":"SimpleSummonDB.AddPotion()","t":"Potion request","d":"Hands the chatter and potion name to ChatPotion, which picks the line.","in":["username","name"],"out":["potion.Add()"],"code":["Connector/SummonDB.cs",68,68]},
+  {"k":"padd","p":"pot","fn":"ChatPotion.Add()","t":"Pick a line","d":"Queued as \"potion name\": in the potion line, or the summon line with potionSamePool.","in":["potionSamePool"],"out":["SummonCommand"],"code":["AI/ChatPotion.cs",14,18]}
 ]},
-"gm-update": {"t":"GameManager.Update","s":"Takes one summon or potion per cooldown","in":["summonQ","potion line","spawnSkill cooldown"],"out":["enemy in the room","potion in the room"],"seq":true,"steps":[
-  {"t":"Each frame","d":"Test spawns without chat, test skill keys, then a potion, then a summon.","in":["summondb","testWithoutChat"],"out":["Spawn","SpawnPotion"],"code":["GameManager.cs",50,58]},
-  {"t":"Test keys 1-6","d":"Vote like one chatter.","in":["Digit1..6"],"out":["Vote"],"code":["AI/ChatSkill.cs",64,69]},
-  {"t":"A potion's turn","d":"From its own line or the summon line. A room gets potionsPerRoom at most.","in":["potion line","potionsSpawned"],"out":["Loot potion"],"code":["AI/ChatPotion.cs",20,30]},
-  {"t":"A summon's turn","d":"Only when the spawn skill is off cooldown. Taking one starts the cooldown.","in":["spawnSkill.isReady"],"out":["Enemy prefab"],"code":["Connector/SummonDB.cs",61,73]},
-  {"t":"Fair order","d":"The chatter with the fewest turns goes first, then the oldest.","in":["turns per chatter"],"out":["SummonCommand"],"code":["Connector/SummonDB.cs",27,45]},
-  {"t":"Name to enemy","d":"Must be unlocked (killed once).","in":["spawnableName","unlocked"],"out":["Enemy"],"code":["Connector/SummonDB.cs",75,79]},
-  {"t":"Cooldown","d":"Skill: ready after cooldown seconds.","in":["cooldown"],"out":["isReady","lastUse"],"code":["Skill.cs",8,19]},
-  {"t":"Put it in the room","d":"Under the room's \"Enemies\" object, so it turns off with the room.","in":["enemy","playerPos"],"out":["Enemy in scene"],"code":["Map/DungeonRoom.cs",12,24]},
-  {"t":"Find a free spot","d":"Flood fill from the player in half-unit steps; a random free cell 0.5 to range away.","in":["oriPos","range","bounds"],"out":["Instantiate"],"code":["Spawner.cs",19,34]}
+"gm-update": {"t":"GameManager.Update","s":"Takes one summon or potion per cooldown","in":["summonQ","potion line","spawnSkill cooldown"],"out":["enemy in the room","potion in the room"],"seq":true,"flow":[
+  {"k":"test","fn":"GameManager.Update()","t":"Test spawns","d":"With testWithoutChat on, a mockEnemy spawns near the player every testWithoutChatSpawnCooldown seconds.","in":["testWithoutChat","mockEnemy"],"out":["Spawn()"],"code":["GameManager.cs",51,51]},
+  {"k":"keys","fn":"GameManager.Update()","t":"Test skill keys","d":"Keys 1-6 vote for the six chat skills, for testing.","in":["summondb.skills"],"out":["Keys()"],"code":["GameManager.cs",52,52]},
+  {"k":"kk","p":"keys","fn":"ChatSkill.Keys()","t":"Test keys 1-6","d":"Vote like one chatter.","in":["Digit1..6"],"out":["Vote"],"code":["AI/ChatSkill.cs",64,69]},
+  {"k":"pot","fn":"GameManager.Update()","t":"Potion first","d":"A potion whose turn it is goes near the player, before the summon line is read.","in":["summondb","playerPos"],"out":["SpawnPotion()"],"code":["GameManager.cs",53,54]},
+  {"k":"gp","p":"pot","fn":"SimpleSummonDB.GetPotionToSpawn()","t":"Ask the potion line","d":"Also passes the summon line, where potions wait when potionSamePool is on.","in":["potion","summon line"],"out":["Loot or null"],"code":["Connector/SummonDB.cs",69,69]},
+  {"k":"pop","p":"gp","fn":"ChatPotion.Pop()","t":"A potion's turn","d":"From its own line or the summon line. A room gets potionsPerRoom at most.","in":["potion line","potionsSpawned"],"out":["Loot potion"],"code":["AI/ChatPotion.cs",20,30]},
+  {"k":"sp","p":"pot","fn":"DungeonRoom.SpawnPotion()","t":"Potion in the room","d":"On a free spot near the player; slides like dropped loot and counts in potionsSpawned.","in":["potion","oriPos","range"],"out":["Loot in the room","potionsSpawned"],"code":["Map/DungeonRoom.cs",19,24]},
+  {"k":"sum","fn":"GameManager.Update()","t":"Next summon","d":"Asks for the next summon every frame; spawns it unless testWithoutChat is on.","in":["summondb","testWithoutChat"],"out":["Spawn()"],"code":["GameManager.cs",55,56]},
+  {"k":"gts","p":"sum","fn":"SimpleSummonDB.GetToSpawn()","t":"A summon's turn","d":"Only when the spawn skill is off cooldown. Taking one starts the cooldown.","in":["spawnSkill.isReady"],"out":["Enemy prefab"],"code":["Connector/SummonDB.cs",61,66]},
+  {"k":"popE","p":"gts","fn":"SimpleSummonDB._Pop()","t":"Take and look up","d":"Takes whose turn it is, then finds the enemy by its name.","in":["summonQ"],"out":["Enemy or null"],"code":["Connector/SummonDB.cs",70,73]},
+  {"k":"take","p":"popE","fn":"ChatLine.Take()","t":"Fair order","d":"The chatter with the fewest turns goes first, then the oldest.","in":["turns per chatter"],"out":["SummonCommand"],"code":["Connector/SummonDB.cs",27,44]},
+  {"k":"name","p":"popE","fn":"SimpleSummonDB.getEnemy()","t":"Name to enemy","d":"Must be unlocked (killed once).","in":["spawnableName","unlocked"],"out":["Enemy"],"code":["Connector/SummonDB.cs",75,79]},
+  {"k":"cd","p":"gts","fn":"Skill.Call()","t":"Cooldown","d":"Sets lastUse to now, so isReady is false for cooldown seconds.","in":["cooldown"],"out":["isReady","lastUse"],"code":["Skill.cs",15,19]},
+  {"k":"spw","p":"sum","fn":"GameManager.Spawn()","t":"Near the player","d":"Into the current room, within spawnRangeFromPlayer of the player.","in":["playerPos","spawnRangeFromPlayer"],"out":["currentRoom.Spawn()"],"code":["GameManager.cs",58,58]},
+  {"k":"room","p":"spw","fn":"DungeonRoom.Spawn()","t":"Put it in the room","d":"Under the room's \"Enemies\" object, so it turns off with the room.","in":["enemy","playerPos"],"out":["Enemy in scene"],"code":["Map/DungeonRoom.cs",12,18]},
+  {"k":"spot","p":"room","fn":"Spawner.Spawn()","t":"Find a free spot","d":"Flood fill from the player in half-unit steps; a random free cell 0.5 to range away.","in":["oriPos","range","bounds"],"out":["Instantiate"],"code":["Spawner.cs",19,34]}
 ]},
-"player-update": {"t":"Player.Update","s":"Move, throw, attack, animate","in":["controller.movement","controller.looking","attackLeft, attackRight"],"out":["rb.velocity","HitBox","animation"],"seq":true,"steps":[
-  {"t":"Dead?","d":"For now death is a reset: full HP, back to the first room.","in":["HP"],"out":["GameManager._re()"],"code":["Player.cs",104,105]},
-  {"t":"Read the controller","d":"movement is clamped to 1. looking follows movement or the look input, by the Experimental switch.","in":["controller.movement","controller.looking","Experimental.I"],"out":["movement","looking"],"code":["Player.cs",106,110]},
-  {"t":"Move, unless stunned","d":"StuntMech lets a knockback slow down by itself; otherwise velocity is set straight from movement.","in":["movement","initSpeed"],"out":["rb.velocity"],"code":["Player.cs",111,111]},
-  {"t":"Throw held?","d":"While Throw is held the weapon buttons throw, and this frame has no attack.","in":["throwHold"],"out":["ThrownWeapon"],"code":["Player.cs",112,112],"open":"throw"},
-  {"t":"Attack with each hand","d":"Left hand, then right hand.","in":["attackLeft","attackRight"],"out":["HitBox"],"code":["Player.cs",113,114],"open":"attack"},
-  {"t":"Pick the animation","d":"Idle, walk or the weapon type's attack clip, in the facing direction.","in":["state","animFacing"],"out":["anim.Play"],"code":["Player.cs",115,116],"open":"anim"}
+"player-update": {"t":"Player.Update","s":"Move, throw, attack, animate","in":["controller.movement","controller.looking","attackLeft, attackRight"],"out":["rb.velocity","HitBox","animation"],"seq":true,"flow":[
+  {"k":"dead","fn":"Player.Update()","t":"Dead?","d":"For now death is a reset: full HP, back to the first room.","in":["HP"],"out":["Died()"],"code":["Player.cs",104,105]},
+  {"k":"pd","p":"dead","fn":"Player.Died()","t":"Reset the player","d":"Full HP (a test for now), back to position 0,0, then the first room.","in":["maxHP"],"out":["HP","roomEntryPos","_re()"],"code":["Player.cs",139,143]},
+  {"k":"re","p":"pd","fn":"GameManager._re()","t":"Back to the first room","d":"Current room off, first room on; the summon and potion queues are cleared.","in":["initRoom"],"out":["currentRoom","NewRoom()"],"code":["GameManager.cs",66,71]},
+  {"k":"read","fn":"Player.Update()","t":"Read the controller","d":"movement is clamped to 1. Experimental switches: 0 in attack clips; looking follows movement or the look input.","in":["controller.movement","controller.looking","Experimental.I"],"out":["movement","looking"],"code":["Player.cs",106,110]},
+  {"k":"move","fn":"Player.Update()","t":"Move, unless stunned","d":"StuntMech lets a knockback slow down by itself; otherwise velocity is set straight from movement.","in":["movement","initSpeed"],"out":["rb.velocity"],"code":["Player.cs",111,111]},
+  {"k":"fric","p":"move","fn":"Floating.Friction()","t":"Less friction afloat","d":"While the floating buff lasts, knockback slows down less (floating.friction, else 1).","in":["BuffType.floating"],"out":["friction"],"code":["AI/ChatSkill.cs",113,113]},
+  {"k":"sm","p":"move","fn":"Character.StuntMech()","t":"Slow down","d":"While stunned, velocity decays and true skips walking; under 0.5 the stun ends.","in":["recover","stunTime"],"out":["rb.velocity","stunTime"],"code":["Character.cs",54,59]},
+  {"k":"throw","fn":"Player.Update()","t":"Throw held?","d":"While Throw is held the weapon buttons throw, and this frame has no attack.","in":["throwHold"],"out":["ThrownWeapon"],"code":["Player.cs",112,112],"open":"throw"},
+  {"k":"atk","fn":"Player.Update()","t":"Attack with each hand","d":"Left hand, then right hand.","in":["attackLeft","attackRight"],"out":["HitBox"],"code":["Player.cs",113,114],"open":"attack"},
+  {"k":"anim","fn":"Player.Update()","t":"Pick the animation","d":"Idle, walk or the weapon type's attack clip, in the facing direction.","in":["state","animFacing"],"out":["anim.Play"],"code":["Player.cs",115,116],"open":"anim"}
 ]},
-"attack": {"t":"Attack","s":"From a held button to a HitBox in the world","in":["button","hand.weapon"],"out":["HitBox","sound","attack animation"],"seq":true,"steps":[
-  {"t":"May this hand attack?","d":"A charge skill can block the normal attack. Then: weapon off cooldown and button down.","in":["button.isPressed","hand.isUsable"],"out":["ForceAttack(hand)"],"code":["Player.cs",117,121],"open":"charge"},
-  {"t":"Attack and animate","d":"ForceAttack skips the cooldown check (charge skills call it too). ForceAnim sets the state UpdateAnim reads.","out":["state","forceAnim"],"code":["Player.cs",122,130]},
-  {"t":"Use the weapon","d":"Starts the cooldown, plays the weapon's own animation and sound, then makes the hitbox.","in":["animFacing","weapon.useSound"],"out":["lastUse","sound"],"code":["Player.cs",17,23]},
-  {"t":"Make the HitBox","d":"Placed in front of the player, then filled from the weapon: damage, knockback, buff, flying speed.","in":["weapon.hitBox","weapon.hitBoxDistance","weapon.buff"],"out":["HitBox in the scene"],"code":["Player.cs",25,40]},
-  {"t":"How much damage","d":"Weapon damage x the user's attack stat x berserk.","in":["weapon.damage","combatStat"],"out":["hitBox.damage"],"code":["AI/Fields.cs",30,31]},
-  {"t":"AI hooks","d":"The one call into AI/: keys, Multi hits, boomerangs.","in":["HitBox"],"out":["Lock opened","Boomerang"],"code":["AI/Hooks.cs",7,12]}
+"attack": {"t":"Attack","s":"From a held button to a HitBox in the world","in":["button","hand.weapon"],"out":["HitBox","sound","attack animation"],"seq":true,"flow":[
+  {"k":"may","fn":"Player.TryAttack()","t":"May this hand attack?","d":"A charge skill can block the normal attack. Then: weapon off cooldown and button down.","in":["button.isPressed","hand.isUsable"],"out":["ForceAttack(hand)"],"code":["Player.cs",117,121],"open":"charge"},
+  {"k":"fa","fn":"Player.ForceAttack()","t":"Attack and animate","d":"ForceAttack skips the cooldown check (charge skills call it too). Uses the weapon, then animates.","in":["hand"],"out":["ForceUse()","ForceAnim()"],"code":["Player.cs",122,125]},
+  {"k":"use","p":"fa","fn":"HoldingWeapons.ForceUse()","t":"Use the weapon","d":"Starts the cooldown, plays the weapon's own animation and sound, then makes the hitbox.","in":["animFacing","weapon.useSound"],"out":["lastUse","sound"],"code":["Player.cs",17,23]},
+  {"k":"pa","p":"use","fn":"HoldingWeapons.PlayAnim()","t":"Weapon's own animation","d":"The weapon's anim object plays its clip for the player's facing.","in":["animFacing"],"out":["BaseWeapon"],"code":["Player.cs",41,41],"open":"anim"},
+  {"k":"hb","p":"use","fn":"HoldingWeapons.SpawnHitBox()","t":"Make the HitBox","d":"Placed in front of the player, then filled from the weapon: damage, knockback, buff, flying speed.","in":["weapon.hitBox","weapon.hitBoxDistance","weapon.buff"],"out":["HitBox in the scene"],"code":["Player.cs",25,40]},
+  {"k":"off","p":"hb","fn":"Weapon.GetOffset()","t":"Offset per facing","d":"An extra shift set in the weapon for each direction: up, right, down, left.","in":["facing"],"out":["offset"],"code":["Data Types/Weapon.cs",25,25]},
+  {"k":"dmg","p":"hb","fn":"Weapon.Damage()","t":"How much damage","d":"Weapon damage x the user's attack stat x berserk.","in":["weapon.damage","combatStat"],"out":["hitBox.damage"],"code":["AI/Fields.cs",31,31]},
+  {"k":"vel","p":"hb","fn":"HitBox.setVelocity()","t":"Fly or stay","d":"Speed 0 stays where it spawns; else its Rigidbody2D flies along flyDir.","in":["flyDir","weapon.velocity"],"out":["rb.velocity"],"code":["HitBox.cs",20,24]},
+  {"k":"hook","p":"hb","fn":"AIHooks.OnAttack()","t":"AI hooks","d":"The AI/ hook after each hitbox: keys, Multi hits, boomerangs.","in":["HitBox"],"out":["Lock opened","Boomerang"],"code":["AI/Hooks.cs",8,12]},
+  {"k":"fan","p":"fa","fn":"Player.ForceAnim()","t":"Set the attack clip","d":"Sets the state UpdateAnim reads: the weapon type's attack clip, timed to the cooldown.","in":["weapon.type","hand.cooldown"],"out":["state","forceAnim","cooldown"],"code":["Player.cs",126,130],"open":"anim"}
 ]},
-"charge": {"t":"Charge skill","s":"Hold a weapon button, let go for the skill","in":["button held","chargeSettings"],"out":["bigger / more HitBoxes","yellow glow"],"seq":true,"steps":[
-  {"t":"Block the normal attack?","d":"The press itself attacks. Holding blocks repeats. Letting go fires the skill if it charged.","in":["button.isPressed","hand.charging"],"out":["true = no normal attack"],"code":["AI/WeaponCharge.cs",14,36]},
-  {"t":"Is it charged?","d":"0 to 1 over chargeTime. The UI can read the same number.","in":["chargeStart","chargeTime"],"out":["0..1"],"code":["AI/WeaponCharge.cs",115,121]},
-  {"t":"Glow","d":"The player sprite turns half yellow while a hand is charged.","out":["sprite color"],"code":["AI/WeaponCharge.cs",37,44]},
-  {"t":"Fire the skill","d":"One case per WeaponSkill. Big, Spin and Volley spawn at once; Flurry, Lunge and Multi are coroutines.","in":["cs.skill"],"out":["HitBoxes"],"code":["AI/WeaponCharge.cs",46,76]},
-  {"t":"Over several frames","d":"These run after Update on later frames, waiting between hits.","out":["HitBoxes over time"],"code":["AI/WeaponCharge.cs",77,93]},
-  {"t":"Every spawn goes here","d":"Back into the same SpawnHitBox the normal attack uses.","out":["hand.SpawnHitBox"],"code":["AI/WeaponCharge.cs",110,112]}
+"charge": {"t":"Charge skill","s":"Hold a weapon button, let go for the skill","in":["button held","chargeSettings"],"out":["bigger / more HitBoxes","yellow glow"],"seq":true,"flow":[
+  {"k":"blk","fn":"WeaponCharge.Blocks()","t":"Block the normal attack?","d":"The press itself attacks. Holding blocks repeats. Letting go fires the skill if it charged.","in":["button.isPressed","hand.charging"],"out":["true = no normal attack","Fire()"],"code":["AI/WeaponCharge.cs",14,36]},
+  {"k":"glow","p":"blk","fn":"WeaponCharge.Glow()","t":"Glow","d":"The player sprite turns half yellow while a hand is charged.","in":[],"out":["sprite color"],"code":["AI/WeaponCharge.cs",38,44]},
+  {"k":"chk","fn":"WeaponCharge.IsCharged()","t":"Fully charged?","d":"True once getChargePercent reaches 1. Blocks asks on release, Glow for both hands.","in":["hand"],"out":["charged"],"code":["AI/WeaponCharge.cs",37,37]},
+  {"k":"pct","p":"chk","fn":"HoldingWeapons.getChargePercent()","t":"Is it charged?","d":"0 to 1 over chargeTime, 1 = charged. The UI can read the same number.","in":["chargeStart","chargeTime"],"out":["0..1"],"code":["AI/WeaponCharge.cs",117,120]},
+  {"k":"fire","fn":"WeaponCharge.Fire()","t":"Fire the skill","d":"Multi runs as its own coroutine. Others start the cooldown, play sound and anim, set the attack clip.","in":["cs.skill","looking"],"out":["lastUse","ForceAnim()"],"code":["AI/WeaponCharge.cs",46,54]},
+  {"k":"multi","p":"fire","fn":"WeaponCharge.Multi()","t":"Multi: attacks in a row","d":"Normal attacks, cooldown plus interval apart. Its hits may skip knockback or stun (OnAttack).","in":["cs.count","cs.interval"],"out":["ForceAttack()"],"code":["AI/WeaponCharge.cs",84,93],"open":"attack"},
+  {"k":"skill","fn":"WeaponCharge.Fire()","t":"One case per skill","d":"Big, Spin and Volley spawn at once; Flurry and Lunge are coroutines over the next frames.","in":["cs.skill","dir"],"out":["HitBoxes"],"code":["AI/WeaponCharge.cs",55,76]},
+  {"k":"spawn","p":"skill","fn":"WeaponCharge.Spawn()","t":"Every spawn goes here","d":"Back into the same SpawnHitBox the normal attack uses.","in":["damage","size"],"out":["hand.SpawnHitBox"],"code":["AI/WeaponCharge.cs",110,112],"open":"attack"},
+  {"k":"flurry","p":"skill","fn":"WeaponCharge.Flurry()","t":"Flurry: hits in a row","d":"count hits along dir, 0.08 s apart; the later ones resume after Update on later frames.","in":["cs.count"],"out":["Spawn()"],"code":["AI/WeaponCharge.cs",77,82]},
+  {"k":"lunge","p":"skill","fn":"WeaponCharge.Lunge()","t":"Lunge, then hit","d":"Dashes along dir, frozen so it can't walk, then one hit after 0.15 s.","in":["cs.dashSpeed"],"out":["rb.velocity","Spawn()"],"code":["AI/WeaponCharge.cs",101,106]}
 ]},
-"throw": {"t":"Throw","s":"Hold Throw, press a weapon button","in":["throwHold","attackLeft / Right"],"out":["ThrownWeapon","empty hand"],"seq":true,"steps":[
-  {"t":"Throw held?","d":"Blocks attacks this frame.","in":["throwHold"],"out":["true"],"code":["AI/ThrownWeapon.cs",21,27]},
-  {"t":"Throw from a hand","d":"Not the fist, not on cooldown. The hand becomes a fist.","in":["hand.weapon"],"out":["Throw","Unequip","UpdateWeap"],"code":["AI/ThrownWeapon.cs",28,35]},
-  {"t":"The fist","d":"An empty hand.","in":["PrefabDatabase.fist"],"out":["hand.weapon"],"code":["Player.cs",14,14]},
-  {"t":"Make the flying weapon","d":"A new object with a sprite, collider and slide body.","in":["throwSettings"],"out":["ThrownWeapon"],"code":["AI/ThrownWeapon.cs",38,59]},
-  {"t":"What it hits","d":"Keys open locks. Enemies take damage; crates stop it.","in":["other"],"out":["AIHooks.Hit","Land"],"code":["AI/ThrownWeapon.cs",85,90]},
-  {"t":"Lands as loot","d":"After the physics step, it becomes a Loot weapon.","out":["Loot.Drop"],"code":["AI/ThrownWeapon.cs",91,100]}
+"throw": {"t":"Throw","s":"Hold Throw, press a weapon button","in":["throwHold","attackLeft / Right"],"out":["ThrownWeapon","empty hand"],"seq":true,"flow":[
+  {"k":"held","fn":"ThrownWeapon.TryThrow()","t":"Throw held?","d":"Held: tries both hands, and blocks attacks this frame.","in":["throwHold"],"out":["true"],"code":["AI/ThrownWeapon.cs",21,27]},
+  {"k":"hand","fn":"ThrownWeapon.TryThrow() per hand","t":"Throw from a hand","d":"Not the fist, not on cooldown, once per press. The hand becomes a fist.","in":["hand.weapon"],"out":["Throw","Unequip","UpdateWeap"],"code":["AI/ThrownWeapon.cs",28,35]},
+  {"k":"fly","p":"hand","fn":"ThrownWeapon.Throw()","t":"Make the flying weapon","d":"A new object with a sprite, collider and slide body.","in":["throwSettings"],"out":["ThrownWeapon"],"code":["AI/ThrownWeapon.cs",38,59]},
+  {"k":"fist","p":"hand","fn":"HoldingWeapons.Unequip()","t":"The fist","d":"An empty hand.","in":["PrefabDatabase.fist"],"out":["hand.weapon"],"code":["Player.cs",14,14]},
+  {"k":"ui","p":"hand","fn":"UI.UpdateWeap()","t":"Hand icons","d":"Both weapon icons show their hand's uiWep sprite again.","in":["lWeapon","rWeapon"],"out":["wepImages"],"code":["UI.cs",86,89]},
+  {"k":"flies","fn":"ThrownWeapon.FixedUpdate()","t":"It flies","d":"Each physics step it slides and spins; when it stops, it lands.","in":["velocity"],"out":["Touch()","Land()"],"code":["AI/ThrownWeapon.cs",71,77],"open":"fixed"},
+  {"k":"touch","fn":"ThrownWeapon.Touch()","t":"What it hits","d":"Keys open locks. Enemies take damage; crates stop it.","in":["other"],"out":["AIHooks.Hit","Land"],"code":["AI/ThrownWeapon.cs",85,90]},
+  {"k":"lock","p":"touch","fn":"Lock.TryOpen()","t":"Open a lock","d":"If the key fits the Lock on other, it unlocks; usedUp means the key is gone.","in":["other","key"],"out":["Unlock()","usedUp"],"code":["AI/Lock.cs",31,38]},
+  {"k":"hit","p":"touch","fn":"AIHooks.Hit()","t":"Hurt or break","d":"An enemy of the thrower, once each: sound, effect, damage, knockback, buff. Non-magic hits damage crates.","in":["damage","knockback"],"out":["recieveDamage","Touched"],"code":["AI/Hooks.cs",24,36],"open":"damage"},
+  {"k":"land","fn":"ThrownWeapon.Land()","t":"It stops","d":"Only once: done ends the flying and touching, then BecomeLoot starts.","in":["done"],"out":["BecomeLoot()"],"code":["AI/ThrownWeapon.cs",91,95]},
+  {"k":"loot","fn":"ThrownWeapon.BecomeLoot()","t":"Lands as loot","d":"After the physics step, it becomes a Loot weapon.","in":[],"out":["Loot.Drop"],"code":["AI/ThrownWeapon.cs",96,100]},
+  {"k":"drop","p":"loot","fn":"Loot.Drop()","t":"Make the loot","d":"The weapon as a new Loot (sprite, trigger) in the room; OnDrop keeps its thrown size.","in":["weapon"],"out":["Loot in the room"],"code":["Loot.cs",65,80]}
 ]},
-"anim": {"t":"Player animation","s":"Picks the clip from state and facing","in":["state","animFacing","isHealing","cooldown"],"out":["anim.Play","anim.speed"],"seq":true,"steps":[
-  {"t":"Wait for an attack clip","d":"An attack clip plays to 90% before anything else.","in":["attackState","normalizedTime"],"out":["return"],"code":["Player.cs",145,148]},
-  {"t":"Facing","d":"Up, right, down or left from looking. stopFacing keeps it a moment.","in":["looking"],"out":["animFacing"],"code":["Character.cs",48,53]},
-  {"t":"Which direction","d":"Sideways when x passes 0.71, else up or down.","in":["Vector2"],"out":["0..3"],"code":["Character.cs",8,14]},
-  {"t":"By state","d":"Idle, walk (water versions when healing), or the weapon type's attack clip.","in":["state"],"out":["ChangeAnimation"],"code":["Player.cs",149,179]},
-  {"t":"Play it","d":"Attack clips speed up to fit the weapon cooldown.","in":["clip","cooldown"],"out":["anim.Play","anim.speed"],"code":["Player.cs",180,186]},
-  {"t":"The weapon's own animation","d":"A child object played in the facing clip; it removes itself at 90%.","in":["weapon.anim"],"out":["BaseWeapon"],"code":["Player.cs",42,57]},
-  {"t":"Weapon animation ends","d":"Removes itself at 90%.","in":["normalizedTime"],"out":["Destroy"],"code":["Player/Weapons/BaseWeapon.cs",10,10]}
+"anim": {"t":"Player animation","s":"Picks the clip from state and facing","in":["state","animFacing","isHealing","cooldown"],"out":["anim.Play","anim.speed"],"seq":true,"flow":[
+  {"k":"wait","fn":"Player.UpdateAnim()","t":"Wait for an attack clip","d":"An attack clip plays to 90% before anything else.","in":["attackState","normalizedTime"],"out":["return"],"code":["Player.cs",145,147]},
+  {"k":"face","fn":"Player.UpdateAnim()","t":"Face the looking way","d":"The facing follows looking, to pick the clip.","in":["looking"],"out":["animFacing"],"code":["Player.cs",148,148]},
+  {"k":"saf","p":"face","fn":"Character.setAnimFacing()","t":"Facing","d":"Up, right, down or left from looking. stopFacing keeps it a moment.","in":["looking","canFace"],"out":["animFacing"],"code":["Character.cs",48,49]},
+  {"k":"fac","p":"saf","fn":"Direction.facing()","t":"Which direction","d":"Sideways when x passes 0.71, else up or down.","in":["Vector2"],"out":["0..3"],"code":["Character.cs",8,14]},
+  {"k":"state","fn":"Player.UpdateAnim()","t":"By state","d":"Idle, walk (water versions when healing), or the weapon type's attack clip.","in":["state"],"out":["ChangeAnimation"],"code":["Player.cs",149,176]},
+  {"k":"play","p":"state","fn":"Player.ChangeAnimation()","t":"Play it","d":"Plays the facing clip unless already playing. Attack clips speed up to fit the weapon cooldown.","in":["clip","cooldown"],"out":["anim.Play","anim.speed"],"code":["Player.cs",180,186]},
+  {"k":"next","fn":"Player.UpdateAnim()","t":"Next frame's state","d":"Back to idle or walking; an attack sets state again through ForceAnim.","in":["isMoving"],"out":["state"],"code":["Player.cs",177,179]},
+  {"k":"wpn","fn":"HoldingWeapons.PlayAnim()","t":"The weapon's own animation","d":"A child object played in the facing clip; it removes itself at 90%.","in":["weapon.anim"],"out":["BaseWeapon"],"code":["Player.cs",42,57]},
+  {"k":"wend","fn":"BaseWeapon.Update()","t":"Weapon animation ends","d":"Removes itself at 90%.","in":["normalizedTime"],"out":["Destroy"],"code":["Player/Weapons/BaseWeapon.cs",10,10]}
 ]},
 "enemy-update": {"t":"Enemy.Update","s":"Notice the player, find the way, walk","in":["player.center","room bounds","enemyData"],"out":["rb.velocity","flipX","Died()"],"seq":true,"flow":[
   {"k":"free","fn":"Enemy.Update()","t":"Spawned free?","d":"Spawned as a trigger. Once it touches nothing it turns solid (ghosts stay triggers).","in":["justSpawn"],"out":["col.isTrigger"],"code":["Enemy.cs",76,76]},
@@ -219,47 +311,71 @@
   {"k":"saf","p":"face","fn":"Character.setAnimFacing()","t":"Set facing","d":"Unless stopFacing holds it.","in":["canFace"],"out":["animFacing"],"code":["Character.cs",48,49]},
   {"k":"fac","p":"saf","fn":"Direction.facing()","t":"Pick a side","d":"Sideways past x 0.71, else up or down.","in":["Vector2"],"out":["0..3"],"code":["Character.cs",8,14]}
 ]},
-"room-events": {"t":"Room events","s":"Checks that open doors","in":["enemies left","sword picked up"],"out":["UnityEvent","door open"],"seq":true,"steps":[
-  {"t":"All enemies defeated","d":"When no Enemy is left (chests count), it fires its UnityEvent once and removes itself.","in":["FindAnyObjectByType<Enemy>"],"out":["onAllEnemiesDefeated","door sound"],"code":["Map/EventAllEnemiesDefeated.cs",10,28]},
-  {"t":"Sword collected","d":"When the sword Loot is gone.","in":["sword"],"out":["onCollectedSword"],"code":["Map/EventCertainObjectDestroyed.cs",11,26]},
-  {"t":"Usual target: a door","d":"Set in the Inspector. Opens, stops blocking, hides after its animation.","out":["anim","coll.enabled = false"],"code":["Door.cs",10,18]},
-  {"t":"Or a dialogue","d":"OnCall dialogues are called the same way.","out":["ui.Dialogue"],"code":["Dialogue.cs",36,38]}
+"room-events": {"t":"Room events","s":"Checks that open doors","in":["enemies left","sword picked up"],"out":["UnityEvent","door open"],"seq":true,"flow":[
+  {"k":"all","fn":"EventAllEnemiesDefeated.Update()","t":"All enemies defeated","d":"When no Enemy is left (chests count), it fires its UnityEvent once and removes itself.","in":["enemies left"],"out":["onAllEnemiesDefeated","door sound"],"code":["Map/EventAllEnemiesDefeated.cs",10,20]},
+  {"k":"none","p":"all","fn":"EventAllEnemiesDefeated.IsConditionTrue()","t":"Any enemy left?","d":"Searches again only once the last found enemy is gone or off; new summons count.","in":["alive","FindAnyObjectByType<Enemy>"],"out":["true if none"],"code":["Map/EventAllEnemiesDefeated.cs",22,28]},
+  {"k":"walls1","p":"all","fn":"PathFinding.Invalidate()","t":"Walls re-read","d":"Cached walls are dropped next frame, so enemies walk through the opened doors.","in":[],"out":["dirtyFrame"],"code":["AI/PathFinding.cs",35,35]},
+  {"k":"sword","fn":"EventCertainObjectDestroyed.Update()","t":"Sword collected","d":"When the sword Loot is gone, it fires its UnityEvent once and removes itself.","in":["sword"],"out":["onCollectedSword"],"code":["Map/EventCertainObjectDestroyed.cs",11,20]},
+  {"k":"gone","p":"sword","fn":"EventCertainObjectDestroyed.IsConditionTrue()","t":"Sword gone?","d":"True once the sword Loot is gone: picked up or fallen in a hole.","in":["sword"],"out":["true if null"],"code":["Map/EventCertainObjectDestroyed.cs",22,26]},
+  {"k":"walls2","p":"sword","fn":"PathFinding.Invalidate()","t":"Walls re-read","d":"Cached walls are dropped next frame, so enemies walk through the opened doors.","in":[],"out":["dirtyFrame"],"code":["AI/PathFinding.cs",35,35]},
+  {"k":"door","fn":"Door.OpenDoor()","t":"Usual target: a door","d":"Set in the Inspector. Opens, stops blocking, hides after its animation.","in":[],"out":["anim","coll.enabled = false"],"code":["Door.cs",12,18]},
+  {"k":"hide","p":"door","fn":"PlayOnce.ThenHide()","t":"Hide after the animation","d":"Waits as long as its longest clip, then hides the door.","in":["anim"],"out":["SetActive(false)"],"code":["AI/PlayOnce.cs",18,18]},
+  {"k":"dlg","fn":"Dialogue.Call()","t":"Or a dialogue","d":"OnCall dialogues are called the same way.","in":[],"out":["ui.Dialogue"],"code":["Dialogue.cs",36,38]},
+  {"k":"show","p":"dlg","fn":"UI.Dialogue()","t":"Show the lines","d":"Stores the lines for UpdateDialogue; a press already held won't skip the first line.","in":["text"],"out":["dialogueTextToShow"],"code":["UI.cs",90,94]}
 ]},
-"ui-update": {"t":"UI.Update","s":"Fills, chat text, dialogue, mini map","in":["player weapons","summondb skills","dialogue"],"out":["screen"],"seq":true,"steps":[
-  {"t":"Each frame","d":"Weapon fills, skill fills, chat text, dialogue.","in":["player","summondb"],"out":["fillAmount","chatText"],"code":["UI.cs",53,63]},
-  {"t":"Weapon reload","d":"0 to 1 since the last use.","in":["lastUse","cooldown"],"out":["0..1"],"code":["Player.cs",16,16]},
-  {"t":"Skill slots","d":"Slot 1 summon, slot 2 potion cooldown.","in":["spawnSkill","potion.spawnSkill"],"out":["skillsReload"],"code":["UI.cs",81,85]},
-  {"t":"Chat text","d":"Who cast what, and open votes.","in":["votes","said"],"out":["string"],"code":["AI/ChatSkill.cs",28,33]},
-  {"t":"Dialogue","d":"Freezes the player. Typewriter text; left attack skips or goes on.","in":["dialogueTextToShow","attackLeft"],"out":["text","player.froze"],"code":["UI.cs",90,113]},
-  {"t":"Enemy name","d":"Shown 2 s when an enemy is hit.","in":["enemyName"],"out":["enemyNameTextbox"],"code":["UI.cs",65,74]},
-  {"t":"Mini map","d":"Its own Update: rooms, doors, you; M opens the big map.","in":["currentRoom","controller.map"],"out":["map panels"],"code":["AI/MiniMap.cs",53,70]},
-  {"t":"Big map pauses","d":"timeScale 0 and the player off.","in":["bigMapPauses"],"out":["Time.timeScale","player.enabled"],"code":["AI/MiniMap.cs",71,80]}
+"ui-update": {"t":"UI.Update","s":"Fills, chat text, dialogue, mini map","in":["player weapons","summondb skills","dialogue"],"out":["screen"],"seq":true,"flow":[
+  {"k":"fill","fn":"UI.Update()","t":"Weapon fills","d":"Each hand's reload shows on its weapon icon.","in":["lWeapon","rWeapon"],"out":["leftFill","rightFill"],"code":["UI.cs",54,55]},
+  {"k":"rel","p":"fill","fn":"HoldingWeapons.getReloadPercent()","t":"Weapon reload","d":"0 to 1 since the last use.","in":["lastUse","cooldown"],"out":["0..1"],"code":["Player.cs",16,16]},
+  {"k":"chg","fn":"UI.Update()","t":"Charge fills","d":"Only with showCharge: the weapon icons need a Charge image, like Fill.","in":["showCharge"],"out":["leftCharge","rightCharge"],"code":["UI.cs",56,59]},
+  {"k":"chp","p":"chg","fn":"HoldingWeapons.getChargePercent()","t":"Charge so far","d":"0 to 1 while a charge skill's button is held; 0 when not charging.","in":["chargeStart","chargeTime"],"out":["0..1"],"code":["AI/WeaponCharge.cs",117,120]},
+  {"k":"skill","fn":"UI.Update()","t":"Skill fills","d":"Every frame, so the slots fill up as the cooldowns run.","in":["summondb"],"out":["UpdateSkill()"],"code":["UI.cs",60,60]},
+  {"k":"upS","p":"skill","fn":"UI.UpdateSkill()","t":"Skill slots","d":"Slot 1 summon, slot 2 potion cooldown.","in":["spawnSkill","potion.spawnSkill"],"out":["skillsReload"],"code":["UI.cs",81,85]},
+  {"k":"skr","p":"upS","fn":"Skill.getReloadPercent()","t":"Skill reload","d":"0 to 1 since the last use, like a weapon's.","in":["lastUse","cooldown"],"out":["0..1"],"code":["Skill.cs",12,13]},
+  {"k":"chat","fn":"UI.Update()","t":"Chat on screen","d":"Only if the UI has a chatText box.","in":["chatText"],"out":["chatText.text"],"code":["UI.cs",61,61]},
+  {"k":"txt","p":"chat","fn":"ChatSkill.Text()","t":"Chat text","d":"Who cast what, and open votes.","in":["votes","said"],"out":["string"],"code":["AI/ChatSkill.cs",28,33]},
+  {"k":"dlg","fn":"UI.Update()","t":"Dialogue box","d":"Every frame; with no text left the box is hidden.","in":["dialogueTextToShow"],"out":["UpdateDialogue()"],"code":["UI.cs",62,62]},
+  {"k":"upD","p":"dlg","fn":"UI.UpdateDialogue()","t":"Dialogue","d":"Freezes the player. Typewriter text; left attack skips or goes on.","in":["dialogueTextToShow","attackLeft"],"out":["text","player.froze"],"code":["UI.cs",95,113]},
+  {"k":"frz","p":"upD","fn":"Character.froze()","t":"Freeze the player","d":"Stunned for 1 s, renewed each frame the dialogue shows, so no walking.","in":[],"out":["stunTime"],"code":["Character.cs",50,50]},
+  {"k":"once","p":"upD","fn":"ControllerButton.isPressedOnce()","t":"Once per press","d":"True the first time each name asks, until the button is let go.","in":["isPressed","\"dialogue\""],"out":["bool"],"code":["Controller.cs",10,14]},
+  {"k":"name","fn":"UI.ShowText()","t":"Enemy name","d":"Shown 2 s when an enemy is hit.","in":["enemyName"],"out":["enemyNameTextbox"],"code":["UI.cs",65,69]},
+  {"k":"hide","p":"name","fn":"UI.d_foo()","t":"Hide after 2 s","d":"Shows the name box, waits 2 seconds, then hides it.","in":[],"out":["enemyNameTextbox off"],"code":["UI.cs",70,74]},
+  {"k":"map","fn":"MiniMap.Update()","t":"Mini map and big map","d":"Its own Update: rooms, doors, you. M opens the big map: player off, paused if bigMapPauses.","in":["currentRoom","controller.map","bigMapPauses"],"out":["map panels","Time.timeScale","player.enabled"],"code":["AI/MiniMap.cs",53,80]}
 ]},
-"coroutines": {"g":"every frame","t":"Coroutines","s":"Resume after Update when their wait is over","in":["WaitForSeconds","yield return null"],"out":["flurry hits","falls","shakes"],"steps":[
-  {"t":"Hole.Fall","d":"Waits for the fall clip, then removes or respawns.","in":["clip.length"],"out":["Destroy","Respawn"],"code":["Map/Hole.cs",19,32]},
-  {"t":"Enemy.WalkHome","d":"One frame after the room turns on: moves it along the path it could have walked.","in":["away time","initSpeed"],"out":["position"],"code":["Enemy.cs",46,58]},
-  {"t":"UI name box","d":"Hides after 2 s.","out":["SetActive(false)"],"code":["UI.cs",70,74]},
-  {"t":"Flurry and Multi","d":"Hits spaced in time.","out":["HitBoxes"],"code":["AI/WeaponCharge.cs",77,93]},
-  {"t":"Lunge","d":"Dash, then hit.","out":["rb.velocity","HitBox"],"code":["AI/WeaponCharge.cs",101,106]},
-  {"t":"Floating","d":"Rise, hold, land.","out":["rb.position","shadow"],"code":["AI/ChatSkill.cs",120,138]},
-  {"t":"Earthquake","d":"Random pushes on all.","out":["receiveKnockback"],"code":["AI/ChatSkill.cs",159,164]},
-  {"t":"Door hides","d":"After its animation.","out":["SetActive(false)"],"code":["AI/PlayOnce.cs",17,18]}
+"coroutines": {"g":"every frame","t":"Coroutines","s":"Resume after Update when their wait is over","in":["WaitForSeconds","yield return null"],"out":["flurry hits","falls","shakes"],"seq":false,"flow":[
+  {"k":"fall","fn":"Hole.Fall()","t":"Fall in a hole","d":"Waits for the fall clip, then removes or respawns.","in":["clip.length"],"out":["Destroy","Respawn"],"code":["Map/Hole.cs",19,32]},
+  {"k":"resp","p":"fall","fn":"Player.Respawn()","t":"Back to the entry","d":"Back to where it entered the room.","in":["roomEntryPos"],"out":["position"],"code":["Player.cs",135,138]},
+  {"k":"home","fn":"Enemy.WalkHome()","t":"Enemy walks home","d":"One frame after the room turns on: moves it along the path it could have walked.","in":["away time","initSpeed"],"out":["position"],"code":["Enemy.cs",46,58]},
+  {"k":"path","p":"home","fn":"PathFinding.Direction()","t":"Find the way","d":"A grid per body size, BFS from the target.","in":["from","to"],"out":["way"],"code":["AI/PathFinding.cs",48,59]},
+  {"k":"name","fn":"UI.d_foo()","t":"UI name box","d":"Shows the enemy name box, hides it after 2 s.","in":[],"out":["SetActive(false)"],"code":["UI.cs",70,74]},
+  {"k":"flurry","fn":"WeaponCharge.Flurry()","t":"Flurry hits","d":"Hits spaced in time: one HitBox every 0.08 s.","in":["cs.count"],"out":["HitBoxes"],"code":["AI/WeaponCharge.cs",77,82]},
+  {"k":"multi","fn":"WeaponCharge.Multi()","t":"Multi attacks","d":"Normal attacks in a row, a gap apart; stops if the weapon changed.","in":["cs.count"],"out":["HitBoxes"],"code":["AI/WeaponCharge.cs",84,93]},
+  {"k":"lunge","fn":"WeaponCharge.Lunge()","t":"Lunge","d":"Dash, then hit.","in":[],"out":["rb.velocity","HitBox"],"code":["AI/WeaponCharge.cs",101,106]},
+  {"k":"float","fn":"Floating.Lift()","t":"Floating","d":"Rise, hold, land.","in":[],"out":["rb.position","shadow"],"code":["AI/ChatSkill.cs",120,138]},
+  {"k":"quake","fn":"Earthquake.Shake()","t":"Earthquake","d":"Random pushes on all.","in":[],"out":["receiveKnockback"],"code":["AI/ChatSkill.cs",159,164]},
+  {"k":"door","fn":"PlayOnce.Hide()","t":"Door hides","d":"After its animation.","in":[],"out":["SetActive(false)"],"code":["AI/PlayOnce.cs",29,32]}
 ]},
-"late": {"g":"every frame","t":"LateUpdate","s":"Buffs act on their character","in":["BuffEffect components"],"out":["burn, heal, slow, stun"],"seq":true,"steps":[
-  {"t":"Over or apply","d":"Ends when time is up or the character died.","in":["end","isDead"],"out":["Destroy(this)","Apply"],"code":["BuffEffect.cs",53,58]},
-  {"t":"Apply","d":"Slow, stun, stop facing, stop animation each frame. Burn and heal once a second.","in":["buff.type","power"],"out":["velocity","froze","recieveDamage","Heal"],"code":["BuffEffect.cs",60,70]},
-  {"t":"Buff types","d":"Flags, so one buff can be several.","out":["BuffType"],"code":["BuffEffect.cs",4,4]},
-  {"t":"Who has what","d":"Checked by Player (shields), Heal (berserk), Hole (floating).","in":["BuffType"],"out":["bool"],"code":["Character.cs",67,67]},
-  {"t":"Thrown weapon shadow","d":"Below the weapon, closer as it slows.","out":["shadow.position"],"code":["AI/ThrownWeapon.cs",78,82]}
+"late": {"g":"every frame","t":"LateUpdate","s":"Buffs act on their character","in":["BuffEffect components"],"out":["burn, heal, slow, stun"],"seq":true,"flow":[
+  {"k":"over","fn":"BuffEffect.LateUpdate()","t":"Over or apply","d":"Ends when time is up or the character died.","in":["end","isDead"],"out":["Destroy(this)","Apply"],"code":["BuffEffect.cs",53,58]},
+  {"k":"apply","p":"over","fn":"BuffEffect.Apply()","t":"Apply","d":"Slow, stun, stop facing, stop animation each frame. Burn and heal once a second.","in":["buff.type","power"],"out":["velocity","froze","HP"],"code":["BuffEffect.cs",60,70]},
+  {"k":"types","p":"apply","fn":"BuffType","t":"Buff types","d":"Flags, so one buff can be several.","in":[],"out":["BuffType"],"code":["BuffEffect.cs",4,4]},
+  {"k":"froze","p":"apply","fn":"Character.froze()","t":"Freeze it","d":"Stunned for the next second; called each frame while the buff lasts.","in":[],"out":["stunTime"],"code":["Character.cs",50,50]},
+  {"k":"sf","p":"apply","fn":"Character.stopFacing()","t":"Hold its facing","d":"Keeps its facing 0.1 s; called each frame while the buff lasts.","in":[],"out":["stopFacingTime"],"code":["Character.cs",52,52]},
+  {"k":"burn","p":"apply","fn":"Character.recieveDamage()","t":"Burn hurts","d":"Each kind of target takes the damage its own way.","in":["power"],"out":["HP"],"code":["Character.cs",76,77],"open":"damage"},
+  {"k":"heal","p":"apply","fn":"Character.Heal()","t":"Heal up","d":"HP up, at most maxHP; nothing while berserk.","in":["heal"],"out":["HP"],"code":["Character.cs",68,68]},
+  {"k":"has","p":"heal","fn":"Character.Has()","t":"Who has what","d":"Checked by Player (shields), Heal (berserk), Hole (floating).","in":["BuffType"],"out":["bool"],"code":["Character.cs",67,67]},
+  {"k":"shadow","fn":"ThrownWeapon.LateUpdate()","t":"Thrown weapon shadow","d":"Below the weapon, closer as it slows.","in":[],"out":["shadow.position"],"code":["AI/ThrownWeapon.cs",78,82]}
 ]},
-"onoff": {"g":"when it happens","t":"OnEnable / OnDisable / OnDestroy","s":"Rooms switch on and off, things end","in":["room SetActive","Destroy"],"out":["enemy reset","cooldown back"],"steps":[
-  {"t":"Enemy leaves with its room","d":"Remembers when.","out":["leftAt"],"code":["Enemy.cs",34,34]},
-  {"t":"Enemy comes back","d":"By Experimental switches: walk home, heal, forget you, clear buffs.","in":["away time","Experimental"],"out":["position","HP","notice"],"code":["Enemy.cs",35,45]},
-  {"t":"Back to the first room","d":"On death (and _re).","in":["initRoom"],"out":["currentRoom","line reset"],"code":["GameManager.cs",66,71]},
-  {"t":"Player dies","d":"For now: full HP, back to 0,0.","in":["HP"],"out":["_re()"],"code":["Player.cs",139,143]},
-  {"t":"BuffEffect ends","d":"Animator plays again; the effect goes.","out":["anim speed 1","Destroy(shown)"],"code":["BuffEffect.cs",39,39]},
-  {"t":"Boomerang gone","d":"The hand is ready again.","out":["hand.lastUse"],"code":["AI/Boomerang.cs",46,46]},
-  {"t":"Chat reader gone","d":"Closes the socket.","out":["tcp.Close"],"code":["AI/UnifiedChat.cs",47,47]},
-  {"t":"Mini map gone","d":"Unpauses if the big map was open.","out":["timeScale 1"],"code":["AI/MiniMap.cs",47,51]}
+"onoff": {"g":"when it happens","t":"OnEnable / OnDisable / OnDestroy","s":"Rooms switch on and off, things end","in":["room SetActive","Destroy"],"out":["enemy reset","cooldown back"],"seq":false,"flow":[
+  {"k":"dis","fn":"Enemy.OnDisable()","t":"Enemy leaves with its room","d":"Remembers when.","in":[],"out":["leftAt"],"code":["Enemy.cs",34,34]},
+  {"k":"en","fn":"Enemy.OnEnable()","t":"Enemy comes back","d":"By Experimental switches: walk home, heal, forget you, clear buffs.","in":["away time","Experimental"],"out":["position","HP","notice"],"code":["Enemy.cs",35,45]},
+  {"k":"walk","p":"en","fn":"Enemy.WalkHome()","t":"Walk home","d":"A frame later: moves it as far along the path home as it could walk.","in":["distance"],"out":["position"],"code":["Enemy.cs",46,58],"open":"coroutines"},
+  {"k":"heal","p":"en","fn":"Character.Heal()","t":"Heal up","d":"HP up, at most maxHP; nothing while berserk.","in":["enemyRegen","away time"],"out":["HP"],"code":["Character.cs",68,68]},
+  {"k":"pd","fn":"Player.Died()","t":"Player dies","d":"For now: full HP, back to 0,0.","in":["HP"],"out":["_re()"],"code":["Player.cs",139,143]},
+  {"k":"re","p":"pd","fn":"GameManager._re()","t":"Back to the first room","d":"Current room off, first room on: their enemies get OnDisable / OnEnable.","in":["initRoom"],"out":["currentRoom","line reset"],"code":["GameManager.cs",66,71]},
+  {"k":"nr","p":"re","fn":"SimpleSummonDB.NewRoom()","t":"Clear chat's line","d":"Empties the summon and potion queues for the new room.","in":[],"out":["summonQ","potion line"],"code":["Connector/SummonDB.cs",67,67]},
+  {"k":"bend","fn":"BuffEffect.OnDestroy()","t":"BuffEffect ends","d":"Animator plays again; the effect goes.","in":[],"out":["anim speed 1","Destroy(shown)"],"code":["BuffEffect.cs",39,39]},
+  {"k":"boom","fn":"Boomerang.OnDestroy()","t":"Boomerang gone","d":"The hand is ready again.","in":[],"out":["hand.lastUse"],"code":["AI/Boomerang.cs",46,46]},
+  {"k":"chat","fn":"UnifiedChat.OnDestroy()","t":"Chat reader gone","d":"Closes the socket.","in":[],"out":["tcp.Close"],"code":["AI/UnifiedChat.cs",47,47]},
+  {"k":"map","fn":"MiniMap.OnDestroy()","t":"Mini map gone","d":"Unpauses if the big map was open, frees the room pictures and camera.","in":[],"out":["timeScale 1"],"code":["AI/MiniMap.cs",47,51]}
 ]}
 }}
