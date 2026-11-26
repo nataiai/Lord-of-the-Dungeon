@@ -19,6 +19,9 @@ The owner reads code outside `AI/`; inside `AI/` they barely look.
 - If it exists, keep it there: new code goes where code like it already lives
   (UI code in `UI.cs` like `leftFill`, charge logic in `AI/WeaponCharge.cs`, etc.).
   Only logic with no such place goes in `AI/`, with a one-line hook in the owner's files.
+- `AI/` is for plug-ins: delete `AI/` and it's still the game. A new game rule (combat, enemies, buffs,
+  skills, loot, doors) goes in the owner's files; `AI/` gets helpers, integrations, and trials behind
+  an `Experimental` switch.
 - "Least code" = less logic, not cramming lines.
 - Avoid partial classes across files; use public members instead.
 - Reuse and generalise: call existing functions/classes first; for duplicate code make a shared
@@ -30,4 +33,6 @@ The owner reads code outside `AI/`; inside `AI/` they barely look.
 - Don't generate non-code files like `.meta`: Unity makes them.
 - Keep names and typos (`recieveDamage`, `knocback`, `d_` = dirty). Rename only if misleading,
   with `[FormerlySerializedAs]`.
-- Push to `main` only when asked. Few commits, short messages, tl;dr reports.
+- Commit to `dev` only when the owner approves: work on your own branch, then squash it onto `dev`,
+  one commit per feature (others use `dev` too: pull first, never force-push it). `main` only when asked.
+- Few commits, short messages, tl;dr reports.
