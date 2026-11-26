@@ -3,12 +3,12 @@ const v = require('vscode');
 const box = w => v.window.createTextEditorDecorationType({isWholeLine:true, borderStyle:'solid', borderWidth:w,
   borderColor:new v.ThemeColor('focusBorder'), backgroundColor:new v.ThemeColor('editor.rangeHighlightBackground')});
 const one = box('2px'), top = box('2px 2px 0 2px'), mid = box('0 2px'), bot = box('0 2px 2px 2px');
-let flow; // Flow~/flow.json: file paths start next to it
+let flow; // AI/Flow~/flow.json: file paths start where AI/ is
 
 exports.activate = ctx => ctx.subscriptions.push(v.window.registerUriHandler({async handleUri(uri){
   const q = new URLSearchParams(uri.query), file = q.get('file'), a = +q.get('from')-1, b = +q.get('to')-1;
-  flow ??= (await v.workspace.findFiles('**/Flow~/flow.json', null, 1))[0];
-  const doc = flow ? flow.with({path: flow.path.replace(/Flow~\/flow\.json$/, file)}) : (await v.workspace.findFiles('**/'+file, null, 1))[0];
+  flow ??= (await v.workspace.findFiles('**/AI/Flow~/flow.json', null, 1))[0];
+  const doc = flow ? flow.with({path: flow.path.replace(/AI\/Flow~\/flow\.json$/, file)}) : (await v.workspace.findFiles('**/'+file, null, 1))[0];
   if(!doc)return v.window.showWarningMessage('Dungeon Flow: '+file+' is not in this workspace');
   const ed = await v.window.showTextDocument(doc);
   const at = (from, to) => Array.from({length:Math.max(to-from+1,0)}, (_,i) => new v.Range(from+i,0,from+i,0));
