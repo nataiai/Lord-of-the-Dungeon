@@ -10,6 +10,11 @@ so nothing here gets a `.meta` file or touches the game. It sits in `AI/` becaus
 | `TODO.md` | Things the map's checks found in the game code that look off, for whoever fixes them. |
 | `vscode/` | A small VS Code extension: a box in the page opens its lines in VS Code with a box drawn around them. Package with `npx @vscode/vsce package`, install with `code --install-extension`. Not tested in VS Code yet. |
 
+**Your review is not in this repo.** The ticks and notes you leave on changes in the map, and each
+"Commit review", are saved in the map's own database. Ask Claude to read your review: it reads the
+collections `commits` and `review` of https://claude.ai/artifact/Jq1ZVYmxs317Bv22XX4ifm with its
+ArtifactData tool. Each note carries its file, line and first changed line.
+
 The page's code (the C# reader that builds the generated map, the page, the build and the checks),
 and the full record of every change, its reason and the mistakes to avoid, are in the
 `everything-on-trial` repo, branch `dungeon-flow`, folder `dungeon-flow/`. Read its `JOURNEY.md`
