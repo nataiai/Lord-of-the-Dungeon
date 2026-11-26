@@ -10,6 +10,9 @@ so nothing here gets a `.meta` file or touches the game. It sits in `AI/` becaus
 | `TODO.md` | Things the map's checks found in the game code that look off, for whoever fixes them. |
 | `vscode/` | A small VS Code extension: a box in the page opens its lines in VS Code with a box drawn around them. Package with `npx @vscode/vsce package`, install with `code --install-extension`. Not tested in VS Code yet. |
 
+**Branches.** This work lives on `dungeon-flow`. Once the owner approves, it lands on `dev` as one
+squashed commit (others commit on `dev` too; `main` only when asked).
+
 **Your review is not in this repo.** The ticks and notes you leave on changes in the map, and each
 "Commit review", are saved in the map's own database. Ask Claude to read your review: it reads the
 collections `commits` and `review` of https://claude.ai/artifact/Jq1ZVYmxs317Bv22XX4ifm with its
