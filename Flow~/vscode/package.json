@@ -1,0 +1,12 @@
+{
+  "name": "dungeon-flow",
+  "displayName": "Dungeon Flow",
+  "description": "Opens the lines a Dungeon Flow box points to, with a box around them",
+  "version": "0.0.1",
+  "publisher": "local",
+  "license": "UNLICENSED",
+  "engines": {"vscode": "^1.75.0"},
+  "activationEvents": ["onUri"],
+  "main": "extension.js",
+  "capabilities": {"untrustedWorkspaces": {"supported": true}}
+}
