@@ -68,6 +68,10 @@ button.name:hover{text-decoration:underline}
 .leaf.add,.leaf.chg,.leaf.del{font-weight:600}
 .box.has>.name::after{content:" \25CF";color:var(--chg)}
 
+.box.chg{border-color:var(--chg)}
+.box.edge{padding:6px 10px;gap:0;border-style:dashed}
+.box.edge .kids,.box.edge .group{display:none}
+.cnt{font-weight:400;color:var(--muted);margin-left:6px}
 .box.add{border-color:var(--add)} .box.add>.name{color:var(--add)}
 .box.del{border-color:var(--del);border-style:dashed} .box.del>.name{color:var(--del)}
 .graph.focus .leaf{opacity:.35}
@@ -112,6 +116,7 @@ textarea{font:400 12.5px/1.55 var(--mono);color:var(--fg);background:var(--surfa
   <div class="bar">
     <div class="tabs" role="tablist" id="tabs"></div>
     <div class="tabs" id="modes"><button type="button" data-only="">Whole graph</button><button type="button" data-only="1">Changed only</button></div>
+    <div class="tabs" id="ais"><button type="button" data-ai="in">AI in graph</button><button type="button" data-ai="edge">AI at edge</button><button type="button" data-ai="off">AI hidden</button></div>
   </div>
   <div class="tabs" id="parts" hidden></div>
   <p class="when" id="when"></p>
@@ -352,6 +357,7 @@ function build(node, parent, inherited, path){
   else if(node.kids.every(c => !c.kids)){ // a class and the things it does
     el = document.createElement("div"); el.className = "box " + mark;
     const n = document.createElement("button"); n.className = "name"; n.type = "button"; n.textContent = name;
+    if(node.edge){ el.classList.add("edge"); el.dataset.edge = 1; n.append(span("cnt", node.count)); }
     n.title = "Click: keep its arrows lit. Double-click: put at the center";
     n.onclick = () => { pinned = pinned === name ? null : name; focusOn(pinned); };
     n.ondblclick = () => { center = name; render(); };
@@ -362,7 +368,7 @@ function build(node, parent, inherited, path){
     for(const c of node.kids) k.append(leafEl(c, name, mark));
     if(path.length) el.append(span("group", path.join(" / ")));
     el.append(n, k); nodes[name] = el;
-    if(el.querySelector(CHANGED)) el.classList.add("has");
+    if(el.querySelector(CHANGED) || (node.edge && mark)) el.classList.add("has");
   }else{ // a group: its name goes on each of its boxes
     nodes[name] = null;
     for(const c of node.kids) build(c, name, mark, [...path, name]);
@@ -376,7 +382,7 @@ function build(node, parent, inherited, path){
 function changed(g){
   const set = new Set(), walk = (n, parent, inh) => {
     const mark = n.mark || inh;
-    if(!n.kids){ if(mark) set.add(keyOf(n, parent)); } else for(const c of n.kids) walk(c, n.name, mark);
+    if(!n.kids){ if(mark) set.add(keyOf(n, parent)); } else if(n.edge){ if(mark) set.add(n.name); } else for(const c of n.kids) walk(c, n.name, mark);
   };
   for(const b of g.boxes) walk(b, null, "");
   let count = set.size;
@@ -401,13 +407,32 @@ function connected(list){
   const out = {}; for(const k in up) (out[find(k)] ||= []).push(k);
   return Object.values(out);
 }
+// AI/ classes: "in" the graph as they are, at the "edge" as one small box each, or "off"
+let ai = "edge";
+function aiView(g){
+  const grp = g.boxes.find(b => b.kids && /^AI\/?$/i.test(b.name));
+  if(ai === "in" || !grp) return g;
+  const names = new Set(grp.kids.map(c => c.name)), cls = k => k.split(".")[0];
+  const small = c => !c.kids ? c : {...c, edge:true, count:c.kids.length, mark:c.mark || (c.kids.some(l => l.mark) ? "chg" : ""), kids:[]};
+  const boxes = ai === "off" ? g.boxes.filter(b => b !== grp) : g.boxes.map(b => b === grp ? {...b, kids:b.kids.map(small)} : b);
+  const fold = list => { // arrows end at the small box; arrows inside one AI class go
+    const seen = {};
+    for(const e of list){
+      const a = names.has(cls(e.from)), b = names.has(cls(e.to)); if(ai === "off" && (a || b)) continue;
+      const from = a ? cls(e.from) : e.from, to = b ? cls(e.to) : e.to, k = e.part + ">" + from + ">" + to;
+      if(from !== to && (!seen[k] || (e.mark && !seen[k].mark))) seen[k] = {...e, from, to, label:a || b ? "" : e.label};
+    }
+    return Object.values(seen);
+  };
+  return {...g, boxes, edges:fold(g.edges), all:fold(g.all.map(e => ({...e, part:""})))};
+}
 function render(){
-  const g = parse(source.value), notes = [];
+  const g = aiView(parse(source.value)), notes = [];
   let boxes = g.boxes, shown = g.all;
   if(part && g.parts.includes(part)){ // one part: its arrows and the boxes they touch
     ({boxes, edges:shown} = onlyPart(g, part));
     const pieces = connected(shown);
-    if(pieces.length > 1) notes.push(`"${part}" is not one connected piece: ` + pieces.map(p => p.join(" + ")).join("  |  "));
+    if(pieces.length > 1 && ai === "in") notes.push(`"${part}" is not one connected piece: ` + pieces.map(p => p.join(" + ")).join("  |  "));
   }
   if(only){ // the changed boxes, plus what they are wired to
     const ch = changed({boxes, edges:shown}).set, keep = new Set(ch);
@@ -455,7 +480,7 @@ function layout(){
     if(U[i].path.length && U[i].path[0] === U[j].path[0]) add(i, j, U[i].path.join() === U[j].path.join() ? .5 : .25);
   const deg = U.map(() => 0);
   for(const e of edges){ const a = unitOf(e.from), b = unitOf(e.to); if(a != null && b != null && a !== b){ deg[a]++; deg[b]++; } }
-  const c = idx[center] ?? (part && edges[0] ? unitOf(edges[0].from) ?? 0 : 0), GAP = 46, STEP = 95; // room for arrows, px per unit of graph distance
+  const c = idx[center] ?? (part && edges[0] && !nodes[edges[0].from].dataset.edge ? unitOf(edges[0].from) ?? 0 : Math.max(0, U.findIndex(u => !u.el.dataset.edge))), GAP = 46, STEP = 95; // room for arrows, px per unit of graph distance
 
   // 1. graph distance between every two boxes (Floyd-Warshall). An arrow is an edge, more arrows = shorter
   const d = U.map((_, i) => U.map((_, j) => i === j ? 0 : Infinity));
@@ -463,6 +488,11 @@ function layout(){
   for(let k = 0; k < n; k++) for(let i = 0; i < n; i++) for(let j = 0; j < n; j++) if(d[i][k] + d[k][j] < d[i][j]) d[i][j] = d[i][k] + d[k][j];
   const far = Math.max(1, ...d.flat().filter(isFinite)) + 1, size = u => (u.w + u.h) / 4;
   const D = d.map((row, i) => row.map((v, j) => size(U[i]) + size(U[j]) + STEP * Math.min(v, far))); // wanted px
+  const out = U.map(u => !!u.el.dataset.edge); // "AI at edge": keep those boxes outside the rest
+  if(out.some(Boolean)){
+    const R = Math.sqrt(U.reduce((t, u, i) => t + (out[i] ? 0 : u.w * u.h), 0)) * .9 + 160;
+    for(let i = 0; i < n; i++) for(let j = 0; j < n; j++) if(out[i] !== out[j]) D[i][j] = Math.max(D[i][j], R);
+  }
 
   // 2. stress majorization: sum of (real - wanted)^2 / wanted^2 over all pairs, each box moved to its best spot in turn
   function majorize(times){
@@ -486,6 +516,7 @@ function layout(){
   // 3. crossings: each arrow as the straight run between its two stubs; count pairs that cross, and arrows through a box
   const Eall = edges.map(e => [e.from, e.to].map(k => unitOf(k) == null ? null : {i:unitOf(k), k})).filter(([a, b]) => a && b);
   const measure = () => { for(const pair of Eall) for(const p of pair){ const l = nodes[p.k], u = U[p.i];
+    if(l === u.el){ p.l = -u.w/2; p.r = u.w/2; p.y = 0; continue; }
     p.l = l.offsetLeft - u.w/2; p.r = p.l + l.offsetWidth; p.y = l.offsetTop + l.offsetHeight/2 - u.h/2; } };
   measure();
   const E = Eall.filter(([a, b]) => a.i !== b.i);
@@ -608,14 +639,14 @@ function focusOn(key){
   graph.classList.toggle("focus", !!key);
   for(const el of graph.querySelectorAll(".leaf,.unit")) el.classList.remove("me", "rel", "lit");
   const box = key && nodes[key]?.classList.contains("box") ? nodes[key] : null;
-  const mine = new Set(box ? [...box.querySelectorAll(".leaf")].map(l => l.dataset.key) : key ? [key] : []);
+  const mine = new Set(box ? [key, ...[...box.querySelectorAll(".leaf")].map(l => l.dataset.key)] : key ? [key] : []);
   for(const w of graph.querySelectorAll(".wire,.wlabel")){
     const out = mine.has(w.dataset.from), inn = mine.has(w.dataset.to);
     w.classList.toggle("hot", out || inn);
     if(out || inn) for(const k of [w.dataset.from, w.dataset.to]) nodes[k].classList.add(mine.has(k) && !box ? "me" : "rel");
   }
   if(box) box.classList.add("me"); else if(key && nodes[key]) nodes[key].classList.add("me");
-  for(const l of graph.querySelectorAll(".leaf.me,.leaf.rel,.box.me")) l.closest(".unit").classList.add("lit");
+  for(const l of graph.querySelectorAll(".leaf.me,.leaf.rel,.box.me,.box.rel")) l.closest(".unit").classList.add("lit");
 }
 
 function show(step){
@@ -649,7 +680,11 @@ function counts(){ // changes per step, on its tab
     b.textContent = b.dataset.step; if(n) b.append(span("n", n));
   }
 }
-function mode(){ for(const b of $("modes").children) b.setAttribute("aria-selected", !!b.dataset.only === only); }
+function mode(){
+  for(const b of $("modes").children) b.setAttribute("aria-selected", !!b.dataset.only === only);
+  for(const b of $("ais").children) b.setAttribute("aria-selected", b.dataset.ai === ai);
+}
+for(const b of $("ais").children) b.onclick = () => { ai = b.dataset.ai; mode(); render(); };
 for(const b of $("modes").children) b.onclick = () => { only = !!b.dataset.only; mode(); render(); };
 source.oninput = () => { STEPS[current].src = source.value; counts(); partTabs(); render(); };
 counts(); mode();
