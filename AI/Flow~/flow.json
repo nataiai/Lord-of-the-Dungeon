@@ -1,12 +1,13 @@
 {
 "_about": "Claude's notes for the Dungeon Flow page. The page builds its map from the .cs files (gen.js in the everything-on-trial repo, branch dungeon-flow) and lays these notes over the boxes. Each note is tied to a file, a line range (a = first line, b = last line) and the text of its first line (line). commit: the code they were checked against; build.js follows your edits from there with git diff and moves the notes, and a note whose own lines changed is a build warning: rewrite or delete it. t: a short title (at most 6 words); d: one sentence (at most 22 words). Unity skips AI/Flow~ (no .meta).",
-"commit": "cf7e676",
+"commit": "5faf1d6",
 "notes": [
   {"f":"AI/Boomerang.cs","a":26,"b":26,"line":"Destroy(hb); // this flies and hits instead of the HitBox (gone before its Start, so it never destroys itself)","t":"Boomerang takes over","d":"The HitBox goes; the Boomerang on the same object flies and hits instead."},
   {"f":"AI/ChatSkills.cs","a":13,"b":18,"line":"public static void Keys(ChatSkill[] skills){","t":"Test keys 1-6","d":"With skillKeys on, keys 1-6 each vote for a skill, as one chatter would."},
   {"f":"AI/ChatSkills.cs","a":25,"b":25,"line":"while(p.Has(BuffType.berserk)){Copy(red, sr, Vector3.zero); yield return null;}","t":"Red while berserk","d":"The red copy follows the player's sprite each frame until the buff ends."},
   {"f":"AI/ChatSkills.cs","a":43,"b":43,"line":"left = p.Has(BuffType.floating) ? ends-Time.time : 0;","t":"Time left afloat","d":"Seconds until the float ends; 0 once the buff is gone, so it lands."},
   {"f":"AI/ChatSkills.cs","a":60,"b":60,"line":"public static float Damage(Character by)=>by.Has(BuffType.berserk) ? 4-2f*by.HP/by.maxHP : 1;","t":"Berserk damage factor","d":"With berserk: x4 at 0 HP down to x2 at full HP; else x1."},
+  {"f":"AI/ChatSkills.cs","a":61,"b":61,"line":"public override void Cast(Player p){base.Cast(p); ChatSkillExtras.Red(p);} // looks: AI/","t":"Buff, then a red copy","d":"Berserk's cast: the buff, then a red copy of the player on top while it lasts."},
   {"f":"AI/ChatSkills.cs","a":90,"b":90,"line":"public static float Friction(Character c)=>c.Has(BuffType.floating) ? GameManager.Instance.summondb.floating.friction : 1;","t":"Less friction afloat","d":"While the floating buff lasts, knockback slows down less (floating.friction, else 1)."},
   {"f":"AI/ChatSkills.cs","a":91,"b":95,"line":"public override void Cast(Player p){","t":"Float: buff, holes, lift","d":"The floating buff goes on; the body stays awake to fall into a hole at the end; the lift is AI/."},
   {"f":"AI/ChatSkills.cs","a":109,"b":115,"line":"public override void Cast(Player p){","t":"Stun everyone, then shake","d":"Stuns the room's enemies and the player (unless spared), then pushes them all, each a random way."},
