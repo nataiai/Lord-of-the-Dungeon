@@ -1,0 +1,660 @@
+<title>Dungeon Step Graph</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* layout: step tabs on top, one free graph (center box pinned, others pulled in by their arrows), its source text underneath */
+:root{
+  --bg:#f5f4f9; --surface:#ffffff; --group:#eeecf6; --leaf:#ffffff;
+  --fg:#1d1b26; --muted:#676380; --border:#cbc7dd; --line:#8d88a6;
+  --add:#15803d; --del:#b91c1c; --chg:#a16207;
+  --sans:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#15141b; --surface:#1c1b25; --group:#24222f; --leaf:#2d2b3b;
+  --fg:#ebe9f5; --muted:#a09cb6; --border:#3a374d; --line:#747090;
+  --add:#4ade80; --del:#f87171; --chg:#facc15; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#15141b; --surface:#1c1b25; --group:#24222f; --leaf:#2d2b3b;
+  --fg:#ebe9f5; --muted:#a09cb6; --border:#3a374d; --line:#747090;
+  --add:#4ade80; --del:#f87171; --chg:#facc15; color-scheme:dark }
+
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;line-height:1.5;
+  padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.page{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px}
+h1{font-family:var(--mono);font-size:20px;font-weight:600;margin:0;text-wrap:balance}
+header p{margin:0;color:var(--muted)}
+
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tabs button{font:500 13px var(--mono);color:var(--muted);background:transparent;border:1px solid var(--border);
+  border-radius:4px;padding:6px 12px;cursor:pointer}
+.tabs button:hover{color:var(--fg)}
+.tabs button[aria-selected="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+#parts button{font-size:12px;padding:4px 10px}
+.tabs .n{margin-left:7px;font-weight:600;color:var(--chg)}
+.tabs button[aria-selected="true"] .n{color:inherit}
+.bar{display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center;justify-content:space-between}
+.when{margin:0;color:var(--muted);min-height:1.5em}
+.commit{margin:0;font:400 12.5px var(--mono);color:var(--muted);max-width:100%;overflow-wrap:anywhere}
+.commit b{color:var(--fg);font-weight:600}
+.empty{color:var(--muted);margin:0;padding:20px}
+
+.scroll{overflow-x:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px}
+.fit{margin:0 auto;overflow:hidden}
+.graph{position:relative;transform-origin:0 0}
+.unit{position:absolute;z-index:1}
+.box.unit{background:var(--group);border-color:var(--line)}
+.box.unit.center{border-color:var(--fg);border-width:2px}
+.box.unit.has{border-color:var(--chg)}
+button.name{background:none;border:0;padding:0;color:inherit;text-align:left;cursor:pointer}
+button.name:hover{text-decoration:underline}
+.box{border:1px solid var(--border);border-radius:4px;padding:8px 12px 12px;display:flex;flex-direction:column;gap:8px}
+.name{font:600 13px var(--mono);letter-spacing:.02em}
+.group{font:400 10px var(--mono);color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:-6px}
+.kids{display:flex;flex-direction:column;gap:7px;align-items:stretch}
+.leaf{font:400 12px var(--mono);color:var(--fg);background:var(--leaf);border:1px solid var(--line);border-radius:3px;
+  padding:4px 9px;text-align:left;cursor:pointer;white-space:nowrap}
+.leaf:hover{border-color:var(--fg)}
+.leaf .m{font-weight:600;margin-right:5px}
+.leaf .note{display:block;font:400 11.5px/1.35 var(--sans);white-space:normal;max-width:24ch;margin-top:1px}
+.leaf.add{border-color:var(--add);border-width:1.5px} .leaf.add .m,.leaf.add .note{color:var(--add)}
+.leaf.chg{border-color:var(--chg);border-width:1.5px} .leaf.chg .m,.leaf.chg .note{color:var(--chg)}
+.leaf.del{border-color:var(--del);border-style:dashed} .leaf.del .m,.leaf.del .note{color:var(--del)}
+.leaf.del .t{text-decoration:line-through}
+.leaf.add{background:color-mix(in srgb,var(--add) 14%,var(--leaf))}
+.leaf.chg{background:color-mix(in srgb,var(--chg) 16%,var(--leaf))}
+.leaf.del{background:color-mix(in srgb,var(--del) 12%,var(--leaf))}
+.leaf.add,.leaf.chg,.leaf.del{font-weight:600}
+.box.has>.name::after{content:" \25CF";color:var(--chg)}
+
+.box.add{border-color:var(--add)} .box.add>.name{color:var(--add)}
+.box.del{border-color:var(--del);border-style:dashed} .box.del>.name{color:var(--del)}
+.graph.focus .leaf{opacity:.35}
+.graph.focus .unit:not(.lit){opacity:.35}
+.graph.focus .unit:not(.lit) .leaf{opacity:1}
+.graph.focus .box.me{border-color:var(--fg);box-shadow:0 0 0 1px var(--fg)}
+.graph.focus .leaf.me,.graph.focus .leaf.rel{opacity:1}
+.graph.focus .leaf.me{border-color:var(--fg);box-shadow:0 0 0 1px var(--fg)}
+
+svg.wires{z-index:2;position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.wire{fill:none;stroke:var(--line);stroke-width:1.1;opacity:.6}
+.wire.add,.wire.chg,.wire.del{opacity:1;stroke-width:2.2}
+.wlabel.add,.wlabel.chg,.wlabel.del{font-weight:600;font-size:11px}
+.wlabel{font:400 10px var(--mono);fill:var(--muted);stroke:var(--surface);stroke-width:4px;paint-order:stroke;stroke-linejoin:round;text-anchor:middle}
+.wlabel:not(.add):not(.chg):not(.del){opacity:0}
+.wire.add{stroke:var(--add)} .wlabel.add{fill:var(--add)}
+.wire.chg{stroke:var(--chg)} .wlabel.chg{fill:var(--chg)}
+.wire.del{stroke:var(--del);stroke-dasharray:4 3} .wlabel.del{fill:var(--del)}
+.graph.focus .wire,.graph.focus .wlabel{opacity:.1}
+.graph.focus .wire.hot{opacity:1;stroke-width:2}
+.graph.focus .wire.hot:not(.add):not(.chg):not(.del){stroke:var(--fg)}
+.graph.focus .wlabel.hot{opacity:1}
+.graph.focus .wlabel.hot:not(.add):not(.chg):not(.del){fill:var(--fg)}
+
+.legend{display:flex;flex-wrap:wrap;gap:4px 20px;color:var(--muted);font-size:13px;margin:0;padding:0;list-style:none}
+.sw{display:inline-block;width:18px;height:0;border-top:2px solid var(--line);vertical-align:middle;margin-right:6px}
+.sw.a{border-color:var(--add)} .sw.c{border-color:var(--chg)} .sw.d{border-color:var(--del);border-top-style:dashed}
+.src{display:flex;flex-direction:column;gap:6px}
+.src label{font:600 12px var(--mono)}
+.src p{margin:0;color:var(--muted);font-size:13px;max-width:70ch}
+textarea{font:400 12.5px/1.55 var(--mono);color:var(--fg);background:var(--surface);border:1px solid var(--border);
+  border-radius:6px;padding:12px;width:100%;box-sizing:border-box;min-height:300px;resize:vertical;tab-size:2;white-space:pre;overflow:auto}
+.warn{margin:0;color:var(--out);font:400 12px var(--mono);white-space:pre-wrap}
+</style>
+
+<div class="page">
+  <header>
+    <h1>Lord of the Dungeon / step graph</h1>
+    <p>What a commit changed, per Unity step, without reading every line.</p>
+  </header>
+  <p class="commit"><b>ddb43c5</b> Chat skills: crowd votes; berserk, invincible, shields, floating, earthquake; enemies walk home; Ghost touch is magic</p>
+  <div class="bar">
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="tabs" id="modes"><button type="button" data-only="">Whole graph</button><button type="button" data-only="1">Changed only</button></div>
+  </div>
+  <div class="tabs" id="parts" hidden></div>
+  <p class="when" id="when"></p>
+  <div class="scroll" id="scroll"><div class="fit" id="fit"><div class="graph" id="graph"></div></div></div>
+  <ul class="legend">
+    <li>Box = class. Lowest box = a function this step reaches. Arrow = calls. A part = everything one step function reaches.</li>
+    <li>Boxes sit next to what they share the most arrows with, arranged so the fewest lines cross. Lowest boxes inside a box are reordered for the same reason. The small grey word on a box is its group. Double-click a box title to put it at the center.</li>
+        <li><span class="sw a"></span>+ added <span class="sw c"></span>~ changed <span class="sw d"></span>- removed</li>
+    <li>Hover a box, or click its title, to light up its arrows and the boxes they reach. Same for a lowest box.</li>
+  </ul>
+  <div class="src">
+    <label for="source">The graph as text</label>
+    <p>This text is the whole graph, written by <code>gen.js</code> from the code at the two commits. The first box is the center. <code>Name[...]</code> is a box, a bare name is a lowest box, <code>Box.thing -> Box.thing : label</code> is an arrow. <code># name</code> starts a part: the arrows under it also get their own smaller graph. Put <code>+</code> <code>~</code> <code>-</code> in front of what a commit added, changed or removed, and <code>: note</code> after it to say what. Edit it and the drawing follows (edits stay in this browser tab only).</p>
+    <textarea id="source" spellcheck="false"></textarea>
+    <p class="warn" id="warn"></p>
+    <p id="info"></p>
+  </div>
+</div>
+
+<script>
+const STEPS = {
+Awake: {when:"Once, before any Start.", src:
+`GameManager[singleton, find cameras, find or make UI, frame rate]
+UI[collect hearts, collect skill slots, find weapon fills]
+SoundPlayer[instance]
+BaseWeapon[find animator]
+
+GameManager.find or make UI -> UI.collect hearts : Instantiate(uiPrefab)`},
+
+Start: {when:"Once, before the object's first Update.", src:
+`Character[
+  Player[full HP, get controller, room entry pos],
+  Enemy[full HP, home pos, find sprite, trigger until clear]
+]
+GameManager[show hearts, find sound]
+UI[hearts, canvas camera, add minimap, weapon icons, dialogue]
+Weapon[HoldingWeapons[weapon], HitBox[start timer]]
+Map[DungeonMap[pair doors, find current room], Dialogue[show on start]]
+Loot[sprite, collider]
+BuffEffect[find character, show effect]
+MiniMap[build]
+
+Player.full HP -> UI.hearts : HP set
+GameManager.show hearts -> UI.hearts : UpdateMaxHP
+HoldingWeapons.weapon -> UI.weapon icons : uiWep
+Dialogue.show on start -> UI.dialogue : ui.Dialogue
+UI.add minimap -> MiniMap.build : AddComponent`},
+
+Update: {when:"Every frame.", src:
+`Character[
+  Player[die, move, look, ~stun: knockback slides longer while floating, throw, attack, anim],
+  Enemy[settle spawn, hurt flash, die, knockback, notice, ~chase: walks back home when it hasn't seen you, face]
+]
+Input[Controller[move axis, look axis, attack L/R, throw hold]]
+Weapon[
+  HoldingWeapons[use, spawn hitbox, swing anim, cooldown],
+  WeaponCharge[charge],
+  ThrownWeapon[throw],
+  HitBox[live, expire],
+  BaseWeapon[end anim]
+]
+UI[reload fill, skill fill, +chat text: what chat did and its open votes, dialogue]
+GameManager[test spawn, +chat keys: test keys 1-6, spawn potion, spawn summon, first room]
+Chat[
+  SummonDB[summon queue, potion queue, skill cooldown, unlock, +skills: berserk invincible 2 shields floating earthquake],
+  +ChatSkill[read votes, keys, text],
+  UnifiedChat[read inbox]
+]
+Map[DungeonRoom[spawn], HealingRoom[heal], Events[all enemies dead, object destroyed]]
+Helpers[PathFinding[direction], Loot[drop], SoundPlayer[play]]
+
+# move
+Controller.move axis -> Player.move : movement
+Controller.look axis -> Player.look : looking
+Player.move -> Player.anim : state
+Controller.throw hold -> Player.throw : isPressed
+Player.throw -> ThrownWeapon.throw : TryThrow
+Player.die -> GameManager.first room : _re
+
+# attack
+Controller.attack L/R -> Player.attack : isPressed
+Player.attack -> Player.anim : ForceAnim
+Player.attack -> WeaponCharge.charge : Blocks
+Player.attack -> HoldingWeapons.use : ForceUse
+HoldingWeapons.use -> HoldingWeapons.spawn hitbox
+HoldingWeapons.use -> HoldingWeapons.swing anim
+HoldingWeapons.use -> SoundPlayer.play : useSound
+HoldingWeapons.spawn hitbox -> HitBox.live : Instantiate
+HoldingWeapons.cooldown -> UI.reload fill : getReloadPercent
+
+# dialogue
+Controller.attack L/R -> UI.dialogue : next line
+UI.dialogue -> Player.stun : froze
+
+# enemy
+~ PathFinding.direction -> Enemy.chase : way to player or home
+Enemy.die -> Loot.drop
+Enemy.die -> SummonDB.unlock
+
+# summon
+SummonDB.summon queue -> GameManager.spawn summon : GetToSpawn
+SummonDB.potion queue -> GameManager.spawn potion
+SummonDB.skill cooldown -> UI.skill fill
+GameManager.spawn summon -> DungeonRoom.spawn
+
+# chat skill
++ GameManager.chat keys -> ChatSkill.keys : Keys
++ SummonDB.skills -> ChatSkill.keys
++ UnifiedChat.read inbox -> ChatSkill.read votes : Read
++ ChatSkill.text -> UI.chat text : Text`},
+
+LateUpdate: {when:"Every frame, after all Updates.", src:
+`Character[velocity, stun time, facing, animator, ~HP: no healing while berserk]
+BuffEffect[end, slow, stun, stop facing, stop anim, burn, heal, +berserk, +invincible, +magic shield, +physical shield, +floating]
+ThrownWeapon[shadow below]
+
+BuffEffect.slow -> Character.velocity : x0.9
+BuffEffect.stun -> Character.stun time : froze
+BuffEffect.stop facing -> Character.facing
+BuffEffect.stop anim -> Character.animator : speed 0
+BuffEffect.burn -> Character.HP : each second
+~ BuffEffect.heal -> Character.HP : not while berserk
++ BuffEffect.berserk -> Character.HP : blocks Heal`},
+
+Trigger: {when:"OnTriggerEnter / Stay / Exit: when colliders touch.", src:
+`Character[
+  Enemy[~touch attack: magic enemies (Ghost) deal magic damage, damage, knockback, buff],
+  Player[~damage: blocked by invincible or the matching shield, ~knockback: blocked by invincible, heal, isHealing]
+]
+Weapon[
+  HitBox[hit character, hit destructable],
+  BuffEffect[copy buff],
+  HoldingWeapons[weapon]
+]
+UI[enemy name, hearts, weapon icons]
+Loot[pick weapon, pick chat skill, instant item]
+Map[HealingRoom[enter, exit], RoomTrigger[exit door], DungeonMap[switch room], Destructable[damage], Hole[~fall: not while floating]]
+GameManager[available skills, connect chat]
+
+# weapon hit
+HitBox.hit character -> Enemy.damage : recieveDamage
+HitBox.hit character -> Enemy.knockback : receiveKnockback
+HitBox.hit destructable -> Destructable.damage
+BuffEffect.copy buff -> Enemy.buff : CopyTo
+Enemy.damage -> UI.enemy name : ShowText
+
+# enemy touch
+~ Enemy.touch attack -> Player.damage : physic or magic
+Enemy.touch attack -> Player.knockback
+Player.damage -> UI.hearts : HP set
+
+# loot
+Loot.pick weapon -> HoldingWeapons.weapon : TryFill / Swap
+Loot.pick weapon -> UI.weapon icons : UpdateWeap
+Loot.pick weapon -> GameManager.connect chat : first weapon
+Loot.pick chat skill -> GameManager.available skills
+Loot.instant item -> Player.heal : HealWithEffect
+Player.heal -> UI.hearts : HP set
+
+# healing room
+HealingRoom.enter -> Player.isHealing
+HealingRoom.exit -> Player.isHealing
+
+# doors
+RoomTrigger.exit door -> DungeonMap.switch room`}
+};
+
+// "A[b, C[d]]" -> [{name:"A", kids:[{name:"b"}, {name:"C", kids:[...]}]}]
+function parseBoxes(s){
+  let i = 0;
+  function list(){
+    const out = []; let name = "";
+    const flush = () => { if(name.trim()) out.push({...meta(name), kids:null}); name = ""; };
+    while(i < s.length){
+      const c = s[i++];
+      if(c === "["){
+        const n = name.trim(); name = "";
+        const kids = list();
+        if(!n) out.push(...kids);            // [attack] = attack
+        else out.push({...meta(n), kids: kids.length ? kids : null});
+      }
+      else if(c === "]"){ flush(); return out; }
+      else if(c === "," || c === "\n") flush();
+      else name += c;
+    }
+    flush(); return out;
+  }
+  return list();
+}
+// "~chase: note" -> {mark:"chg", name:"chase", note:"note"}
+const MARK = {"+":"add", "-":"del", "~":"chg"};
+function meta(raw){
+  const m = raw.trim().match(/^([+\-~])?\s*([^:]*)(?::(.*))?$/);
+  return {mark: MARK[m[1]] || "", name: m[2].trim(), note: (m[3] || "").trim()};
+}
+function parse(src){
+  const boxLines = [], edges = [], parts = []; let part = "";
+  for(const line of src.split("\n")){
+    if(line.trim().startsWith("//")) continue;
+    if(line.trim().startsWith("#")){ part = line.trim().slice(1).trim(); if(part && !parts.includes(part)) parts.push(part); continue; }
+    const m = line.match(/^\s*([+\-~])?(.*?)->(.*?)(?::(.*))?$/);
+    if(m) edges.push({mark:MARK[m[1]] || "", from:m[2].trim(), to:m[3].trim(), label:(m[4]||"").trim(), part});
+    else boxLines.push(line);
+  }
+  const seen = {}; // an arrow can sit in several parts: once in the whole graph, a marked one wins
+  for(const e of edges){ const k = e.from + ">" + e.to; if(!seen[k] || (e.mark && !seen[k].mark)) seen[k] = e; }
+  return {boxes: parseBoxes(boxLines.join("\n")), edges, parts, all: Object.values(seen)};
+}
+
+const $ = id => document.getElementById(id);
+const graph = $("graph"), source = $("source"), NS = "http://www.w3.org/2000/svg";
+let current = STEPS.Update ? "Update" : Object.keys(STEPS)[0], nodes = {}, edges = [], pinned = null, only = false, center = null, part = "", scale = 1;
+
+const span = (cls, text) => { const s = document.createElement("span"); s.className = cls; s.textContent = text; return s; };
+const keyOf = (node, parent) => parent ? parent + "." + node.name : node.name;
+const CHANGED = ".leaf.add,.leaf.chg,.leaf.del";
+let over = null; // class box under the mouse
+let units = []; // each floats freely
+function leafEl(node, parent, inherited){
+  const mark = node.mark || inherited;
+  const el = document.createElement("button"); el.type = "button"; el.className = "leaf " + mark;
+  if(mark) el.append(span("m", {add:"+", del:"-", chg:"~"}[mark]));
+  el.append(span("t", node.name));
+  if(node.note) el.append(span("note", node.note));
+  const key = keyOf(node, parent);
+  el.dataset.key = key; nodes[key] = el;
+  el.onmouseenter = () => focusOn(key);
+  el.onmouseleave = () => focusOn(pinned || over);
+  el.onfocus = () => focusOn(key);
+  el.onblur = () => focusOn(pinned || over);
+  el.onclick = () => { pinned = pinned === key ? null : key; focusOn(pinned); };
+  return el;
+}
+function build(node, parent, inherited, path){
+  const mark = node.mark || inherited;
+  let el, name = node.name;
+  if(!node.kids){ el = leafEl(node, parent, mark); name = el.dataset.key; }
+  else if(node.kids.every(c => !c.kids)){ // a class and the things it does
+    el = document.createElement("div"); el.className = "box " + mark;
+    const n = document.createElement("button"); n.className = "name"; n.type = "button"; n.textContent = name;
+    n.title = "Click: keep its arrows lit. Double-click: put at the center";
+    n.onclick = () => { pinned = pinned === name ? null : name; focusOn(pinned); };
+    n.ondblclick = () => { center = name; render(); };
+    n.onfocus = () => focusOn(name); n.onblur = () => focusOn(pinned || over);
+    el.onmouseenter = () => { over = name; focusOn(name); };
+    el.onmouseleave = () => { over = null; focusOn(pinned); };
+    const k = document.createElement("div"); k.className = "kids";
+    for(const c of node.kids) k.append(leafEl(c, name, mark));
+    if(path.length) el.append(span("group", path.join(" / ")));
+    el.append(n, k); nodes[name] = el;
+    if(el.querySelector(CHANGED)) el.classList.add("has");
+  }else{ // a group: its name goes on each of its boxes
+    nodes[name] = null;
+    for(const c of node.kids) build(c, name, mark, [...path, name]);
+    return;
+  }
+  el.classList.add("unit"); el.dataset.unit = name;
+  units.push({name, el, path}); graph.append(el);
+}
+
+// lowest boxes a commit touched: marked ones and both ends of marked arrows
+function changed(g){
+  const set = new Set(), walk = (n, parent, inh) => {
+    const mark = n.mark || inh;
+    if(!n.kids){ if(mark) set.add(keyOf(n, parent)); } else for(const c of n.kids) walk(c, n.name, mark);
+  };
+  for(const b of g.boxes) walk(b, null, "");
+  let count = set.size;
+  for(const e of g.edges) if(e.mark){ count++; set.add(e.from); set.add(e.to); }
+  return {set, count};
+}
+function prune(n, parent, keep){
+  if(!n.kids) return keep.has(keyOf(n, parent)) ? n : null;
+  if(keep.has(n.name)) return n;
+  const kids = n.kids.map(c => prune(c, n.name, keep)).filter(Boolean);
+  return kids.length ? {...n, kids} : null;
+}
+function onlyPart(g, name){
+  const edges = g.edges.filter(e => e.part === name), keep = new Set(edges.flatMap(e => [e.from, e.to]));
+  return {boxes: g.boxes.map(b => prune(b, null, keep)).filter(Boolean), edges};
+}
+// class boxes joined by arrows, as connected pieces (union-find)
+function connected(list){
+  const up = {}, find = k => up[k] === k ? k : (up[k] = find(up[k])), cls = k => k.split(".")[0];
+  for(const e of list) for(const k of [e.from, e.to]) up[cls(k)] ??= cls(k);
+  for(const e of list) up[find(cls(e.from))] = find(cls(e.to));
+  const out = {}; for(const k in up) (out[find(k)] ||= []).push(k);
+  return Object.values(out);
+}
+function render(){
+  const g = parse(source.value), notes = [];
+  let boxes = g.boxes, shown = g.all;
+  if(part && g.parts.includes(part)){ // one part: its arrows and the boxes they touch
+    ({boxes, edges:shown} = onlyPart(g, part));
+    const pieces = connected(shown);
+    if(pieces.length > 1) notes.push(`"${part}" is not one connected piece: ` + pieces.map(p => p.join(" + ")).join("  |  "));
+  }
+  if(only){ // the changed boxes, plus what they are wired to
+    const ch = changed({boxes, edges:shown}).set, keep = new Set(ch);
+    shown = shown.filter(e => e.mark || ch.has(e.from) || ch.has(e.to));
+    for(const e of shown){ keep.add(e.from); keep.add(e.to); }
+    boxes = boxes.map(b => prune(b, null, keep)).filter(Boolean);
+  }
+  nodes = {}; units = []; pinned = null; graph.className = "graph"; graph.textContent = "";
+  for(const b of boxes) build(b, null, "", []);
+  if(!boxes.length){ const p = document.createElement("p"); p.className = "empty"; p.textContent = "Nothing changed in this step."; graph.append(p); }
+  g.edges = shown;
+  const missing = [];
+  edges = g.edges.filter(e => {
+    for(const k of [e.from, e.to]) if(!nodes[k]) missing.push(k);
+    return nodes[e.from] && nodes[e.to];
+  });
+  if(missing.length) notes.push("No box named: " + [...new Set(missing)].join(", "));
+  $("warn").textContent = notes.join("\n");
+  layout(); draw();
+  $("info").textContent = layout.info ? "Layout: " + layout.info + " (counted on straight runs, an arrow through a box = 0.5)" : "";
+}
+
+// an arrow leaves a lowest box on its left or right. Of the 4 ways, take the shortest run between the two stubs
+const STUB = 28;
+function sides(a, b){ // a, b: {l, r, y}
+  let best;
+  for(const sa of "rl") for(const sb of "rl"){
+    const p = {x:sa === "l" ? a.l - STUB : a.r + STUB, y:a.y}, q = {x:sb === "l" ? b.l - STUB : b.r + STUB, y:b.y};
+    const len = Math.hypot(p.x - q.x, p.y - q.y);
+    if(!best || len < best.len) best = {sa, sb, p, q, len};
+  }
+  return best;
+}
+
+// layout: 1 graph distances, 2 stress majorization, 3 fewest crossings, 4 no overlaps. The center box is pinned
+function layout(){
+  const fit = $("fit");
+  if(!units.length){ graph.style.cssText = fit.style.cssText = ""; scale = 1; return; }
+  const U = units.map(u => ({...u, w:u.el.offsetWidth, h:u.el.offsetHeight, x:0, y:0})), n = U.length;
+  const idx = {}; U.forEach((u, i) => idx[u.name] = i);
+  const unitOf = k => idx[nodes[k]?.closest("[data-unit]")?.dataset.unit];
+  const pull = {}, add = (i, j, w) => { if(i == null || j == null || i === j) return; const k = Math.min(i, j) + "," + Math.max(i, j); pull[k] = (pull[k] || 0) + w; };
+  for(const e of edges) add(unitOf(e.from), unitOf(e.to), 1);          // one per arrow
+  for(let i = 0; i < n; i++) for(let j = i + 1; j < n; j++)           // same group: a weak pull
+    if(U[i].path.length && U[i].path[0] === U[j].path[0]) add(i, j, U[i].path.join() === U[j].path.join() ? .5 : .25);
+  const deg = U.map(() => 0);
+  for(const e of edges){ const a = unitOf(e.from), b = unitOf(e.to); if(a != null && b != null && a !== b){ deg[a]++; deg[b]++; } }
+  const c = idx[center] ?? (part && edges[0] ? unitOf(edges[0].from) ?? 0 : 0), GAP = 46, STEP = 95; // room for arrows, px per unit of graph distance
+
+  // 1. graph distance between every two boxes (Floyd-Warshall). An arrow is an edge, more arrows = shorter
+  const d = U.map((_, i) => U.map((_, j) => i === j ? 0 : Infinity));
+  for(const k in pull){ const [i, j] = k.split(",").map(Number), w = pull[k]; d[i][j] = d[j][i] = w >= 1 ? 1/Math.sqrt(w) : 1/w; }
+  for(let k = 0; k < n; k++) for(let i = 0; i < n; i++) for(let j = 0; j < n; j++) if(d[i][k] + d[k][j] < d[i][j]) d[i][j] = d[i][k] + d[k][j];
+  const far = Math.max(1, ...d.flat().filter(isFinite)) + 1, size = u => (u.w + u.h) / 4;
+  const D = d.map((row, i) => row.map((v, j) => size(U[i]) + size(U[j]) + STEP * Math.min(v, far))); // wanted px
+
+  // 2. stress majorization: sum of (real - wanted)^2 / wanted^2 over all pairs, each box moved to its best spot in turn
+  function majorize(times){
+    for(let t = 0; t < times; t++) for(let i = 0; i < n; i++){
+      if(i === c) continue;
+      let sx = 0, sy = 0, sw = 0;
+      for(let j = 0; j < n; j++){
+        if(j === i) continue;
+        const w = 1 / (D[i][j] * D[i][j]), dx = U[i].x - U[j].x, dy = U[i].y - U[j].y, len = Math.hypot(dx, dy) || 1;
+        sx += w * (U[j].x + D[i][j] * dx / len); sy += w * (U[j].y + D[i][j] * dy / len); sw += w;
+      }
+      U[i].x = sx / sw; U[i].y = sy / sw;
+    }
+  }
+  function stress(){
+    let s = 0;
+    for(let i = 0; i < n; i++) for(let j = i + 1; j < n; j++){ const e = Math.hypot(U[i].x - U[j].x, U[i].y - U[j].y) - D[i][j]; s += e * e / (D[i][j] * D[i][j]); }
+    return s;
+  }
+
+  // 3. crossings: each arrow as the straight run between its two stubs; count pairs that cross, and arrows through a box
+  const Eall = edges.map(e => [e.from, e.to].map(k => unitOf(k) == null ? null : {i:unitOf(k), k})).filter(([a, b]) => a && b);
+  const measure = () => { for(const pair of Eall) for(const p of pair){ const l = nodes[p.k], u = U[p.i];
+    p.l = l.offsetLeft - u.w/2; p.r = p.l + l.offsetWidth; p.y = l.offsetTop + l.offsetHeight/2 - u.h/2; } };
+  measure();
+  const E = Eall.filter(([a, b]) => a.i !== b.i);
+  const at = p => ({l:U[p.i].x + p.l, r:U[p.i].x + p.r, y:U[p.i].y + p.y});
+  const ccw = (a, b, e) => (e.y - a.y) * (b.x - a.x) > (b.y - a.y) * (e.x - a.x);
+  const cross = (a, b, e, f) => ccw(a, e, f) !== ccw(b, e, f) && ccw(a, b, e) !== ccw(a, b, f);
+  function crossings(){
+    const S = E.map(([a, b]) => { const s = sides(at(a), at(b)); return {p:s.p, q:s.q, a, b}; }); let bad = 0;
+    S.forEach((s, i) => {
+      for(let j = i + 1; j < S.length; j++){
+        const t = S[j]; if(s.a.k === t.a.k || s.a.k === t.b.k || s.b.k === t.a.k || s.b.k === t.b.k) continue;
+        if(cross(s.p, s.q, t.p, t.q)) bad++;
+      }
+      U.forEach((u, k) => { if(k === s.a.i || k === s.b.i) return;
+        const l = u.x - u.w/2, r = u.x + u.w/2, t = u.y - u.h/2, b = u.y + u.h/2;
+        if(cross(s.p, s.q, {x:l, y:t}, {x:r, y:b}) || cross(s.p, s.q, {x:r, y:t}, {x:l, y:b})) bad += .5; });
+    });
+    return bad;
+  }
+
+  // 4. boxes are rectangles: push apart any two closer than GAP
+  function apart(){
+    for(let i = 0; i < n; i++) for(let j = i + 1; j < n; j++){
+      const dx = U[j].x - U[i].x, dy = U[j].y - U[i].y, ox = (U[i].w + U[j].w)/2 + GAP - Math.abs(dx), oy = (U[i].h + U[j].h)/2 + GAP - Math.abs(dy);
+      if(ox <= 0 || oy <= 0) continue;
+      const f = i === c || j === c ? 1 : .5, mv = (k, x, y) => { if(k !== c){ U[k].x += x; U[k].y += y; } };
+      if(ox < oy){ const s = (dx < 0 ? -1 : 1) * ox * f; mv(i, -s, 0); mv(j, s, 0); }
+      else{ const s = (dy < 0 ? -1 : 1) * oy * f; mv(i, 0, -s); mv(j, 0, s); }
+    }
+  }
+  const settle = times => { majorize(times); for(let t = 0; t < 40; t++) apart(); };
+  const cost = () => stress() + CROSS * crossings(), CROSS = .8; // one crossing is worth this much stress
+  const save = () => U.map(u => [u.x, u.y]), load = p => U.forEach((u, i) => { u.x = p[i][0]; u.y = p[i][1]; });
+  let best = Infinity, keep;
+  const big = n > 24; // many boxes: a shorter search
+  for(const turn of big ? [2.4, 3.9] : [2.4, 1, 3.9, 5.1]) for(const flip of [1, -1]){ // majorization finds a local best: try a few starts
+    U.forEach((u, i) => { const a = Math.PI + i * turn, r = i === c ? 0 : D[c][i]; u.x = flip * r * Math.cos(a); u.y = r * Math.sin(a); });
+    settle(150); const v = cost(); if(v < best){ best = v; keep = save(); }
+  }
+  load(keep);
+  for(let pass = 0; pass < (big ? 1 : 4); pass++){ // fewest crossings is NP-hard: local search, swap two boxes when the cost drops
+    let better = false;
+    for(let i = 0; i < n; i++) for(let j = i + 1; j < n; j++){
+      if(i === c || j === c) continue;
+      const was = save(); [U[i].x, U[j].x] = [U[j].x, U[i].x]; [U[i].y, U[j].y] = [U[j].y, U[i].y];
+      settle(15); const v = cost();
+      if(v < best - 1e-6){ best = v; better = true; } else load(was);
+    }
+    for(let i = 0; i < n; i++) for(const turn of [.5, -.5, 1, -1, 1.6, -1.6, Math.PI]){ // or carry one box around the center
+      if(i === c) continue;
+      const was = save(), x = U[i].x, y = U[i].y; U[i].x = x * Math.cos(turn) - y * Math.sin(turn); U[i].y = x * Math.sin(turn) + y * Math.cos(turn);
+      settle(15); const v = cost();
+      if(v < best - 1e-6){ best = v; better = true; } else load(was);
+    }
+    if(!better) break;
+  }
+  // 5. inside a box, order the lowest boxes by where their arrows go (barycenter), so they don't cross on the way out
+  for(let round = 0; round < 3; round++){
+    const want = {}, add = (k, y) => { (want[k] ||= []).push(y); };
+    for(const [a, b] of Eall){ add(a.k, at(b).y); add(b.k, at(a).y); }
+    for(const u of U){
+      const kids = u.el.querySelector(".kids"); if(!kids) continue;
+      const val = new Map([...kids.children].map(l => { const w = want[l.dataset.key];
+        return [l, w ? w.reduce((x, y) => x + y) / w.length : u.y - u.h/2 + l.offsetTop + l.offsetHeight/2]; }));
+      kids.append(...[...kids.children].sort((p, q) => val.get(p) - val.get(q)));
+    }
+    measure();
+  }
+  layout.info = `stress ${stress().toFixed(2)}, crossings ${crossings()}`;
+
+  const boxes = U.map(u => ({l:u.x - u.w/2, t:u.y - u.h/2, r:u.x + u.w/2, b:u.y + u.h/2}));
+  const all = boxes, PAD = 30;
+  const minX = Math.min(...all.map(a => a.l)) - PAD, minY = Math.min(...all.map(a => a.t)) - PAD;
+  const W = Math.max(...all.map(a => a.r)) + PAD - minX, Ht = Math.max(...all.map(a => a.b)) + PAD - minY;
+  U.forEach((u, i) => { u.el.style.left = boxes[i].l - minX + "px"; u.el.style.top = boxes[i].t - minY + "px"; u.el.classList.toggle("center", i === c); });
+  scale = Math.max(.6, Math.min(1, $("scroll").clientWidth / W)); // shrink to fit, but stay readable
+  graph.style.cssText = `width:${W}px;height:${Ht}px;transform:scale(${scale})`;
+  fit.style.cssText = `width:${W*scale}px;height:${Ht*scale}px`;
+}
+function draw(){
+  graph.querySelector("svg")?.remove();
+  const svg = document.createElementNS(NS, "svg"); svg.setAttribute("class", "wires");
+  const o = graph.getBoundingClientRect();
+  const rect = el => { const r = el.getBoundingClientRect(); return {l:(r.left-o.left)/scale, r:(r.right-o.left)/scale, t:(r.top-o.top)/scale, h:r.height/scale}; };
+  // which side each end uses, then spread the ends on a side so they don't share a point
+  const slots = {};
+  const ends = edges.map(e => {
+    const a = rect(nodes[e.from]), b = rect(nodes[e.to]);
+    const mid = r => ({l:r.l, r:r.r, y:r.t + r.h/2}), {sa, sb} = sides(mid(a), mid(b));
+    const A = {r:a, side:sa, other:b.t + b.h/2}, B = {r:b, side:sb, other:a.t + a.h/2};
+    (slots[e.from + sa] ||= []).push(A); (slots[e.to + sb] ||= []).push(B);
+    return {e, A, B};
+  });
+  for(const list of Object.values(slots)){
+    list.sort((p, q) => p.other - q.other);
+    list.forEach((p, i) => { p.y = p.r.t + p.r.h * (i + 1) / (list.length + 1); p.x = p.side === "l" ? p.r.l : p.r.r; });
+  }
+  for(const {e, A, B} of ends){
+    const da = A.side === "l" ? -1 : 1, db = B.side === "l" ? -1 : 1;
+    const x1 = A.x, y1 = A.y, x2 = B.x + db * 6, y2 = B.y; // room for the head
+    const c = Math.max(24, Math.min(110, Math.hypot(x2 - x1, y2 - y1) * .4)), c1 = x1 + da * c, c2 = x2 + db * c;
+    const hx = B.x, s = B.side === "l" ? -1 : 1;
+    const p = document.createElementNS(NS, "path");
+    p.setAttribute("d", `M${x1} ${y1}C${c1} ${y1} ${c2} ${y2} ${x2} ${y2}L${hx} ${y2}M${hx + 6*s} ${y2 - 3.5}L${hx} ${y2}L${hx + 6*s} ${y2 + 3.5}`);
+    p.setAttribute("class", "wire " + e.mark); p.dataset.from = e.from; p.dataset.to = e.to;
+    svg.append(p);
+    if(e.label){
+      const t = document.createElementNS(NS, "text");
+      t.setAttribute("x", (x1 + 3*c1 + 3*c2 + x2) / 8); t.setAttribute("y", (y1 + y2) / 2 - 3);
+      t.setAttribute("class", "wlabel " + e.mark); t.dataset.from = e.from; t.dataset.to = e.to; t.textContent = e.label;
+      svg.append(t);
+    }
+  }
+  graph.append(svg);
+  focusOn(pinned);
+}
+
+// key: a lowest box, or a class box (then all of its lowest boxes count)
+function focusOn(key){
+  graph.classList.toggle("focus", !!key);
+  for(const el of graph.querySelectorAll(".leaf,.unit")) el.classList.remove("me", "rel", "lit");
+  const box = key && nodes[key]?.classList.contains("box") ? nodes[key] : null;
+  const mine = new Set(box ? [...box.querySelectorAll(".leaf")].map(l => l.dataset.key) : key ? [key] : []);
+  for(const w of graph.querySelectorAll(".wire,.wlabel")){
+    const out = mine.has(w.dataset.from), inn = mine.has(w.dataset.to);
+    w.classList.toggle("hot", out || inn);
+    if(out || inn) for(const k of [w.dataset.from, w.dataset.to]) nodes[k].classList.add(mine.has(k) && !box ? "me" : "rel");
+  }
+  if(box) box.classList.add("me"); else if(key && nodes[key]) nodes[key].classList.add("me");
+  for(const l of graph.querySelectorAll(".leaf.me,.leaf.rel,.box.me")) l.closest(".unit").classList.add("lit");
+}
+
+function show(step){
+  current = step; center = null; part = "";
+  for(const b of $("tabs").children) b.setAttribute("aria-selected", b.dataset.step === step);
+  $("when").textContent = STEPS[step].when;
+  source.value = STEPS[step].src;
+  const g = parse(STEPS[step].src); // too dense to read whole: open on the part with the most changes
+  if(g.all.length > 60) part = g.parts.map(name => [changed(onlyPart(g, name)).count, name]).sort((a, b) => b[0] - a[0])[0]?.[1] || "";
+  partTabs(); render();
+}
+for(const step of Object.keys(STEPS)){
+  const b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "tab"); b.dataset.step = step;
+  b.onclick = () => show(step); $("tabs").append(b);
+}
+function partTabs(){ // "# name" in the text = a part of the step with its own smaller graph
+  const g = parse(STEPS[current].src), box = $("parts");
+  if(!g.parts.includes(part)) part = "";
+  box.textContent = ""; box.hidden = !g.parts.length;
+  for(const name of ["", ...g.parts]){
+    const b = document.createElement("button"); b.type = "button"; b.textContent = name || "All";
+    const n = changed(name ? onlyPart(g, name) : {boxes:g.boxes, edges:g.all}).count; if(n) b.append(span("n", n));
+    b.setAttribute("aria-selected", name === part);
+    b.onclick = () => { part = name; center = null; partTabs(); render(); };
+    box.append(b);
+  }
+}
+function counts(){ // changes per step, on its tab
+  for(const b of $("tabs").children){
+    const g = parse(STEPS[b.dataset.step].src), n = changed({boxes:g.boxes, edges:g.all}).count;
+    b.textContent = b.dataset.step; if(n) b.append(span("n", n));
+  }
+}
+function mode(){ for(const b of $("modes").children) b.setAttribute("aria-selected", !!b.dataset.only === only); }
+for(const b of $("modes").children) b.onclick = () => { only = !!b.dataset.only; mode(); render(); };
+source.oninput = () => { STEPS[current].src = source.value; counts(); partTabs(); render(); };
+counts(); mode();
+let lastW = 0;
+new ResizeObserver(() => { const w = $("scroll").clientWidth; if(w !== lastW){ lastW = w; layout(); draw(); } }).observe($("scroll"));
+document.fonts?.ready.then(() => { layout(); draw(); });
+show(current);
+</script>
