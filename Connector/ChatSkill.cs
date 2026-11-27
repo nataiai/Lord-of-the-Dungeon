@@ -18,11 +18,6 @@ public class ChatSkill : Skill{
     // what it does: its buff on the player. A skill can change it
     public virtual void Cast(Player p){buff.CopyTo(p.gameObject);}
     public virtual bool CanCast()=>true; // false: no votes
-    protected static SpriteRenderer Body(Player p)=>System.Array.Find(p.GetComponentsInChildren<SpriteRenderer>(), s=>s.sprite); // the sprite you see
-    protected static void Copy(SpriteRenderer copy, SpriteRenderer of, Vector3 offset){ // it walks too
-        copy.transform.position = of.transform.position+offset; copy.transform.localScale = of.transform.localScale;
-        copy.sprite = of.sprite; copy.flipX = of.flipX;
-    }
 
     // UI.chatText: chat can't be answered, the screen can
     public static string Text(){
@@ -60,13 +55,6 @@ public class ChatSkill : Skill{
         foreach(var t in seen.Values)if(t>Time.time-activeTime)active++;
         return Mathf.Max(1, Mathf.RoundToInt(Experimental.I.crowdNeed*Mathf.Sqrt(active)));
     }
-    // GameManager.Update
-    public static void Keys(ChatSkill[] skills){
-        var keys = UnityEngine.InputSystem.Keyboard.current;
-        if(!Experimental.I.chatSkills || !Experimental.I.skillKeys || keys==null)return;
-        for(int i=0;i<skills.Length && i<9;i++)
-            if(keys[UnityEngine.InputSystem.Key.Digit1+i].wasPressedThisFrame)Vote(skills, "keys", skills[i].chatType, "key"); // as a chatter would
-    }
 }
 
 // attack x2 at full HP up to x4 (Weapon.Damage), no healing (Character.Heal)
@@ -74,13 +62,7 @@ public class ChatSkill : Skill{
 public class Berserk : ChatSkill{
     public Berserk(){Set(ChatType.berserk, BuffType.berserk, 3);} //test: 15
     public static float Damage(Character by)=>by.Has(BuffType.berserk) ? 4-2f*by.HP/by.maxHP : 1;
-    public override void Cast(Player p){base.Cast(p); var sr = Body(p); if(sr)p.StartCoroutine(Red(sr, p));}
-    IEnumerator Red(SpriteRenderer sr, Player p){ // a red copy on top, for now (the Animator keeps the sprite's own color)
-        var red = ThrownWeapon.Shadow(sr, sr.transform.parent);
-        red.name = "berserk"; red.color = new Color(1,0,0,.5f); red.sortingOrder = sr.sortingOrder+1;
-        while(p.Has(BuffType.berserk)){Copy(red, sr, Vector3.zero); yield return null;}
-        Object.Destroy(red.gameObject);
-    }
+    public override void Cast(Player p){base.Cast(p); ChatSkillExtras.Red(p);} // looks: AI/
 }
 // no damage, no knockback (Player)
 [System.Serializable]
@@ -107,34 +89,13 @@ public class Floating : ChatSkill{
     public float riseTime = 1;
     [Tooltip("How fast knockback slows down while floating, x the ground's: 1 = like the ground, 0 = no friction (slides on)")]
     public float friction = .2f;
-    bool up; float ends; // lifted now; when it ends
     public Floating(){Set(ChatType.floating, BuffType.floating, 5);} //test: 10
     // Player.Update: knockback slows down less in the air
     public static float Friction(Character c)=>c.Has(BuffType.floating) ? GameManager.Instance.summondb.floating.friction : 1;
     public override void Cast(Player p){
         base.Cast(p);
-        ends = Time.time+buff.duration;
         p.rb.sleepMode = RigidbodySleepMode2D.NeverSleep; // so it falls when the float ends over a hole
-        if(!up)p.StartCoroutine(Lift(p));
-    }
-    IEnumerator Lift(Player p){
-        var sr = p.GetComponentInChildren<SpriteRenderer>(); // its sorting layer, like a thrown weapon's shadow
-        if(sr==null)yield break;
-        var body = Body(p) ?? sr;
-        up = true;
-        var shadow = ThrownWeapon.Shadow(sr, body.transform.parent);
-        float rise = Mathf.Max(riseTime,.01f), t = 0, h = 0, left = 1; // t: 0 = on the ground, 1 = up
-        while(left>0){
-            left = p.Has(BuffType.floating) ? ends-Time.time : 0;
-            t = Mathf.Min(Mathf.MoveTowards(t, 1, Time.deltaTime/rise), left/rise); // up at the start, lands as it ends
-            float was = h;
-            h = height*Mathf.SmoothStep(0, 1, t);
-            p.rb.position += Vector2.up*(h-was); // the player, not its sprite: the Animator moves that
-            Copy(shadow, body, Vector3.down*h);
-            yield return null;
-        }
-        Object.Destroy(shadow.gameObject);
-        up = false;
+        ChatSkillExtras.Lift(this, p); // up, a shadow below (AI/)
     }
 }
 // earthquake / quake: its stun goes on every enemy of the room and the player, then shakes push them all at once,
