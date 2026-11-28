@@ -107,6 +107,9 @@ svg.wires{z-index:2;position:absolute;inset:0;width:100%;height:100%;pointer-eve
 .graph.focus .wlabel.hot{opacity:1}
 .graph.focus .wlabel.hot:not(.add):not(.chg):not(.del){fill:var(--fg)}
 
+.scroll.computing .fit{opacity:0}
+.busy[hidden]{display:none}
+.busy{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;text-align:center;color:var(--muted);font:500 13px var(--sans)}
 .pop{position:absolute;right:8px;bottom:8px;z-index:5;width:min(560px,calc(100% - 16px));max-height:min(62%,460px);overflow:auto;cursor:auto;touch-action:pan-x pan-y;overscroll-behavior:contain;user-select:text;-webkit-user-select:text;background:var(--surface);border:1px solid var(--fg);border-radius:8px;box-shadow:0 8px 28px rgb(0 0 0 / .2)}
 .pop .fn{border:0;border-radius:0}
 .pop .fn+.fn{border-top:1px solid var(--border)}
@@ -165,7 +168,7 @@ textarea{font:400 12.5px/1.55 var(--mono);color:var(--fg);background:var(--surfa
   </div>
   <div class="tabs" id="parts" hidden></div>
   <p class="when" id="when"></p>
-  <div class="scroll" id="scroll"><div class="fit" id="fit"><div class="graph" id="graph"></div></div><div class="pop" id="pop" hidden></div></div>
+  <div class="scroll" id="scroll"><div class="fit" id="fit"><div class="graph" id="graph"></div></div><div class="pop" id="pop" hidden></div><div class="busy" id="busy" hidden>Finding the clearest layout for this view…</div></div>
   <ul class="legend">
     <li>Box = class. Lowest box = a function this step reaches. Arrow = calls. A part = everything one step function reaches. Inside Unity step functions and changed functions: what they do, in order (titles from Dungeon Flow's notes); a call's arrow leaves from its step.</li>
     <li>Boxes sit next to what they share the most arrows with, arranged so the fewest lines cross. Lowest boxes inside a box are reordered for the same reason. The small grey word on a box is its group. Double-click a box title to put it at the center.</li>
@@ -490,8 +493,17 @@ function aiView(g){
   const p = fold(g.edges), w = fold(g.all.map(e => ({...e, part:""})));
   return {...g, boxes:g.boxes.filter(b => b !== grp), edges:p.keep, all:w.keep, stubs:p.st, stubsAll:w.st};
 }
+// one layout per view, worked out once with functions only (hidden while it is found), then kept: steps grow boxes in place
+const layoutStore = { get(k){ return this.m[k] || null; }, set(k, v){ this.m[k] = v; }, m:{} }; // this visit only, nothing stored
+const viewKey = () => [document.querySelector(".commit")?.textContent || "", current, part, ai, flow, only ? 1 : 0, $("scroll").clientWidth < 640 ? 1 : 0].join("|");
+let busy = false, round = 0;
+function setBusy(on){
+  if(busy === on) return; busy = on; $("scroll").classList.toggle("computing", on); $("busy").hidden = !on;
+  if(!on && !still) $("fit").animate([{opacity:0}, {opacity:1}], {duration:350, easing:"ease-out"});
+}
 function render(){
-  const fold = stepMode === "off" || (stepMode === "auto" && !zoomedIn); // auto: steps show once zoomed in to 100%
+  const key = viewKey(), saved = layoutStore.get(key), computing = !saved;
+  const fold = computing || stepMode === "off"; // the layout is found with functions only
   const g = aiView(parse(fold ? unstep(source.value) : source.value)), notes = [];
   let boxes = g.boxes, shown = g.all, st = g.stubsAll;
   if(part && g.parts.includes(part)){ // one part: its arrows and the boxes they touch
@@ -522,7 +534,32 @@ function render(){
   aiChanged = ai === "in" || !grp ? [] : grp.kids.flatMap(c => (c.kids || []).filter(l => l.mark || c.mark).map(l => c.name + "." + l.name));
   if(missing.length) notes.push("No box named: " + [...new Set(missing)].join(", "));
   $("warn").textContent = notes.join("\n");
-  layout(); draw(); showCode(); showPop(); showInfo();
+  setBusy(computing);
+  if(computing){ // find it: a fresh layout and its search, then one more round from where that ended, then keep it
+    if(!layout.seeding) round = 0;
+    layout.searchMs = round ? 3000 : 5000; layout.place = null;
+    layout.onDone = () => { if(viewKey() !== key) return;
+      const pos = Object.fromEntries(units.map(u => [u.name, [u.el.offsetLeft, u.el.offsetTop]]));
+      if(round < 1){ round++; layout.dom = pos; layout.keepView = layout.seeding = true; render(); layout.keepView = layout.seeding = false; return; }
+      const sides = Object.fromEntries(edges.filter(e => e.route && !e.route.inner).map(e => [e.from + ">" + e.to, [e.route.k1 >= e.route.x1 ? 1 : -1, e.route.hs]]));
+      layoutStore.set(key, {pos, sides}); layout.onDone = null; render(); setBusy(false);
+    };
+  } else { layout.onDone = null; layout.dom = saved.pos; layout.place = fold ? "exact" : "grow"; } // functions: exactly as found; steps: same places, overlaps nudged apart
+  layout();
+  if(!computing){ for(const e of edges) if(e.route && !e.route.inner){ const sd = saved.sides?.[e.from + ">" + e.to]; sd ? setSides(e, sd[0], sd[1]) : faceTarget(e); } layout.place = null; }
+  draw(); showCode(); showPop(); showInfo();
+}
+function setSides(e, sa, sb){ // leave on side sa, arrive on side sb (1 right, -1 left)
+  if((e.route.k1 >= e.route.x1 ? 1 : -1) !== sa) flipEnd(e, 0); if(e.route.hs !== sb) flipEnd(e, 1);
+}
+function faceTarget(e){ // leave toward the target, arrive on the side facing where it came from
+  const a = nodes[e.from].closest(".unit"), b = nodes[e.to].closest(".unit"), ca = a.offsetLeft + a.offsetWidth / 2, cb = b.offsetLeft + b.offsetWidth / 2;
+  setSides(e, cb > ca + 20 ? 1 : cb < ca - 20 ? -1 : 1, cb > ca + 20 ? -1 : 1);
+}
+function flipEnd(e, end){ // leave (or arrive) on the function's other side
+  const r = e.route, el = nodes[end ? e.to : e.from], u = el.closest(".unit"), L = u.offsetLeft + (el === u ? 0 : el.offsetLeft), Rr = L + el.offsetWidth;
+  if(!end){ const sa = r.k1 >= r.x1 ? 1 : -1; r.x1 = sa > 0 ? L : Rr; r.k1 = r.x1 - sa * 30; }
+  else{ r.x2 = r.hs > 0 ? L : Rr; r.hs = -r.hs; r.k2 = r.x2 + r.hs * 30; }
 }
 // what the viewer has open, saved for Claude to read (views/last). Nothing here without the db capability
 let viewDb = null, saveT;
@@ -686,15 +723,22 @@ function layout(){
   const cost = () => stress() + CROSS * crossings(), CROSS = 40; // one crossing is worth this much stress
   const save = () => U.map(u => [u.x, u.y]), load = p => U.forEach((u, i) => { u.x = p[i][0]; u.y = p[i][1]; });
   let best = Infinity, keep;
-  const lr = flow === "lr", from0 = layout.keepView && layout.dom && U.filter(u => layout.dom[u.name]).length >= n * .6 ? layout.dom : null; // steps opened or closed: start where the boxes were
+  const lr = flow === "lr", from0 = (layout.keepView || layout.place) && layout.dom && U.filter(u => layout.dom[u.name]).length >= n * .6 ? layout.dom : null; // steps opened or closed: start where the boxes were
   const big = n > 24, huge = n > 36; // many boxes: a shorter search
   for(const turn of lr || from0 ? [] : big ? [2.4, 3.9] : [2.4, 1, 3.9, 5.1]) for(const flip of [1, -1]){ // majorization finds a local best: try a few starts
     U.forEach((u, i) => { const a = Math.PI + i * turn, r = i === c ? 0 : D[c][i]; u.x = flip * r * Math.cos(a); u.y = r * Math.sin(a); });
     settle(150); const v = cost(); if(v < best){ best = v; keep = save(); }
   }
-  if(lr) placeLeftToRight(); // callers left, what they call to their right
-  else if(from0){ U.forEach(u => { const p = from0[u.name]; if(p){ u.x = p[0] - u.pl + u.w / 2; u.y = p[1] - u.pt + u.h / 2; } else { u.x = 0; u.y = 0; } }); } // each box's top-left where it was on the page
-  if(lr || from0){ if(!layout.freeze) for(let k = 0; k < 120; k++) apart(); best = cost(); keep = save(); } // hiding steps: no pushing apart
+  if(lr && !from0) placeLeftToRight(); // callers left, what they call to their right
+  if(from0){ U.forEach(u => { const p = from0[u.name]; if(p){ u.x = p[0] - u.pl + u.w / 2; u.y = p[1] - u.pt + u.h / 2; } else { u.x = 0; u.y = 0; } }); } // each box's top-left where it was on the page
+  if(from0 && layout.place === "grow"){ // steps opened: boxes keep their places; one that now overlaps a box above it slides down below it
+    const order = U.map((u, i) => i).sort((i, j) => (U[i].y - U[i].h / 2) - (U[j].y - U[j].h / 2)), done = [];
+    for(const i of order){ const u = U[i];
+      for(let again = true; again;){ again = false;
+        for(const j of done){ const v = U[j]; if(Math.abs(u.x - v.x) < (u.w + v.w) / 2 + 24 && Math.abs(u.y - v.y) < (u.h + v.h) / 2 + 24){ u.y = v.y + v.h / 2 + 30 + u.h / 2; again = true; } } }
+      done.push(i); }
+  }
+  if(lr || from0){ if(!layout.place) for(let k = 0; k < 120; k++) apart(); best = cost(); keep = save(); } // placed from the stored layout: no pushing apart
   load(keep);
   for(let pass = 0; pass < (lr || from0 ? 0 : huge ? 0 : big ? 1 : 4); pass++){ // fewest crossings is NP-hard: local search, swap two boxes when the cost drops
     let better = false;
@@ -759,7 +803,7 @@ function layout(){
       if(!moved) break;
     }
   }
-  let first0 = true; const frozen = !!layout.freeze; // steps hidden: boxes stay where they are
+  let first0 = true; const frozen = !!layout.place; // placed from the stored layout: no tightening, no search
   function placeLeftToRight(){ // columns by call order (longest chain of calls from a box nothing calls), order in a column by its neighbours
     const out = U.map(() => new Set()), inn = U.map(() => new Set());
     for(const e of edges){ const a = unitOf(e.from), b = unitOf(e.to); if(a != null && b != null && a !== b){ out[a].add(b); inn[b].add(a); } }
@@ -796,7 +840,7 @@ function layout(){
     return best < was0 - 1e-6;
   }
   function finish(first){ // the best layout so far onto the page
-    load(keep); if(!layout.freeze) for(let k = 0; k < 40; k++) apart();
+    load(keep); if(!layout.place) for(let k = 0; k < 40; k++) apart();
     // a phone is tall: turn a wide layout on its side
     const ext = k => { const h = k === "x" ? "w" : "h"; return Math.max(...U.map(u => u[k] + u[h]/2)) - Math.min(...U.map(u => u[k] - u[h]/2)); };
     if(!lr && !frozen && $("scroll").clientWidth < 640 && ext("x") > ext("y")){ for(const u of U) [u.x, u.y] = [u.y, u.x]; for(let k = 0; k < 80; k++) apart(); measure(); }
@@ -856,7 +900,7 @@ function applyView(){
 const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 function snapshot(){ return new Map(units.map(u => [u.name, u.el.getBoundingClientRect()])); }
 function animateFrom(before){
-  if(still || !before) return;
+  if(still || !before || busy) return;
   let moved = false;
   for(const u of units){
     const a = before.get(u.name), b = u.el.getBoundingClientRect();
@@ -912,7 +956,7 @@ function centerOn(el){ // move the map so el sits in the middle
 }
 (() => { // drag to move, two fingers to zoom, ctrl + wheel (or a trackpad pinch) to zoom
   const box = $("scroll"), pts = new Map(); let moved = false;
-  box.addEventListener("pointerdown", e => { layout.stop = true; if(e.target.closest(".pop")) return; if(!pts.size) moved = false; pts.set(e.pointerId, {x:e.clientX, y:e.clientY}); });
+  box.addEventListener("pointerdown", e => { if(!busy) layout.stop = true; if(e.target.closest(".pop")) return; if(!pts.size) moved = false; pts.set(e.pointerId, {x:e.clientX, y:e.clientY}); });
   box.addEventListener("pointermove", e => {
     const p = pts.get(e.pointerId); if(!p) return;
     const dx = e.clientX - p.x, dy = e.clientY - p.y;
@@ -1231,7 +1275,7 @@ function routeSearch(){
   draw(); showInfo();
   let best = routeScore(orthoRoute(list())).total, tries = 0, shown = null; const t0 = performance.now();
   const step = () => {
-    if(layout.stop || (window.SW?.evals ? tries >= window.SW.evals : performance.now() - t0 > (window.SW?.ms ?? 8000)) || !units.length){ layout.job = null; return; } // tests: a fixed number of tries
+    if(layout.stop || (window.SW?.evals ? tries >= window.SW.evals : performance.now() - t0 > (window.SW?.ms ?? layout.searchMs ?? 8000)) || !units.length){ layout.job = null; layout.onDone?.(); return; } // tests: a fixed number of tries
     const until = performance.now() + 40; let better = false; shown ||= snapshot(); // where boxes are on screen now
     while(performance.now() < until && !(window.SW?.evals && tries >= window.SW.evals)){
       let undo;
@@ -1384,7 +1428,7 @@ function mode(){
   for(const b of $("flow").children) b.setAttribute("aria-selected", b.dataset.l === flow);
 }
 for(const b of $("ais").children) b.onclick = () => { ai = b.dataset.ai; mode(); counts(); partTabs(); render(); };
-for(const b of $("fold").children) b.onclick = () => { if(stepMode === b.dataset.f) return; stepMode = b.dataset.f; mode(); layout.freeze = stepMode === "off"; relayoutKeepingPlace(); layout.freeze = false; }; // steps: laid out again from here; back to functions: every box stays
+for(const b of $("fold").children) b.onclick = () => { if(stepMode === b.dataset.f) return; stepMode = b.dataset.f; mode(); relayoutKeepingPlace(); }; // same layout: boxes only grow or shrink // steps: laid out again from here; back to functions: every box stays
 for(const b of $("flow").children) b.onclick = () => { flow = b.dataset.l; layout.pos = null; mode(); render(); };
 for(const b of $("zoom").children) b.onclick = () => { const box = $("scroll"), f = b.dataset.z === "in" ? 1.3 : 1/1.3, px = box.clientWidth/2, py = box.clientHeight/2;
   if(b.dataset.z === "fit"){ fitScale(true); return; }
