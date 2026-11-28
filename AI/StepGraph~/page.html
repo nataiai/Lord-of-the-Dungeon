@@ -86,7 +86,10 @@ svg.wires{z-index:2;position:absolute;inset:0;width:100%;height:100%;pointer-eve
 .wire.add,.wire.chg,.wire.del{opacity:1;stroke-width:2.2}
 .wlabel.add,.wlabel.chg,.wlabel.del{font-weight:600;font-size:11px}
 .wlabel{font:400 10px var(--mono);fill:var(--muted);stroke:var(--surface);stroke-width:4px;paint-order:stroke;stroke-linejoin:round;text-anchor:middle}
-.wlabel:not(.add):not(.chg):not(.del){opacity:0}
+.wlabel:not(.add):not(.chg):not(.del):not(.stubl){opacity:0}
+.wire.stub{stroke-dasharray:3 3}
+.wlabel.stubl{font-style:italic} .wlabel.stubl.l{text-anchor:end} .wlabel.stubl.r{text-anchor:start}
+.sw.s{border-top-style:dotted}
 .wire.add{stroke:var(--add)} .wlabel.add{fill:var(--add)}
 .wire.chg{stroke:var(--chg)} .wlabel.chg{fill:var(--chg)}
 .wire.del{stroke:var(--del);stroke-dasharray:4 3} .wlabel.del{fill:var(--del)}
@@ -96,10 +99,34 @@ svg.wires{z-index:2;position:absolute;inset:0;width:100%;height:100%;pointer-eve
 .graph.focus .wlabel.hot{opacity:1}
 .graph.focus .wlabel.hot:not(.add):not(.chg):not(.del){fill:var(--fg)}
 
+.code{display:flex;flex-direction:column;gap:8px;min-width:0}
+.code h2{font:600 14px var(--mono);margin:4px 0 0}
+.code h3{font:600 12px var(--mono);color:var(--muted);margin:8px 0 0}
+.fn{background:var(--surface);border:1px solid var(--border);border-radius:6px;min-width:0}
+.fn.pick{border-color:var(--fg);box-shadow:0 0 0 1px var(--fg)}
+.fn summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:8px 12px;cursor:pointer;font:500 12.5px var(--mono)}
+.fm{font-weight:700;min-width:1ch} .fm.add{color:var(--add)} .fm.chg{color:var(--chg)} .fm.del{color:var(--del)}
+.fk{overflow-wrap:anywhere} .ff{color:var(--muted);font-size:11.5px}
+.find{margin-left:auto;font:500 11.5px var(--mono);background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;color:var(--muted);cursor:pointer}
+.find:hover{color:var(--fg);border-color:var(--fg)}
+.diff{margin:0;padding:8px 0;border-top:1px solid var(--border);font:400 12px/1.5 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;tab-size:4}
+.ln{display:block;padding:0 12px 0 26px;text-indent:-14px}
+.ln::before{display:inline-block;width:14px;text-indent:0;color:var(--muted);content:" "}
+.ln.add{background:color-mix(in srgb,var(--add) 14%,transparent)} .ln.add::before{content:"+";color:var(--add)}
+.ln.del{background:color-mix(in srgb,var(--del) 12%,transparent)} .ln.del::before{content:"-";color:var(--del)}
+.ln.gap{color:var(--muted);font-style:italic}
+@media (max-width:700px){
+  .tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;max-width:100%}
+  .tabs button{flex:none;padding:5px 9px;font-size:12px}
+  h1{font-size:17px}
+  .bar{gap:8px}
+}
 .legend{display:flex;flex-wrap:wrap;gap:4px 20px;color:var(--muted);font-size:13px;margin:0;padding:0;list-style:none}
 .sw{display:inline-block;width:18px;height:0;border-top:2px solid var(--line);vertical-align:middle;margin-right:6px}
 .sw.a{border-color:var(--add)} .sw.c{border-color:var(--chg)} .sw.d{border-color:var(--del);border-top-style:dashed}
-.src{display:flex;flex-direction:column;gap:6px}
+.src{display:block}
+.src>*+*{margin-top:8px}
+.src summary{font:600 12px var(--mono);cursor:pointer}
 .src label{font:600 12px var(--mono)}
 .src p{margin:0;color:var(--muted);font-size:13px;max-width:70ch}
 textarea{font:400 12.5px/1.55 var(--mono);color:var(--fg);background:var(--surface);border:1px solid var(--border);
@@ -116,7 +143,8 @@ textarea{font:400 12.5px/1.55 var(--mono);color:var(--fg);background:var(--surfa
   <div class="bar">
     <div class="tabs" role="tablist" id="tabs"></div>
     <div class="tabs" id="modes"><button type="button" data-only="">Whole graph</button><button type="button" data-only="1">Changed only</button></div>
-    <div class="tabs" id="ais"><button type="button" data-ai="in">AI in graph</button><button type="button" data-ai="edge">AI at edge</button><button type="button" data-ai="off">AI hidden</button></div>
+    <div class="tabs" id="ais"><button type="button" data-ai="in">AI drawn</button><button type="button" data-ai="edge">AI as arrows out</button><button type="button" data-ai="off">AI hidden</button></div>
+    <div class="tabs" id="zoom"><button type="button" data-z="fit">Fit</button><button type="button" data-z="1">100%</button></div>
   </div>
   <div class="tabs" id="parts" hidden></div>
   <p class="when" id="when"></p>
@@ -125,18 +153,21 @@ textarea{font:400 12.5px/1.55 var(--mono);color:var(--fg);background:var(--surfa
     <li>Box = class. Lowest box = a function this step reaches. Arrow = calls. A part = everything one step function reaches.</li>
     <li>Boxes sit next to what they share the most arrows with, arranged so the fewest lines cross. Lowest boxes inside a box are reordered for the same reason. The small grey word on a box is its group. Double-click a box title to put it at the center.</li>
         <li><span class="sw a"></span>+ added <span class="sw c"></span>~ changed <span class="sw d"></span>- removed</li>
-    <li>Hover a box, or click its title, to light up its arrows and the boxes they reach. Same for a lowest box.</li>
+    <li><span class="sw s"></span>AI arrows out: a short arrow off a box's edge names the AI/ class it calls (or is called from).</li>
+    <li>Tap a function to light up its arrows and see its code below. Tap a box title to light up the whole class.</li>
   </ul>
-  <div class="src">
-    <label for="source">The graph as text</label>
+  <p class="warn" id="warn"></p>
+  <section class="code" id="code" aria-live="polite"></section>
+  <details class="src">
+    <summary>The graph as text</summary>
     <p>This text is the whole graph, written by <code>gen.js</code> from the code at the two commits. The first box is the center. <code>Name[...]</code> is a box, a bare name is a lowest box, <code>Box.thing -> Box.thing : label</code> is an arrow. <code># name</code> starts a part: the arrows under it also get their own smaller graph. Put <code>+</code> <code>~</code> <code>-</code> in front of what a commit added, changed or removed, and <code>: note</code> after it to say what. Edit it and the drawing follows (edits stay in this browser tab only).</p>
-    <textarea id="source" spellcheck="false"></textarea>
-    <p class="warn" id="warn"></p>
+    <textarea id="source" spellcheck="false" aria-label="The graph as text"></textarea>
     <p id="info"></p>
-  </div>
+  </details>
 </div>
 
 <script>
+const CODE = {};
 const STEPS = {
 Awake: {when:"Once, before any Start.", src:
 `GameManager[singleton, find cameras, find or make UI, frame rate]
@@ -347,7 +378,7 @@ function leafEl(node, parent, inherited){
   el.onmouseleave = () => focusOn(pinned || over);
   el.onfocus = () => focusOn(key);
   el.onblur = () => focusOn(pinned || over);
-  el.onclick = () => { pinned = pinned === key ? null : key; focusOn(pinned); };
+  el.onclick = () => { pinned = pinned === key ? null : key; focusOn(pinned); showCode(true); };
   return el;
 }
 function build(node, parent, inherited, path){
@@ -387,6 +418,7 @@ function changed(g){
   for(const b of g.boxes) walk(b, null, "");
   let count = set.size;
   for(const e of g.edges) if(e.mark){ count++; set.add(e.from); set.add(e.to); }
+  for(const x of g.stubs || []) if(x.mark){ count++; set.add(x.leaf); }
   return {set, count};
 }
 function prune(n, parent, keep){
@@ -397,6 +429,7 @@ function prune(n, parent, keep){
 }
 function onlyPart(g, name){
   const edges = g.edges.filter(e => e.part === name), keep = new Set(edges.flatMap(e => [e.from, e.to]));
+  for(const x of g.stubs || []) if(x.part === name) keep.add(x.leaf);
   return {boxes: g.boxes.map(b => prune(b, null, keep)).filter(Boolean), edges};
 }
 // class boxes joined by arrows, as connected pieces (union-find)
@@ -407,37 +440,40 @@ function connected(list){
   const out = {}; for(const k in up) (out[find(k)] ||= []).push(k);
   return Object.values(out);
 }
-// AI/ classes: "in" the graph as they are, at the "edge" as one small box each, or "off"
-let ai = "edge";
+// AI/ classes: drawn "in" the graph, or left out with a short arrow off the box edge ("edge"), or left out ("off")
+let ai = "edge", zoom = "fit", stubs = [], aiChanged = [];
 function aiView(g){
   const grp = g.boxes.find(b => b.kids && /^AI\/?$/i.test(b.name));
-  if(ai === "in" || !grp) return g;
+  if(ai === "in" || !grp) return {...g, stubs:[], stubsAll:[]};
   const names = new Set(grp.kids.map(c => c.name)), cls = k => k.split(".")[0];
-  const small = c => !c.kids ? c : {...c, edge:true, count:c.kids.length, mark:c.mark || (c.kids.some(l => l.mark) ? "chg" : ""), kids:[]};
-  const boxes = ai === "off" ? g.boxes.filter(b => b !== grp) : g.boxes.map(b => b === grp ? {...b, kids:b.kids.map(small)} : b);
-  const fold = list => { // arrows end at the small box; arrows inside one AI class go
-    const seen = {};
+  const fold = list => {
+    const keep = [], st = {};
     for(const e of list){
-      const a = names.has(cls(e.from)), b = names.has(cls(e.to)); if(ai === "off" && (a || b)) continue;
-      const from = a ? cls(e.from) : e.from, to = b ? cls(e.to) : e.to, k = e.part + ">" + from + ">" + to;
-      if(from !== to && (!seen[k] || (e.mark && !seen[k].mark))) seen[k] = {...e, from, to, label:a || b ? "" : e.label};
+      const a = names.has(cls(e.from)), b = names.has(cls(e.to));
+      if(!a && !b){ keep.push(e); continue; }
+      if(ai === "off" || (a && b)) continue;
+      const x = {part:e.part, leaf:a ? e.to : e.from, dir:a ? "in" : "out", ai:cls(a ? e.from : e.to), mark:e.mark}, k = x.part + ">" + x.leaf + x.dir + x.ai;
+      if(!st[k] || (x.mark && !st[k].mark)) st[k] = x;
     }
-    return Object.values(seen);
+    return {keep, st:Object.values(st)};
   };
-  return {...g, boxes, edges:fold(g.edges), all:fold(g.all.map(e => ({...e, part:""})))};
+  const p = fold(g.edges), w = fold(g.all.map(e => ({...e, part:""})));
+  return {...g, boxes:g.boxes.filter(b => b !== grp), edges:p.keep, all:w.keep, stubs:p.st, stubsAll:w.st};
 }
 function render(){
   const g = aiView(parse(source.value)), notes = [];
-  let boxes = g.boxes, shown = g.all;
+  let boxes = g.boxes, shown = g.all, st = g.stubsAll;
   if(part && g.parts.includes(part)){ // one part: its arrows and the boxes they touch
-    ({boxes, edges:shown} = onlyPart(g, part));
+    ({boxes, edges:shown} = onlyPart(g, part)); st = g.stubs.filter(x => x.part === part);
     const pieces = connected(shown);
     if(pieces.length > 1 && ai === "in") notes.push(`"${part}" is not one connected piece: ` + pieces.map(p => p.join(" + ")).join("  |  "));
   }
   if(only){ // the changed boxes, plus what they are wired to
-    const ch = changed({boxes, edges:shown}).set, keep = new Set(ch);
+    const ch = changed({boxes, edges:shown, stubs:st}).set, keep = new Set(ch);
     shown = shown.filter(e => e.mark || ch.has(e.from) || ch.has(e.to));
+    st = st.filter(x => x.mark || ch.has(x.leaf));
     for(const e of shown){ keep.add(e.from); keep.add(e.to); }
+    for(const x of st) keep.add(x.leaf);
     boxes = boxes.map(b => prune(b, null, keep)).filter(Boolean);
   }
   nodes = {}; units = []; pinned = null; graph.className = "graph"; graph.textContent = "";
@@ -449,9 +485,13 @@ function render(){
     for(const k of [e.from, e.to]) if(!nodes[k]) missing.push(k);
     return nodes[e.from] && nodes[e.to];
   });
+  stubs = st.filter(x => nodes[x.leaf]);
+  const raw = parse(source.value), rv = part && raw.parts.includes(part) ? onlyPart(raw, part) : raw; // AI changes that are not drawn
+  const grp = rv.boxes.find(b => b.kids && /^AI\/?$/i.test(b.name));
+  aiChanged = ai === "in" || !grp ? [] : grp.kids.flatMap(c => (c.kids || []).filter(l => l.mark || c.mark).map(l => c.name + "." + l.name));
   if(missing.length) notes.push("No box named: " + [...new Set(missing)].join(", "));
   $("warn").textContent = notes.join("\n");
-  layout(); draw();
+  layout(); draw(); showCode();
   $("info").textContent = layout.info ? "Layout: " + layout.info + " (counted on straight runs, an arrow through a box = 0.5)" : "";
 }
 
@@ -470,12 +510,14 @@ function sides(a, b){ // a, b: {l, r, y}
 // layout: 1 graph distances, 2 stress majorization, 3 fewest crossings, 4 no overlaps. The center box is pinned
 function layout(){
   const fit = $("fit");
-  if(!units.length){ graph.style.cssText = fit.style.cssText = ""; scale = 1; return; }
+  if(!units.length){ graph.style.cssText = fit.style.cssText = ""; scale = 1; layout.W = 0; return; }
   const U = units.map(u => ({...u, w:u.el.offsetWidth, h:u.el.offsetHeight, x:0, y:0})), n = U.length;
   const idx = {}; U.forEach((u, i) => idx[u.name] = i);
   const unitOf = k => idx[nodes[k]?.closest("[data-unit]")?.dataset.unit];
   const pull = {}, add = (i, j, w) => { if(i == null || j == null || i === j) return; const k = Math.min(i, j) + "," + Math.max(i, j); pull[k] = (pull[k] || 0) + w; };
   for(const e of edges) add(unitOf(e.from), unitOf(e.to), 1);          // one per arrow
+  const viaAI = {}; for(const x of stubs) (viaAI[x.ai] ||= new Set()).add(unitOf(x.leaf)); // same AI class: a weak pull
+  for(const set of Object.values(viaAI)){ const l = [...set]; for(let i = 0; i < l.length; i++) for(let j = i + 1; j < l.length; j++) add(l[i], l[j], 1); }
   for(let i = 0; i < n; i++) for(let j = i + 1; j < n; j++)           // same group: a weak pull
     if(U[i].path.length && U[i].path[0] === U[j].path[0]) add(i, j, U[i].path.join() === U[j].path.join() ? .5 : .25);
   const deg = U.map(() => 0);
@@ -573,6 +615,10 @@ function layout(){
     }
     if(!better) break;
   }
+  // a phone is tall: turn a wide layout on its side
+  const ext = k => { const h = k === "x" ? "w" : "h"; return Math.max(...U.map(u => u[k] + u[h]/2)) - Math.min(...U.map(u => u[k] - u[h]/2)); };
+  if($("scroll").clientWidth < 640 && ext("x") > ext("y")){ for(const u of U) [u.x, u.y] = [u.y, u.x]; for(let t = 0; t < 80; t++) apart(); measure(); }
+
   // 5. inside a box, order the lowest boxes by where their arrows go (barycenter), so they don't cross on the way out
   for(let round = 0; round < 3; round++){
     const want = {}, add = (k, y) => { (want[k] ||= []).push(y); };
@@ -588,13 +634,17 @@ function layout(){
   layout.info = `stress ${stress().toFixed(2)}, crossings ${crossings()}`;
 
   const boxes = U.map(u => ({l:u.x - u.w/2, t:u.y - u.h/2, r:u.x + u.w/2, b:u.y + u.h/2}));
-  const all = boxes, PAD = 30;
-  const minX = Math.min(...all.map(a => a.l)) - PAD, minY = Math.min(...all.map(a => a.t)) - PAD;
-  const W = Math.max(...all.map(a => a.r)) + PAD - minX, Ht = Math.max(...all.map(a => a.b)) + PAD - minY;
+  const all = boxes, PAD = 30, PX = stubs.length ? 90 : 30; // room for the AI names
+  const minX = Math.min(...all.map(a => a.l)) - PX, minY = Math.min(...all.map(a => a.t)) - PAD;
+  const W = Math.max(...all.map(a => a.r)) + PX - minX, Ht = Math.max(...all.map(a => a.b)) + PAD - minY;
   U.forEach((u, i) => { u.el.style.left = boxes[i].l - minX + "px"; u.el.style.top = boxes[i].t - minY + "px"; u.el.classList.toggle("center", i === c); });
-  scale = Math.max(.6, Math.min(1, $("scroll").clientWidth / W)); // shrink to fit, but stay readable
-  graph.style.cssText = `width:${W}px;height:${Ht}px;transform:scale(${scale})`;
-  fit.style.cssText = `width:${W*scale}px;height:${Ht*scale}px`;
+  layout.W = W; layout.H = Ht; fitScale();
+}
+function fitScale(){ // Fit: the whole graph in the width. 100%: real size, scroll to move around
+  const W = layout.W, H = layout.H; if(!W) return;
+  scale = zoom === "fit" ? Math.max(innerWidth < 700 ? .55 : .3, Math.min(1, $("scroll").clientWidth / W)) : 1; // a phone keeps text readable and scrolls sideways
+  graph.style.cssText = `width:${W}px;height:${H}px;transform:scale(${scale})`;
+  $("fit").style.cssText = `width:${W*scale}px;height:${H*scale}px`;
 }
 function draw(){
   graph.querySelector("svg")?.remove();
@@ -609,6 +659,26 @@ function draw(){
     const A = {r:a, side:sa, other:b.t + b.h/2}, B = {r:b, side:sb, other:a.t + a.h/2};
     (slots[e.from + sa] ||= []).push(A); (slots[e.to + sb] ||= []).push(B);
     return {e, A, B};
+  });
+  const groups = {}, half = graph.offsetWidth / 2; // AI arrows: one short arrow per function and direction, off the side facing out
+  for(const x of stubs){
+    const k = x.leaf + x.dir, gr = groups[k] ||= {leaf:x.leaf, dir:x.dir, names:[], mark:""};
+    if(!gr.names.includes(x.ai)) gr.names.push(x.ai); if(x.mark) gr.mark = x.mark;
+  }
+  const others = units.map(u => ({el:u.el, ...rect(u.el)}));
+  const room = (r, side) => { // free space beside a function, up to the next box or the graph's edge
+    const y = r.t + r.h/2, home = nodes[r.key].closest(".unit");
+    let free = side === "r" ? graph.offsetWidth - r.r : r.l;
+    for(const o of others) if(o.el !== home && o.t < y + 10 && o.t + o.h > y - 10){
+      if(side === "r" && o.l >= r.r - 1) free = Math.min(free, o.l - r.r);
+      if(side === "l" && o.r <= r.l + 1) free = Math.min(free, r.l - o.r);
+    }
+    return free;
+  };
+  const stubEnds = Object.values(groups).map(gr => {
+    const r = {...rect(nodes[gr.leaf]), key:gr.leaf}, fr = room(r, "r"), fl = room(r, "l"), side = fr === fl ? ((r.l + r.r) / 2 < half ? "l" : "r") : fr > fl ? "r" : "l";
+    const P = {r, side, other:r.t + r.h/2, free:Math.max(fr, fl)};
+    (slots[gr.leaf + side] ||= []).push(P); return {gr, P};
   });
   for(const list of Object.values(slots)){
     list.sort((p, q) => p.other - q.other);
@@ -630,8 +700,51 @@ function draw(){
       svg.append(t);
     }
   }
+  for(const {gr, P} of stubEnds){
+    const s = P.side === "l" ? -1 : 1, x1 = P.x, x2 = P.x + s * 30, y = P.y;
+    const head = gr.dir === "out" ? `M${x2 - 6*s} ${y - 3.5}L${x2} ${y}L${x2 - 6*s} ${y + 3.5}` : `M${x1 + 6*s} ${y - 3.5}L${x1} ${y}L${x1 + 6*s} ${y + 3.5}`;
+    const p = document.createElementNS(NS, "path"), t = document.createElementNS(NS, "text");
+    p.setAttribute("d", `M${x1} ${y}L${x2} ${y}` + head); p.setAttribute("class", "wire stub " + gr.mark);
+    t.setAttribute("x", x2 + s * 4); t.setAttribute("y", y + 3.5); t.setAttribute("class", `wlabel stubl ${P.side} ${gr.mark}`);
+    const full = (gr.dir === "in" ? "from " : "") + gr.names.join(", "), fits = Math.max(4, Math.floor((P.free - 44) / 6.2));
+    t.textContent = full.length > fits ? full.slice(0, fits - 1) + "…" : full;
+    const tip = document.createElementNS(NS, "title"); tip.textContent = full; t.append(tip);
+    for(const el of [p, t]){ el.dataset.from = el.dataset.to = gr.leaf; svg.append(el); }
+  }
   graph.append(svg);
   focusOn(pinned);
+}
+
+// code of the changed functions in this view; a tapped function that did not change goes first
+function codeItem(key, open){
+  const c = CODE[key], d = document.createElement("details"), sm = document.createElement("summary"), pre = document.createElement("pre");
+  d.className = "fn"; d.dataset.key = key; d.open = open;
+  sm.append(span("fm " + ({"+":"add", "-":"del", "~":"chg"}[c.m] || ""), c.m || "·"), span("fk", key), span("ff", c.f));
+  if(nodes[key]){
+    const b = document.createElement("button"); b.type = "button"; b.className = "find"; b.textContent = "Show in graph";
+    b.onclick = ev => { ev.preventDefault(); pinned = key; focusOn(key); $("scroll").scrollIntoView({behavior:"smooth", block:"start"}); };
+    sm.append(b);
+  }
+  pre.className = "diff";
+  for(const l of c.d || c.t.split("\n").map(x => " " + x)){
+    const op = l[0];
+    pre.append(span("ln " + ({"+":"add", "-":"del", "…":"gap"}[op] || "ctx"), op === "…" ? `⋯ ${l.slice(1)} same line${l.slice(1) === "1" ? "" : "s"}` : l.slice(1) || " "));
+  }
+  d.append(sm, pre); return d;
+}
+function showCode(jump){
+  const box = $("code"); box.textContent = "";
+  const keys = [...new Set([...graph.querySelectorAll(".leaf.add,.leaf.chg,.leaf.del")].map(l => l.dataset.key))].filter(k => CODE[k]).sort();
+  const h = document.createElement("h2"); h.textContent = keys.length ? `What changed here (${keys.length})` : "Nothing changed in this view"; box.append(h);
+  if(pinned && CODE[pinned] && !keys.includes(pinned)) box.append(codeItem(pinned, true));
+  for(const k of keys) box.append(codeItem(k, k === pinned || (CODE[k].d || []).length <= 40));
+  const hid = aiChanged.filter(k => CODE[k]);
+  if(hid.length){
+    const h3 = document.createElement("h3"); h3.textContent = `Also changed in AI/, not drawn (${hid.length})`; box.append(h3);
+    for(const k of hid) box.append(codeItem(k, false));
+  }
+  const it = jump && pinned && [...box.querySelectorAll(".fn")].find(f => f.dataset.key === pinned);
+  if(it){ it.open = true; it.classList.add("pick"); if(innerWidth < 800) it.scrollIntoView({behavior:"smooth", block:"start"}); }
 }
 
 // key: a lowest box, or a class box (then all of its lowest boxes count)
@@ -663,12 +776,12 @@ for(const step of Object.keys(STEPS)){
   b.onclick = () => show(step); $("tabs").append(b);
 }
 function partTabs(){ // "# name" in the text = a part of the step with its own smaller graph
-  const g = parse(STEPS[current].src), box = $("parts");
+  const g = aiView(parse(STEPS[current].src)), box = $("parts");
   if(!g.parts.includes(part)) part = "";
   box.textContent = ""; box.hidden = !g.parts.length;
   for(const name of ["", ...g.parts]){
     const b = document.createElement("button"); b.type = "button"; b.textContent = name || "All";
-    const n = changed(name ? onlyPart(g, name) : {boxes:g.boxes, edges:g.all}).count; if(n) b.append(span("n", n));
+    const n = changed(name ? {...onlyPart(g, name), stubs:g.stubs.filter(x => x.part === name)} : {boxes:g.boxes, edges:g.all, stubs:g.stubsAll}).count; if(n) b.append(span("n", n));
     b.setAttribute("aria-selected", name === part);
     b.onclick = () => { part = name; center = null; partTabs(); render(); };
     box.append(b);
@@ -676,15 +789,17 @@ function partTabs(){ // "# name" in the text = a part of the step with its own s
 }
 function counts(){ // changes per step, on its tab
   for(const b of $("tabs").children){
-    const g = parse(STEPS[b.dataset.step].src), n = changed({boxes:g.boxes, edges:g.all}).count;
+    const g = aiView(parse(STEPS[b.dataset.step].src)), n = changed({boxes:g.boxes, edges:g.all, stubs:g.stubsAll}).count;
     b.textContent = b.dataset.step; if(n) b.append(span("n", n));
   }
 }
 function mode(){
   for(const b of $("modes").children) b.setAttribute("aria-selected", !!b.dataset.only === only);
   for(const b of $("ais").children) b.setAttribute("aria-selected", b.dataset.ai === ai);
+  for(const b of $("zoom").children) b.setAttribute("aria-selected", b.dataset.z === zoom);
 }
-for(const b of $("ais").children) b.onclick = () => { ai = b.dataset.ai; mode(); render(); };
+for(const b of $("ais").children) b.onclick = () => { ai = b.dataset.ai; mode(); counts(); partTabs(); render(); };
+for(const b of $("zoom").children) b.onclick = () => { zoom = b.dataset.z; mode(); fitScale(); };
 for(const b of $("modes").children) b.onclick = () => { only = !!b.dataset.only; mode(); render(); };
 source.oninput = () => { STEPS[current].src = source.value; counts(); partTabs(); render(); };
 counts(); mode();
