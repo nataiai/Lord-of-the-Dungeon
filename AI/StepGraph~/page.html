@@ -50,7 +50,7 @@ header p{margin:0;color:var(--muted)}
 .box.unit.has{border-color:var(--chg)}
 button.name{background:none;border:0;padding:0;color:inherit;text-align:left;cursor:pointer}
 button.name:hover{text-decoration:underline}
-.box{border:1px solid var(--border);border-radius:4px;padding:8px 12px 12px 20px;display:flex;flex-direction:column;gap:8px}
+.box{border:1px solid var(--border);border-radius:4px;padding:8px 20px 12px 20px;display:flex;flex-direction:column;gap:8px}
 .name{font:600 13px var(--mono);letter-spacing:.02em}
 .group{font:400 10px var(--mono);color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:-6px}
 .kids{display:flex;flex-direction:column;gap:7px;align-items:stretch}
@@ -386,7 +386,7 @@ function leafEl(node, parent, inherited){
   el.onmouseleave = () => focusOn(pinned || over);
   el.onfocus = () => focusOn(key);
   el.onblur = () => focusOn(pinned || over);
-  el.onclick = () => { pinned = pinned === key ? null : key; focusOn(pinned); showCode(); showPop(); };
+  el.onclick = () => { pinned = pinned === key ? null : key; focusOn(pinned); showCode(); showPop(); track(); };
   return el;
 }
 function build(node, parent, inherited, path){
@@ -398,7 +398,7 @@ function build(node, parent, inherited, path){
     const n = document.createElement("button"); n.className = "name"; n.type = "button"; n.textContent = name;
     if(node.edge){ el.classList.add("edge"); el.dataset.edge = 1; n.append(span("cnt", node.count)); }
     n.title = "Click: keep its arrows lit. Double-click: put at the center";
-    n.onclick = () => { pinned = pinned === name ? null : name; focusOn(pinned); showCode(); showPop(); };
+    n.onclick = () => { pinned = pinned === name ? null : name; focusOn(pinned); showCode(); showPop(); track(); };
     n.ondblclick = () => { center = name; render(); };
     n.onfocus = () => focusOn(name); n.onblur = () => focusOn(pinned || over);
     el.onmouseenter = () => { over = name; focusOn(name); };
@@ -501,9 +501,22 @@ function render(){
   $("warn").textContent = notes.join("\n");
   layout(); draw(); showCode(); showPop(); showInfo();
 }
+// what the viewer has open, saved for Claude to read (views/last). Nothing here without the db capability
+let viewDb = null, saveT;
+(async () => { try{ viewDb = await window.claude?.use?.("db"); }catch(e){} })();
+function track(){
+  clearTimeout(saveT);
+  saveT = setTimeout(async () => {
+    if(!viewDb) return;
+    const boxes = units.map(u => [u.name, Math.round(u.el.offsetLeft), Math.round(u.el.offsetTop), [...u.el.querySelectorAll(".leaf")].map(l => l.dataset.key.split(".").pop()).join(",")]);
+    try{ await viewDb.doc("views/last").set({at:new Date().toISOString(), commit:document.querySelector(".commit")?.textContent || "", step:current, part, ai, only,
+      pinned:pinned || "", center:center || "", zoom:+view.s.toFixed(2), screen:innerWidth + "x" + innerHeight, info:$("info").textContent, boxes:JSON.stringify(boxes)}); }catch(e){}
+  }, 1500);
+}
 function showInfo(){
   const all = drawn; drawn = all.filter(d => !d.inner); const between = drawnCrossings(); drawn = all;
   $("info").textContent = layout.info ? `Layout: ${layout.info}. Crossings as drawn: ${between} between boxes, ${drawnCrossings() - between} with arcs inside a box` : "";
+  track();
 }
 
 // an arrow leaves a lowest box on its left or right. Of the 4 ways, take the shortest run between the two stubs
@@ -572,37 +585,59 @@ function layout(){
   }
 
   // 3. crossings: each arrow as the straight run between its two stubs; count pairs that cross, and arrows through a box
-  const Eall = edges.map(e => [e.from, e.to].map(k => unitOf(k) == null ? null : {i:unitOf(k), k})).filter(([a, b]) => a && b);
-  const measure = () => { for(const pair of Eall) for(const p of pair){ const l = nodes[p.k], u = U[p.i];
+  const Eall = edges.map(e => Object.assign([e.from, e.to].map(k => unitOf(k) == null ? null : {i:unitOf(k), k}), {e})).filter(([a, b]) => a && b);
+  const Sall = stubs.map(x => ({i:unitOf(x.leaf), k:x.leaf, dir:x.dir})); // one per stub, same order // AI arrows: fixed side, in left / out right
+  const measure = () => { for(const p of [...Eall.flat(), ...Sall]){ const l = nodes[p.k], u = U[p.i];
     const L = -u.w/2 + u.pl, T = -u.h/2 + u.pt; // the box itself, inside the room for labels
-    if(l === u.el){ p.l = L; p.r = L + u.ew; p.y = T + u.eh/2; continue; }
-    p.l = L + l.offsetLeft; p.r = p.l + l.offsetWidth; p.y = T + l.offsetTop + l.offsetHeight/2; } };
+    if(l === u.el){ p.l = L; p.r = L + u.ew; p.y = T + u.eh/2; p.h = u.eh; continue; }
+    p.l = L + l.offsetLeft; p.r = p.l + l.offsetWidth; p.y = T + l.offsetTop + l.offsetHeight/2; p.h = l.offsetHeight; } };
   measure();
-  const E = Eall.filter(([a, b]) => a.i !== b.i);
-  const at = p => ({l:U[p.i].x + p.l, r:U[p.i].x + p.r, y:U[p.i].y + p.y});
+  const E = Eall.filter(([a, b]) => a.i !== b.i), Inner = Eall.filter(([a, b]) => a.i === b.i);
+  const at = p => ({l:U[p.i].x + p.l, r:U[p.i].x + p.r, y:U[p.i].y + p.y, h:p.h});
   const ccw = (a, b, e) => (e.y - a.y) * (b.x - a.x) > (b.y - a.y) * (e.x - a.x);
   const cross = (a, b, e, f) => ccw(a, e, f) !== ccw(b, e, f) && ccw(a, b, e) !== ccw(a, b, f);
-  function curves(){ // every arrow between two boxes as drawn: 8 straight bits of its curve
-    return E.map(([a, b]) => {
-      const A = at(a), B = at(b), {sa, sb} = sides(A, B), x1 = sa === "l" ? A.l : A.r, x2 = sb === "l" ? B.l : B.r, da = sa === "l" ? -1 : 1, db = sb === "l" ? -1 : 1;
-      const k = Math.max(24, Math.min(110, Math.hypot(x2 - x1, B.y - A.y) * .4)), pts = [];
-      for(let i = 0; i <= 8; i++){ const t = i / 8, u = 1 - t;
-        pts.push({x:u*u*u*x1 + 3*u*u*t*(x1 + da*k) + 3*u*t*t*(x2 + db*k) + t*t*t*x2, y:u*u*u*A.y + 3*u*u*t*A.y + 3*u*t*t*B.y + t*t*t*B.y}); }
-      const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
-      return {a, b, pts, l:Math.min(...xs), r:Math.max(...xs), t:Math.min(...ys), bt:Math.max(...ys)};
-    });
+  const unitKey = {}; for(const p of [...Eall.flat(), ...Sall]) unitKey[p.k] = p.i;
+  const arcForce = {};
+  function arcSide(i, ends){ // calls inside a box go on its emptier side
+    if(arcForce[i]) return arcForce[i];
+    let l = 0, r = 0; for(const x of ends) if(unitKey[x.k] === i) x.side === "l" ? l++ : r++;
+    return r < l ? "r" : "l";
+  }
+  function route(a, b, e, inner, x1, y1, k1, k2, x2, y2, hs){ // one arrow: the curve the page draws, and its points for counting
+    const pts = bez([x1, y1], [k1, y1], [k2, y2], [x2, y2]).map(([x, y]) => ({x, y})), xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+    return {a, b, e, inner, x1, y1, k1, k2, x2, y2, hs, pts, l:Math.min(...xs), r:Math.max(...xs), t:Math.min(...ys), bt:Math.max(...ys)};
+  }
+  function curves(){ // every arrow between two boxes as drawn: its side, its spot on that side, 8 straight bits of its curve
+    const ends = [], slot = {};
+    const C = E.map(pr => { const [a, b] = pr, A = at(a), B = at(b), {sa, sb} = pr.e.force || sides(A, B);
+      const ea = {k:a.k, R:A, side:sa, other:B.y}, eb = {k:b.k, R:B, side:sb, other:A.y}; ends.push(ea, eb); return {a, b, ea, eb, e:pr.e}; });
+    for(const p of Sall){ const R = at(p), x = {k:p.k, R, side:p.dir === "in" ? "l" : "r", other:R.y}; ends.push(x); p.end = x; }
+    const arcEnds = Inner.map(pr => { const [a, b] = pr, side = arcSide(a.i, ends), A = at(a), B = at(b); // other mirrored: longer arcs start further out, so they nest
+      const ea = {k:a.k, R:A, side, other:2*A.y - B.y}, eb = {k:b.k, R:B, side, other:2*B.y - A.y}; return {ea, eb, side, e:pr.e}; });
+    for(const {ea, eb} of arcEnds) ends.push(ea, eb);
+    for(const x of ends) (slot[x.k + x.side] ||= []).push(x);
+    for(const list of Object.values(slot)){ list.sort((p, q) => p.other - q.other);
+      list.forEach((x, i) => { x.y = x.R.y - x.R.h/2 + x.R.h * (i + 1) / (list.length + 1); x.x = x.side === "l" ? x.R.l : x.R.r; }); }
+    return C.map(({a, b, ea, eb, e}) => {
+      const x1 = ea.x, y1 = ea.y, x2 = eb.x, y2 = eb.y, da = ea.side === "l" ? -1 : 1, db = eb.side === "l" ? -1 : 1;
+      const k = Math.max(24, Math.min(110, Math.hypot(x2 - x1, y2 - y1) * .4)), pts = [];
+      return route(a, b, e, false, x1, y1, x1 + da*k, x2 + db*k, x2, y2, db);
+    }).concat(arcEnds.map(({ea, eb, side, e}) => { // calls inside a box, as drawn
+      const s = side === "l" ? -1 : 1, d = (4 + Math.min(10, Math.abs(eb.y - ea.y) / 10)) * 1.6;
+      return route({k:ea.k, i:-1}, {k:eb.k, i:-1}, e, true, ea.x, ea.y, ea.x + s*d, eb.x + s*d, eb.x, eb.y, s);
+    }));
   }
   function crossings(){ // pairs of arrows that cross, + .5 for an arrow through a box
     const S = curves(); let bad = 0;
     S.forEach((s, i) => {
       for(let j = i + 1; j < S.length; j++){
-        const t = S[j]; if(s.a.k === t.a.k || s.a.k === t.b.k || s.b.k === t.a.k || s.b.k === t.b.k) continue;
+        const t = S[j];
         if(s.r < t.l || t.r < s.l || s.bt < t.t || t.bt < s.t) continue;
         let x = false;
         for(let p = 1; p < s.pts.length && !x; p++) for(let q = 1; q < t.pts.length && !x; q++) x = cross(s.pts[p - 1], s.pts[p], t.pts[q - 1], t.pts[q]);
         if(x) bad++;
       }
-      U.forEach((u, k) => { if(k === s.a.i || k === s.b.i) return;
+      if(!s.inner) U.forEach((u, k) => { if(k === s.a.i || k === s.b.i) return;
         const l = u.x - u.w/2 + u.pl, r = l + u.ew, t = u.y - u.h/2 + u.pt, b = t + u.eh;
         if(s.r < l || r < s.l || s.bt < t || b < s.t) return;
         for(let p = 1; p < s.pts.length; p++) if(cross(s.pts[p - 1], s.pts[p], {x:l, y:t}, {x:r, y:b}) || cross(s.pts[p - 1], s.pts[p], {x:r, y:t}, {x:l, y:b})){ bad += .5; return; } });
@@ -621,7 +656,7 @@ function layout(){
     }
   }
   const settle = times => { majorize(times); for(let t = 0; t < 40; t++) apart(); };
-  const cost = () => stress() + CROSS * crossings(), CROSS = 10; // one crossing is worth this much stress
+  const cost = () => stress() + CROSS * crossings(), CROSS = 40; // one crossing is worth this much stress
   const save = () => U.map(u => [u.x, u.y]), load = p => U.forEach((u, i) => { u.x = p[i][0]; u.y = p[i][1]; });
   let best = Infinity, keep;
   const big = n > 24, huge = n > 36; // many boxes: a shorter search
@@ -648,7 +683,35 @@ function layout(){
   }
   // simulated annealing: nudge or swap one box at a time; keep it when the score drops, early on sometimes when it rises a little
   let seed = 12345; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647; // same moves every time
-  let cur = best, t = 0; const steps = 6000, T0 = Math.max(.3, best * .03);
+  let cur = best, t = 0, steps = n <= 14 ? 2500 : 6000; const T0 = Math.max(.3, best * .03);
+  function polish(){ // try each arrow's other ways out of its functions, then each function's place in its box; keep what uncrosses
+    const until = performance.now() + (n <= 14 ? 1e9 : first0 ? 900 : 250); // a small view: until nothing helps
+    for(const pr of E) pr.e.force = null;
+    let score = crossings();
+    for(let round = 0; round < 2 && performance.now() < until; round++){
+      let better = false;
+      for(const pr of E){
+        if(performance.now() > until) break;
+        let keepF = pr.e.force;
+        for(const sa of "lr") for(const sb of "lr"){ pr.e.force = {sa, sb}; const v = crossings(); if(v < score - 1e-9){ score = v; keepF = pr.e.force; better = true; } }
+        pr.e.force = keepF;
+      }
+      for(const i of new Set(Inner.map(pr => pr[0].i))){ // calls inside a box: the other margin?
+        const was = arcForce[i]; arcForce[i] = "l"; const vl = crossings(); arcForce[i] = "r"; const vr = crossings();
+        const pick = vl <= vr ? "l" : "r", v = Math.min(vl, vr); if(v < score - 1e-9){ score = v; better = true; arcForce[i] = pick; } else arcForce[i] = was;
+      }
+      for(const u of U){
+        const kids = u.el.querySelector(".kids"); if(!kids || kids.children.length < 2) continue;
+        for(let i = 0; i < kids.children.length && performance.now() < until; i++) for(let j = 0; j < kids.children.length; j++){
+          if(i === j) continue;
+          const el = kids.children[i], back = el.nextSibling; kids.insertBefore(el, kids.children[j]); measure();
+          const v = crossings(); if(v < score - 1e-9){ score = v; better = true; } else{ kids.insertBefore(el, back); measure(); }
+        }
+      }
+      if(!better) break;
+    }
+  }
+  let first0 = true;
   function anneal(ms){ // returns true if it found a better layout
     const until = performance.now() + ms, was0 = best;
     for(; t < steps && n > 2 && performance.now() < until; t++){
@@ -663,11 +726,12 @@ function layout(){
     return best < was0 - 1e-6;
   }
   function finish(first){ // the best layout so far onto the page
-    const snap = save(); load(keep); for(let k = 0; k < 40; k++) apart();
+    load(keep); for(let k = 0; k < 40; k++) apart();
     // a phone is tall: turn a wide layout on its side
     const ext = k => { const h = k === "x" ? "w" : "h"; return Math.max(...U.map(u => u[k] + u[h]/2)) - Math.min(...U.map(u => u[k] - u[h]/2)); };
     if($("scroll").clientWidth < 640 && ext("x") > ext("y")){ for(const u of U) [u.x, u.y] = [u.y, u.x]; for(let k = 0; k < 80; k++) apart(); measure(); }
-    // 5. inside a box, order the lowest boxes by where their arrows go (barycenter), so they don't cross on the way out
+    // 5. inside a box, order the lowest boxes by where their arrows go (barycenter), so they don't cross on the way out. Kept only if it helps
+    const orders = U.map(u => [...(u.el.querySelector(".kids")?.children || [])]), before = crossings();
     for(let round = 0; round < 3; round++){
       const want = {}, add = (k, y) => { (want[k] ||= []).push(y); };
       for(const [a, b] of Eall){ add(a.k, at(b).y); add(b.k, at(a).y); }
@@ -679,17 +743,26 @@ function layout(){
       }
       measure();
     }
+    if(crossings() > before){ U.forEach((u, i) => u.el.querySelector(".kids")?.append(...orders[i])); measure(); }
+    polish(); layout.arcs = Object.fromEntries(Object.entries(arcForce).map(([i, side]) => [U[i].name, side]));
     layout.info = `stress ${stress().toFixed(2)}, crossings ${crossings()}`;
     const boxes = U.map(u => ({l:u.x - u.w/2, t:u.y - u.h/2, r:u.x + u.w/2, b:u.y + u.h/2})), PAD = 30;
     const minX = Math.min(...boxes.map(a => a.l)) - PAD, minY = Math.min(...boxes.map(a => a.t)) - PAD;
     const W = Math.max(...boxes.map(a => a.r)) + PAD - minX, Ht = Math.max(...boxes.map(a => a.b)) + PAD - minY;
     U.forEach((u, i) => { u.el.style.left = boxes[i].l + u.pl - minX + "px"; u.el.style.top = boxes[i].t + u.pt - minY + "px"; u.el.classList.toggle("center", i === c); });
-    load(snap); cur = best = cost(); // the order inside boxes changed: score again from here
+    for(const r of curves()) r.e.route = {inner:r.inner, x1:r.x1 - minX, y1:r.y1 - minY, k1:r.k1 - minX, k2:r.k2 - minX, x2:r.x2 - minX, y2:r.y2 - minY, hs:r.hs};
+    Sall.forEach((p, i) => { stubs[i].route = {x:p.end.x - minX, y:p.end.y - minY}; });
+    cur = best = cost(); // carry on from the best layout, polished: the order inside boxes changed, so score it again
     keep = save();
     layout.W = W; layout.H = Ht;
     if(first) fitScale(); else{ graph.style.width = W + "px"; graph.style.height = Ht + "px"; }
   }
-  anneal(500); finish(true);
+  if(n <= 14){ // a small view, before the first paint: the whole search from 3 different starts, keep the best
+    const start = save();
+    for(const s0 of [12345, 777, 4242]){ load(start); seed = s0; t = 0; cur = cost(); anneal(1e9); }
+  }
+  else anneal(500);
+  finish(true); first0 = false;
   // then keep improving in the background for a few seconds, until the map is touched
   const started = performance.now();
   const more = () => {
@@ -747,7 +820,7 @@ function centerOn(el){ // move the map so el sits in the middle
   box.addEventListener("click", e => { if(moved && !e.target.closest(".pop")){ e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
   box.addEventListener("wheel", e => { if(!e.ctrlKey) return; layout.stop = true; e.preventDefault(); const r = box.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * .01), e.clientX - r.left, e.clientY - r.top); }, {passive:false});
 })();
-// crossings as drawn: each curve as 16 straight bits, pairs of arrows that touch the same function don't count
+// crossings as drawn: each curve as 12 straight bits; arrows that share a function count too
 function drawnCrossings(){
   const ccw = (a, b, c) => (c[1] - a[1]) * (b[0] - a[0]) > (b[1] - a[1]) * (c[0] - a[0]);
   const hit = (a, b, c, d) => ccw(a, c, d) !== ccw(b, c, d) && ccw(a, b, c) !== ccw(a, b, d);
@@ -755,14 +828,14 @@ function drawnCrossings(){
   const B = drawn.map(box); let n = 0;
   for(let i = 0; i < drawn.length; i++) for(let j = i + 1; j < drawn.length; j++){
     const a = drawn[i], b = drawn[j];
-    if(a.ends.some(k => b.ends.includes(k)) || B[i][2] < B[j][0] || B[j][2] < B[i][0] || B[i][3] < B[j][1] || B[j][3] < B[i][1]) continue;
+    if(B[i][2] < B[j][0] || B[j][2] < B[i][0] || B[i][3] < B[j][1] || B[j][3] < B[i][1]) continue;
     let x = false;
     for(let p = 1; p < a.pts.length && !x; p++) for(let q = 1; q < b.pts.length && !x; q++) x = hit(a.pts[p - 1], a.pts[p], b.pts[q - 1], b.pts[q]);
     if(x) n++;
   }
   return n;
 }
-const bez = (p0, p1, p2, p3) => Array.from({length:17}, (_, i) => { const t = i / 16, u = 1 - t;
+const bez = (p0, p1, p2, p3) => Array.from({length:13}, (_, i) => { const t = i / 12, u = 1 - t;
   return [u*u*u*p0[0] + 3*u*u*t*p1[0] + 3*u*t*t*p2[0] + t*t*t*p3[0], u*u*u*p0[1] + 3*u*u*t*p1[1] + 3*u*t*t*p2[1] + t*t*t*p3[1]]; });
 let drawn = [];
 function draw(){
@@ -770,12 +843,13 @@ function draw(){
   const svg = document.createElementNS(NS, "svg"); svg.setAttribute("class", "wires");
   const o = graph.getBoundingClientRect();
   const rect = el => { const r = el.getBoundingClientRect(); return {l:(r.left-o.left)/scale, r:(r.right-o.left)/scale, t:(r.top-o.top)/scale, h:r.height/scale}; };
+  if(edges.every(e => e.route) && stubs.every(x => x.route)){ drawRoutes(svg, rect); graph.append(svg); focusOn(pinned); return; }
   // which side each end uses, then spread the ends on a side so they don't share a point
   const slots = {};
   const inner = edges.filter(e => nodes[e.from].closest(".unit") === nodes[e.to].closest(".unit"));
   const ends = edges.filter(e => !inner.includes(e)).map(e => {
     const a = rect(nodes[e.from]), b = rect(nodes[e.to]);
-    const mid = r => ({l:r.l, r:r.r, y:r.t + r.h/2}), {sa, sb} = sides(mid(a), mid(b));
+    const mid = r => ({l:r.l, r:r.r, y:r.t + r.h/2}), {sa, sb} = e.force || sides(mid(a), mid(b));
     const A = {r:a, side:sa, other:b.t + b.h/2}, B = {r:b, side:sb, other:a.t + a.h/2};
     (slots[e.from + sa] ||= []).push(A); (slots[e.to + sb] ||= []).push(B);
     return {e, A, B};
@@ -794,6 +868,14 @@ function draw(){
     const box = rect(u);
     for(const x of list){ const P = {r:x.r, side, other:x.ly}; (slots[x.leaf + side] ||= []).push(P); stubEnds.push({x, P, edge:side === "l" ? box.l : box.r}); }
   }
+  const arcs = inner.map(e => { // calls inside a box: on the side of the box with fewer ends
+    const u = nodes[e.from].closest(".unit"), a = rect(nodes[e.from]), b = rect(nodes[e.to]);
+    let l = 0, r = 0; for(const [k, list] of Object.entries(slots)) if(nodes[k.slice(0, -1)]?.closest(".unit") === u) k.endsWith("l") ? l += list.length : r += list.length;
+    const ya = a.t + a.h/2, yb = b.t + b.h/2, side = layout.arcs?.[u.dataset.unit] || (r < l ? "r" : "l");
+    const A = {r:a, side, other:2*ya - yb}, B = {r:b, side, other:2*yb - ya}; // mirrored: longer arcs start further out, so they nest
+    (slots[e.from + side] ||= []).push(A); (slots[e.to + side] ||= []).push(B);
+    return {e, A, B, side};
+  });
   for(const list of Object.values(slots)){
     list.sort((p, q) => p.other - q.other);
     list.forEach((p, i) => { p.y = p.r.t + p.r.h * (i + 1) / (list.length + 1); p.x = p.side === "l" ? p.r.l : p.r.r; });
@@ -824,12 +906,12 @@ function draw(){
     t.textContent = x.ai;
     for(const el of [p, t]){ el.dataset.from = el.dataset.to = x.leaf; svg.append(el); }
   }
-  for(const e of inner){ // a call inside one box: an arc in its left margin, longer calls further out so they nest
-    const a = rect(nodes[e.from]), b = rect(nodes[e.to]), y1 = a.t + a.h/2, y2 = b.t + b.h/2, d = 4 + Math.min(10, Math.abs(y2 - y1) / 10);
+  for(const {e, A, B, side} of arcs){ // a call inside one box: an arc in its margin, longer calls further out so they nest
+    const s = side === "l" ? -1 : 1, d = (4 + Math.min(10, Math.abs(B.y - A.y) / 10)) * 1.6;
     const p = document.createElementNS(NS, "path");
-    p.setAttribute("d", `M${a.l} ${y1}C${a.l - d*1.6} ${y1} ${b.l - d*1.6} ${y2} ${b.l} ${y2}M${b.l - 5} ${y2 - 3}L${b.l} ${y2}L${b.l - 5} ${y2 + 3}`);
+    p.setAttribute("d", `M${A.x} ${A.y}C${A.x + s*d} ${A.y} ${B.x + s*d} ${B.y} ${B.x} ${B.y}M${B.x + s*5} ${B.y - 3}L${B.x} ${B.y}L${B.x + s*5} ${B.y + 3}`);
     p.setAttribute("class", "wire inner " + e.mark); p.dataset.from = e.from; p.dataset.to = e.to; svg.append(p);
-    drawn.push({ends:[e.from, e.to], inner:true, pts:bez([a.l, y1], [a.l - d*1.6, y1], [b.l - d*1.6, y2], [b.l, y2])});
+    drawn.push({ends:[e.from, e.to], inner:true, pts:bez([A.x, A.y], [A.x + s*d, A.y], [B.x + s*d, B.y], [B.x, B.y])});
   }
   graph.append(svg);
   focusOn(pinned);
@@ -887,6 +969,36 @@ function showPop(){ // over the map: the tapped function's code. Tap it again to
   head.append(span("", pinned), x); pop.append(head);
   for(const k of keys) pop.append(codeItem(k, keys.length === 1 || !!CODE[k].m));
   pop.hidden = false; pop.scrollTop = 0;
+}
+
+function drawRoutes(svg, rect){ // exactly the arrows the layout scored
+  for(const e of edges){
+    const r = e.route, p = document.createElementNS(NS, "path");
+    p.setAttribute("d", `M${r.x1} ${r.y1}C${r.k1} ${r.y1} ${r.k2} ${r.y2} ${r.x2} ${r.y2}M${r.x2 + r.hs*6} ${r.y2 - 3.5}L${r.x2} ${r.y2}L${r.x2 + r.hs*6} ${r.y2 + 3.5}`);
+    p.setAttribute("class", "wire " + (r.inner ? "inner " : "") + e.mark); p.dataset.from = e.from; p.dataset.to = e.to; svg.append(p);
+    drawn.push({ends:[e.from, e.to], inner:r.inner, pts:bez([r.x1, r.y1], [r.k1, r.y1], [r.k2, r.y2], [r.x2, r.y2])});
+    if(e.label && !r.inner){
+      const t = document.createElementNS(NS, "text");
+      t.setAttribute("x", (r.x1 + 3*r.k1 + 3*r.k2 + r.x2) / 8); t.setAttribute("y", (r.y1 + r.y2) / 2 - 3);
+      t.setAttribute("class", "wlabel " + e.mark); t.dataset.from = e.from; t.dataset.to = e.to; t.textContent = e.label; svg.append(t);
+    }
+  }
+  // AI arrows: from their spot on the function's edge to labels stacked 14px apart beside the box
+  const bySide = {};
+  for(const x of stubs){ const u = nodes[x.leaf].closest(".unit"), side = x.dir === "in" ? "l" : "r"; (bySide[u.dataset.unit + side] ||= {u, side, list:[]}).list.push(x); }
+  for(const {u, side, list} of Object.values(bySide)){
+    list.sort((a, b) => a.route.y - b.route.y || a.ai.localeCompare(b.ai));
+    let prev = -Infinity; const ly = new Map(); for(const x of list){ const y = Math.max(x.route.y, prev + 14); ly.set(x, y); prev = y; }
+    const shift = list.reduce((t, x) => t + ly.get(x) - x.route.y, 0) / list.length, box = rect(u), s = side === "l" ? -1 : 1;
+    for(const x of list){
+      const x1 = x.route.x, y1 = x.route.y, x2 = (side === "l" ? box.l : box.r) + s * 40, y2 = ly.get(x) - shift;
+      const head = x.dir === "out" ? `M${x2 - 6*s} ${y2 - 3.5}L${x2} ${y2}L${x2 - 6*s} ${y2 + 3.5}` : `M${x1 + 6*s} ${y1 - 3.5}L${x1} ${y1}L${x1 + 6*s} ${y1 + 3.5}`;
+      const p = document.createElementNS(NS, "path"), t = document.createElementNS(NS, "text");
+      p.setAttribute("d", `M${x1} ${y1}C${x1 + s*24} ${y1} ${x2 - s*20} ${y2} ${x2} ${y2}` + head); p.setAttribute("class", "wire stub " + x.mark);
+      t.setAttribute("x", x2 + s * 4); t.setAttribute("y", y2 + 3.5); t.setAttribute("class", `wlabel stubl ${side} ${x.mark}`); t.textContent = x.ai;
+      for(const el of [p, t]){ el.dataset.from = el.dataset.to = x.leaf; svg.append(el); }
+    }
+  }
 }
 
 // key: a lowest box, or a class box (then all of its lowest boxes count)
