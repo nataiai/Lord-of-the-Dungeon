@@ -159,7 +159,8 @@ textarea{font:400 12.5px/1.55 var(--mono);color:var(--fg);background:var(--surfa
     <div class="tabs" role="tablist" id="tabs"></div>
     <div class="tabs" id="modes"><button type="button" data-only="">Whole graph</button><button type="button" data-only="1">Changed only</button></div>
     <div class="tabs" id="ais"><button type="button" data-ai="in">AI drawn</button><button type="button" data-ai="edge">AI as arrows out</button><button type="button" data-ai="off">AI hidden</button></div>
-    <div class="tabs" id="fold"><button type="button" data-f="">Steps</button><button type="button" data-f="1">Fold steps</button></div>
+    <div class="tabs" id="fold"><button type="button" data-f="auto">Steps: zoom</button><button type="button" data-f="on">Show</button><button type="button" data-f="off">Hide</button></div>
+    <div class="tabs" id="flow"><button type="button" data-l="center">Centered</button><button type="button" data-l="lr">Left to right</button></div>
     <div class="tabs" id="zoom"><button type="button" data-z="out" aria-label="Zoom out">−</button><button type="button" data-z="fit">Fit</button><button type="button" data-z="in" aria-label="Zoom in">+</button></div>
   </div>
   <div class="tabs" id="parts" hidden></div>
@@ -470,7 +471,7 @@ function connected(list){
 }
 // AI/ classes: drawn "in" the graph, or left out with a short arrow off the box edge ("edge"), or left out ("off")
 const unstep = t => t.replace(/\{[^}]*\}/g, "").replace(/#\d+ ->/g, " ->"); // folded: no steps, calls from the function
-let fold = false, ai = "edge", stubs = [], aiChanged = [];
+let stepMode = "auto", zoomedIn = false, flow = "center", ai = "edge", stubs = [], aiChanged = [];
 function aiView(g){
   const grp = g.boxes.find(b => b.kids && /^AI\/?$/i.test(b.name));
   if(ai === "in" || !grp) return {...g, stubs:[], stubsAll:[]};
@@ -490,6 +491,7 @@ function aiView(g){
   return {...g, boxes:g.boxes.filter(b => b !== grp), edges:p.keep, all:w.keep, stubs:p.st, stubsAll:w.st};
 }
 function render(){
+  const fold = stepMode === "off" || (stepMode === "auto" && !zoomedIn); // auto: steps show once zoomed in to 100%
   const g = aiView(parse(fold ? unstep(source.value) : source.value)), notes = [];
   let boxes = g.boxes, shown = g.all, st = g.stubsAll;
   if(part && g.parts.includes(part)){ // one part: its arrows and the boxes they touch
@@ -684,13 +686,17 @@ function layout(){
   const cost = () => stress() + CROSS * crossings(), CROSS = 40; // one crossing is worth this much stress
   const save = () => U.map(u => [u.x, u.y]), load = p => U.forEach((u, i) => { u.x = p[i][0]; u.y = p[i][1]; });
   let best = Infinity, keep;
+  const lr = flow === "lr", from0 = layout.keepView && layout.pos && U.filter(u => layout.pos[u.name]).length >= n * .6 ? layout.pos : null; // steps opened or closed: start where the boxes were
   const big = n > 24, huge = n > 36; // many boxes: a shorter search
-  for(const turn of big ? [2.4, 3.9] : [2.4, 1, 3.9, 5.1]) for(const flip of [1, -1]){ // majorization finds a local best: try a few starts
+  for(const turn of lr || from0 ? [] : big ? [2.4, 3.9] : [2.4, 1, 3.9, 5.1]) for(const flip of [1, -1]){ // majorization finds a local best: try a few starts
     U.forEach((u, i) => { const a = Math.PI + i * turn, r = i === c ? 0 : D[c][i]; u.x = flip * r * Math.cos(a); u.y = r * Math.sin(a); });
     settle(150); const v = cost(); if(v < best){ best = v; keep = save(); }
   }
+  if(lr) placeLeftToRight(); // callers left, what they call to their right
+  else if(from0){ U.forEach((u, i) => { const p = from0[u.name]; if(p){ u.x = p[0]; u.y = p[1]; } else { u.x = 0; u.y = 0; } }); }
+  if(lr || from0){ for(let k = 0; k < 120; k++) apart(); best = cost(); keep = save(); }
   load(keep);
-  for(let pass = 0; pass < (huge ? 0 : big ? 1 : 4); pass++){ // fewest crossings is NP-hard: local search, swap two boxes when the cost drops
+  for(let pass = 0; pass < (lr || from0 ? 0 : huge ? 0 : big ? 1 : 4); pass++){ // fewest crossings is NP-hard: local search, swap two boxes when the cost drops
     let better = false;
     for(let i = 0; i < n; i++) for(let j = i + 1; j < n; j++){
       if(i === c || j === c) continue;
@@ -754,6 +760,28 @@ function layout(){
     }
   }
   let first0 = true;
+  function placeLeftToRight(){ // columns by call order (longest chain of calls from a box nothing calls), order in a column by its neighbours
+    const out = U.map(() => new Set()), inn = U.map(() => new Set());
+    for(const e of edges){ const a = unitOf(e.from), b = unitOf(e.to); if(a != null && b != null && a !== b){ out[a].add(b); inn[b].add(a); } }
+    const state = U.map(() => 0), back = new Set(); // calls that loop back are left out of the order
+    const dfs = i => { state[i] = 1; for(const j of out[i]){ if(state[j] === 1) back.add(i + ">" + j); else if(!state[j]) dfs(j); } state[i] = 2; };
+    U.forEach((_, i) => { if(!state[i] && ![...inn[i]].length) dfs(i); }); U.forEach((_, i) => { if(!state[i]) dfs(i); });
+    const col = U.map(() => 0); let changed = true;
+    for(let k = 0; changed && k < n; k++){ changed = false; U.forEach((_, i) => { for(const j of out[i]) if(!back.has(i + ">" + j) && col[j] < col[i] + 1){ col[j] = col[i] + 1; changed = true; } }); }
+    const cols = []; U.forEach((_, i) => (cols[col[i]] ||= []).push(i));
+    for(let sweep = 0; sweep < 6; sweep++){ // barycenter: each box near the middle of the boxes it is wired to in the column before (then after)
+      const pos = {}; cols.forEach(cl => cl?.forEach((i, k) => pos[i] = k));
+      const order = sweep % 2 ? [...cols.keys()].reverse() : [...cols.keys()];
+      for(const L of order){ const cl = cols[L]; if(!cl) continue;
+        const val = i => { const nb = [...(sweep % 2 ? out[i] : inn[i])].filter(j => col[j] !== L); return nb.length ? nb.reduce((t, j) => t + pos[j], 0) / nb.length : pos[i]; };
+        cl.sort((a, b) => val(a) - val(b)); cl.forEach((i, k) => pos[i] = k); }
+    }
+    let x = 0;
+    for(const cl of cols){ if(!cl) continue;
+      const w = Math.max(...cl.map(i => U[i].w)), h = cl.reduce((t, i) => t + U[i].h + 40, -40); let y = -h / 2;
+      for(const i of cl){ U[i].x = x + w / 2; U[i].y = y + U[i].h / 2; y += U[i].h + 40; }
+      x += w + 120; }
+  }
   function anneal(ms){ // returns true if it found a better layout
     const until = performance.now() + ms, was0 = best;
     for(; t < steps && n > 2 && performance.now() < until; t++){
@@ -772,7 +800,7 @@ function layout(){
     // a phone is tall: turn a wide layout on its side
     const ext = k => { const h = k === "x" ? "w" : "h"; return Math.max(...U.map(u => u[k] + u[h]/2)) - Math.min(...U.map(u => u[k] - u[h]/2)); };
     if($("scroll").clientWidth < 640 && ext("x") > ext("y")){ for(const u of U) [u.x, u.y] = [u.y, u.x]; for(let k = 0; k < 80; k++) apart(); measure(); }
-    compact(first0 ? 1200 : 200); // no empty space for nothing
+    if(!lr) compact(first0 ? 1200 : 200); // no empty space for nothing
     // 5. inside a box, order the lowest boxes by where their arrows go (barycenter), so they don't cross on the way out. Kept only if it helps
     const orders = U.map(u => [...(u.el.querySelector(".kids")?.children || [])]), before = crossings();
     for(let round = 0; round < 3; round++){
@@ -798,9 +826,11 @@ function layout(){
     cur = best = cost(); // carry on from the best layout, polished: the order inside boxes changed, so score it again
     keep = save();
     layout.W = W; layout.H = Ht;
-    if(first) fitScale(); else{ graph.style.width = W + "px"; graph.style.height = Ht + "px"; }
+    layout.pos = Object.fromEntries(U.map(u => [u.name, [u.x, u.y]])); // where each box went: the next layout of this view starts there
+    if(first && !layout.keepView) fitScale(); else{ graph.style.width = W + "px"; graph.style.height = Ht + "px"; }
   }
-  if(n <= 14){ // a small view, before the first paint: the whole search from 3 different starts, keep the best
+  if(lr || from0){} // already placed
+  else if(n <= 14){ // a small view, before the first paint: the whole search from 3 different starts, keep the best
     const start = save();
     for(const s0 of [12345, 777, 4242]){ load(start); seed = s0; t = 0; cur = cost(); anneal(1e9); }
   }
@@ -810,14 +840,30 @@ function layout(){
   const started = performance.now();
   const more = () => {
     if(layout.stop) return;
-    if(t >= steps || performance.now() - started > 8000){ routeSearch(); return; } // then judge by the routed lines
+    if(lr || from0 || t >= steps || performance.now() - started > 8000){ routeSearch(); return; } // then judge by the routed lines
     if(anneal(40)){ finish(false); draw(); showInfo(); }
     layout.job = setTimeout(more, 30);
   };
   layout.job = setTimeout(more, 30);
 }
 const view = {s:1, x:0, y:0}; // the map: screen = view.x + view.s * graph
-function applyView(){ scale = view.s; graph.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.s})`; }
+function applyView(){
+  scale = view.s; graph.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.s})`;
+  if(stepMode !== "auto") return;
+  const want = zoomedIn ? view.s >= .8 : view.s >= 1; // open at 100%, close below 80%
+  if(want !== zoomedIn){ clearTimeout(applyView.t); applyView.t = setTimeout(() => { if((zoomedIn ? view.s >= .8 : view.s >= 1) !== zoomedIn){ zoomedIn = !zoomedIn; relayoutKeepingPlace(); } }, 300); }
+}
+// steps open or close: lay out again from where the boxes are, and keep the box in the middle of the screen where it was
+function relayoutKeepingPlace(){
+  const box = $("scroll"), cx = (box.clientWidth / 2 - view.x) / view.s, cy = (box.clientHeight / 2 - view.y) / view.s;
+  let anchor = null, bestD = Infinity;
+  for(const u of units){ const x = u.el.offsetLeft + u.el.offsetWidth / 2, y = u.el.offsetTop + u.el.offsetHeight / 2, d = Math.hypot(x - cx, y - cy); if(d < bestD){ bestD = d; anchor = {name:u.name, dx:x - cx, dy:y - cy}; } }
+  layout.keepView = true; const s = view.s; render(); layout.keepView = false;
+  const u = anchor && units.find(v => v.name === anchor.name); if(!u) return;
+  const x = u.el.offsetLeft + u.el.offsetWidth / 2 - anchor.dx, y = u.el.offsetTop + u.el.offsetHeight / 2 - anchor.dy;
+  view.s = s; view.x = box.clientWidth / 2 - x * s; view.y = box.clientHeight / 2 - y * s; scale = s;
+  graph.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.s})`;
+}
 function zoomAt(f, px, py){
   const s = Math.min(2.5, Math.max(.12, view.s * f));
   view.x = px - (px - view.x) * s / view.s; view.y = py - (py - view.y) * s / view.s; view.s = s; applyView();
@@ -1161,7 +1207,7 @@ function routeSearch(){
         const ya = ua.offsetTop + A.offsetTop + A.offsetHeight / 2, yb = ub.offsetTop + B.offsetTop + B.offsetHeight / 2, mv = rnd() < .5 ? ub : ua, dy = Math.round(mv === ub ? ya - yb : yb - ya);
         if(!dy || !free(mv, 0, dy)) continue; shift(mv, 0, dy); undo = () => shift(mv, 0, -dy);
       } else if(rnd() < .7 || !outer.length){
-        const el = units[Math.floor(rnd() * units.length)].el, d = [30, 60, 120][Math.floor(rnd() * 3)] * (rnd() < .5 ? -1 : 1), [dx, dy] = rnd() < .5 ? [d, 0] : [0, d];
+        const el = units[Math.floor(rnd() * units.length)].el, d = [30, 60, 120][Math.floor(rnd() * 3)] * (rnd() < .5 ? -1 : 1), [dx, dy] = rnd() < .5 && flow !== "lr" ? [d, 0] : [0, d]; // left to right: columns stay
         if(!free(el, dx, dy)) continue; shift(el, dx, dy); undo = () => shift(el, -dx, -dy);
       } else { const e = outer[Math.floor(rnd() * outer.length)], end = rnd() < .5 ? 0 : 1; flip(e, end); undo = () => flip(e, end); }
       const v = routeScore(orthoRoute(list())).total;
@@ -1237,7 +1283,7 @@ function focusOn(key){
 }
 
 function show(step){
-  current = step; center = null; part = ""; only = step === "All steps"; mode(); // everything at once is dense: changes and their neighbours first
+  current = step; center = null; part = ""; layout.pos = null; only = step === "All steps"; mode(); // everything at once is dense: changes and their neighbours first
   for(const b of $("tabs").children) b.setAttribute("aria-selected", b.dataset.step === step);
   $("when").textContent = STEPS[step].when;
   source.value = STEPS[step].src;
@@ -1257,7 +1303,7 @@ function partTabs(){ // "# name" in the text = a part of the step with its own s
     const b = document.createElement("button"); b.type = "button"; b.textContent = name || "All";
     const n = changed(name ? {...onlyPart(g, name), stubs:g.stubs.filter(x => x.part === name)} : {boxes:g.boxes, edges:g.all, stubs:g.stubsAll}).count; if(n) b.append(span("n", n));
     b.setAttribute("aria-selected", name === part);
-    b.onclick = () => { part = name; center = null; partTabs(); render(); };
+    b.onclick = () => { part = name; center = null; layout.pos = null; partTabs(); render(); };
     box.append(b);
   }
 }
@@ -1270,10 +1316,12 @@ function counts(){ // changes per step, on its tab
 function mode(){
   for(const b of $("modes").children) b.setAttribute("aria-selected", !!b.dataset.only === only);
   for(const b of $("ais").children) b.setAttribute("aria-selected", b.dataset.ai === ai);
-  for(const b of $("fold").children) b.setAttribute("aria-selected", !!b.dataset.f === fold);
+  for(const b of $("fold").children) b.setAttribute("aria-selected", b.dataset.f === stepMode);
+  for(const b of $("flow").children) b.setAttribute("aria-selected", b.dataset.l === flow);
 }
 for(const b of $("ais").children) b.onclick = () => { ai = b.dataset.ai; mode(); counts(); partTabs(); render(); };
-for(const b of $("fold").children) b.onclick = () => { fold = !!b.dataset.f; mode(); render(); };
+for(const b of $("fold").children) b.onclick = () => { stepMode = b.dataset.f; mode(); relayoutKeepingPlace(); };
+for(const b of $("flow").children) b.onclick = () => { flow = b.dataset.l; layout.pos = null; mode(); render(); };
 for(const b of $("zoom").children) b.onclick = () => { const box = $("scroll"); b.dataset.z === "fit" ? fitScale() : zoomAt(b.dataset.z === "in" ? 1.3 : 1/1.3, box.clientWidth/2, box.clientHeight/2); };
 addEventListener("keydown", e => { if(e.key === "Escape" && pinned){ pinned = null; focusOn(null); showPop(); showCode(); } });
 for(const b of $("modes").children) b.onclick = () => { only = !!b.dataset.only; mode(); render(); };

@@ -301,7 +301,7 @@ const addCode = k => { if(code[k]) return;
   if(m) code[k].d = diff(codeOf(old, k), codeOf(now, k)); else code[k].t = codeOf(now, k);
 };
 const STEP_FN = /^(Awake|Start|Update|FixedUpdate|LateUpdate|On(Trigger|Collision|Enable|Disable|Destroy).*)$/;
-const shown = k => STEP_FN.test(k.split(".")[1]) || !!markOf(k); // steps inside: Unity step functions and changed functions
+const shown = k => true; // every function with steps; the page shows them when zoomed in
 function fromStep(line){ // "A -> B" -> one line per step of A that calls B ("A#2 -> B")
   const m = line.match(/^([+-] )?(\S+) -> (\S+)$/); if(!m) return [line];
   const [, mk = "", a, b] = m, st = shown(a) ? stepsOf(a) : []; if(!st.length) return [line];
