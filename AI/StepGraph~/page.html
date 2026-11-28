@@ -769,11 +769,11 @@ function layout(){
     const col = U.map(() => 0); let changed = true;
     for(let k = 0; changed && k < n; k++){ changed = false; U.forEach((_, i) => { for(const j of out[i]) if(!back.has(i + ">" + j) && col[j] < col[i] + 1){ col[j] = col[i] + 1; changed = true; } }); }
     const cols = []; U.forEach((_, i) => (cols[col[i]] ||= []).push(i));
-    for(let sweep = 0; sweep < 6; sweep++){ // barycenter: each box near the middle of the boxes it is wired to in the column before (then after)
+    for(let sweep = 0; sweep < (window.LRB?.sweeps ?? 6); sweep++){ // barycenter: each box near the middle of the boxes it is wired to in the column before (then after)
       const pos = {}; cols.forEach(cl => cl?.forEach((i, k) => pos[i] = k));
       const order = sweep % 2 ? [...cols.keys()].reverse() : [...cols.keys()];
       for(const L of order){ const cl = cols[L]; if(!cl) continue;
-        const val = i => { const nb = [...(sweep % 2 ? out[i] : inn[i])].filter(j => col[j] !== L); return nb.length ? nb.reduce((t, j) => t + pos[j], 0) / nb.length : pos[i]; };
+        const val = i => { const nb = [...(window.LRB?.both ? new Set([...out[i], ...inn[i]]) : sweep % 2 ? out[i] : inn[i])].filter(j => col[j] !== L); return nb.length ? nb.reduce((t, j) => t + pos[j], 0) / nb.length : pos[i]; };
         cl.sort((a, b) => val(a) - val(b)); cl.forEach((i, k) => pos[i] = k); }
     }
     let x = 0;
@@ -799,7 +799,7 @@ function layout(){
     load(keep); for(let k = 0; k < 40; k++) apart();
     // a phone is tall: turn a wide layout on its side
     const ext = k => { const h = k === "x" ? "w" : "h"; return Math.max(...U.map(u => u[k] + u[h]/2)) - Math.min(...U.map(u => u[k] - u[h]/2)); };
-    if($("scroll").clientWidth < 640 && ext("x") > ext("y")){ for(const u of U) [u.x, u.y] = [u.y, u.x]; for(let k = 0; k < 80; k++) apart(); measure(); }
+    if(!lr && $("scroll").clientWidth < 640 && ext("x") > ext("y")){ for(const u of U) [u.x, u.y] = [u.y, u.x]; for(let k = 0; k < 80; k++) apart(); measure(); }
     if(!lr) compact(first0 ? 1200 : 200); // no empty space for nothing
     // 5. inside a box, order the lowest boxes by where their arrows go (barycenter), so they don't cross on the way out. Kept only if it helps
     const orders = U.map(u => [...(u.el.querySelector(".kids")?.children || [])]), before = crossings();
@@ -1063,6 +1063,7 @@ function showPop(){ // over the map: the tapped function's code. Tap it again to
 
 // lines around boxes: a grid on the gaps between boxes, then the cheapest path for each line (Dijkstra).
 // Cost: length, +25 a turn, +60 crossing a line already drawn, +20 running on a lane another line uses (so they take the next lane)
+const RT = {turn:25, lane:20, cross:500}; // tuned on the test set: a crossing costs as much as 500 px of detour // what a line pays in the router, in px of length
 function orthoRoute(list){
   const M = 10, LANES = [10, 17, 24];
   const R = units.map(u => ({l:u.el.offsetLeft, t:u.el.offsetTop, r:u.el.offsetLeft + u.el.offsetWidth, b:u.el.offsetTop + u.el.offsetHeight, el:u.el}));
@@ -1095,8 +1096,8 @@ function orthoRoute(list){
       for(const [di, dj, nd] of [[1, 0, 0], [-1, 0, 0], [0, 1, 1], [0, -1, 1]]){
         const ii = i + di, jj = j + dj; if(ii < 0 || jj < 0 || ii >= nx || jj >= ny) continue;
         const np = ii * ny + jj; if(!free[np] && np !== g) continue;
-        let c = Math.abs(X[ii] - X[i]) + Math.abs(Y[jj] - Y[j]) + (nd !== dir ? 25 : 0);
-        c += (nd === 0 ? useH[np] : useV[np]) * 20 + (nd === 0 ? useV[np] : useH[np]) * 60; // same lane / crossing
+        let c = Math.abs(X[ii] - X[i]) + Math.abs(Y[jj] - Y[j]) + (nd !== dir ? RT.turn : 0);
+        c += (nd === 0 ? useH[np] : useV[np]) * RT.lane + (nd === 0 ? useV[np] : useH[np]) * RT.cross; // same lane / crossing
         const ns = np * 2 + nd; if(d + c < dist[ns]){ dist[ns] = d + c; prev[ns] = st; push(ns, d + c); }
       }
     }
@@ -1167,8 +1168,12 @@ function routeScore(res){
         else if(a[0] === b[0] && c[0] === d[0] && a[0] === c[0]) overlap += Math.max(0, Math.min(Math.max(a[1], b[1]), Math.max(c[1], d[1])) - Math.max(Math.min(a[1], b[1]), Math.min(c[1], d[1])));
       }
       if(x) cross++; } });
+  let near = 0; // other lines passing within 40 px of a box with one neighbour: it should sit in open space
+  for(const L of routeScore.lone || []) res.forEach((o, i) => { if(!segs[i] || o.p.e.from.split(".")[0] === L.name || o.p.e.to.split(".")[0] === L.name) return;
+    const b = {l:L.el.offsetLeft, t:L.el.offsetTop, r:L.el.offsetLeft + L.el.offsetWidth, b:L.el.offsetTop + L.el.offsetHeight};
+    if(segs[i].some(([p, q]) => segRect(p, q, b, -40))) near++; });
   const area = layout.W * layout.H;
-  return {cross, fail, total:cross * 100 + fail * 150 + overlap * .5 + bends * 8 + len * .02 + area / 8000}; // turns cost: straight lines win
+  return {cross, fail, near, bends, len, total:cross * 100 + fail * 150 + near * 60 + overlap * .5 + bends * (window.SW?.bend ?? 8) + len * (window.SW?.len ?? .1) + area / 8000}; // turns cost: straight lines win
 }
 // after the layout: move boxes and flip which side lines leave from, judged by the routed lines themselves. Stops when the map is touched
 function routeSearch(){
@@ -1186,9 +1191,13 @@ function routeSearch(){
     else{ r.x2 = r.hs > 0 ? L : Rr; r.hs = -r.hs; r.k2 = r.x2 + r.hs * 30; }
   }
   const free = (el, dx, dy) => { const l = el.offsetLeft + dx, t = el.offsetTop + dy, r = l + el.offsetWidth, b = t + el.offsetHeight;
-    if(l < 8 || t < 8 || r > layout.W - 8 || b > layout.H - 8) return false;
+    if(l < 8 || t < 8 || r > layout.W + 300 || b > layout.H + 300) return false;
     return units.every(u => u.el === el || r + 24 <= u.el.offsetLeft || l >= u.el.offsetLeft + u.el.offsetWidth + 24 || b + 24 <= u.el.offsetTop || t >= u.el.offsetTop + u.el.offsetHeight + 24); };
   let seed = 4242; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+  const nb = {}; for(const e of edges){ const a = e.from.split(".")[0], b = e.to.split(".")[0]; if(a !== b){ (nb[a] ||= new Set()).add(b); (nb[b] ||= new Set()).add(a); } }
+  routeScore.lone = units.filter(u => nb[u.name]?.size === 1).map(u => ({name:u.name, el:u.el, to:[...nb[u.name]][0]})); // boxes with one neighbour
+  const grow = () => { let W = layout.W, H = layout.H; for(const u of units){ W = Math.max(W, u.el.offsetLeft + u.el.offsetWidth + 30); H = Math.max(H, u.el.offsetTop + u.el.offsetHeight + 30); }
+    if(W !== layout.W || H !== layout.H){ layout.W = W; layout.H = H; graph.style.width = W + "px"; graph.style.height = H + "px"; } };
   const outer = edges.filter(e => !e.route.inner);
   for(const e of outer){ // a line leaves toward its target and comes in on the side facing where it came from; the search changes that only if it helps
     const a = unitOfKey(e.from), b = unitOfKey(e.to), ca = a.offsetLeft + a.offsetWidth / 2, cb = b.offsetLeft + b.offsetWidth / 2, r = e.route;
@@ -1196,13 +1205,24 @@ function routeSearch(){
     if((r.k1 >= r.x1 ? 1 : -1) !== out) flip(e, 0); if(r.hs !== inn) flip(e, 1);
   }
   draw(); showInfo();
-  let best = routeScore(orthoRoute(list())).total; const t0 = performance.now();
+  let best = routeScore(orthoRoute(list())).total, tries = 0; const t0 = performance.now();
   const step = () => {
-    if(layout.stop || performance.now() - t0 > 8000 || !units.length) return;
+    if(layout.stop || (window.SW?.evals ? tries >= window.SW.evals : performance.now() - t0 > (window.SW?.ms ?? 8000)) || !units.length){ layout.job = null; return; } // tests: a fixed number of tries
     const until = performance.now() + 40; let better = false;
-    while(performance.now() < until){
+    while(performance.now() < until && !(window.SW?.evals && tries >= window.SW.evals)){
       let undo;
-      if(rnd() < .25 && outer.length){ // line two functions up at one height, so their line can go flat
+      if(rnd() < .2 && routeScore.lone.length){ // dock a one-neighbour box beside its neighbour, at the height of their first line
+        const L = routeScore.lone[Math.floor(rnd() * routeScore.lone.length)], N = units.find(u => u.name === L.to)?.el; if(!N) continue;
+        const e = edges.find(e => (e.from.split(".")[0] === L.name && e.to.split(".")[0] === L.to) || (e.to.split(".")[0] === L.name && e.from.split(".")[0] === L.to)); if(!e) continue;
+        const mine = nodes[e.from.split(".")[0] === L.name ? e.from : e.to], theirs = nodes[e.from.split(".")[0] === L.name ? e.to : e.from];
+        const y = N.offsetTop + theirs.offsetTop + theirs.offsetHeight / 2 - mine.offsetTop - mine.offsetHeight / 2;
+        const sides = flow === "lr" ? [e.from.split(".")[0] === L.name ? -1 : 1] : [1, -1];
+        const sd = sides[Math.floor(rnd() * sides.length)], x = sd > 0 ? N.offsetLeft + N.offsetWidth + 70 : N.offsetLeft - 70 - L.el.offsetWidth;
+        const dx = Math.round(x - L.el.offsetLeft), dy = Math.round(y - L.el.offsetTop); if(!free(L.el, dx, dy)) continue;
+        const r0 = edges.filter(f => [f.from, f.to].some(k => k.split(".")[0] === L.name)).map(f => [f, f.route.k1 >= f.route.x1, f.route.hs]);
+        shift(L.el, dx, dy); grow();
+        undo = () => shift(L.el, -dx, -dy);
+      } else if(rnd() < .25 && outer.length){ // line two functions up at one height, so their line can go flat
         const e = outer[Math.floor(rnd() * outer.length)], A = nodes[e.from], B = nodes[e.to], ua = A.closest(".unit"), ub = B.closest(".unit");
         const ya = ua.offsetTop + A.offsetTop + A.offsetHeight / 2, yb = ub.offsetTop + B.offsetTop + B.offsetHeight / 2, mv = rnd() < .5 ? ub : ua, dy = Math.round(mv === ub ? ya - yb : yb - ya);
         if(!dy || !free(mv, 0, dy)) continue; shift(mv, 0, dy); undo = () => shift(mv, 0, -dy);
@@ -1210,7 +1230,7 @@ function routeSearch(){
         const el = units[Math.floor(rnd() * units.length)].el, d = [30, 60, 120][Math.floor(rnd() * 3)] * (rnd() < .5 ? -1 : 1), [dx, dy] = rnd() < .5 && flow !== "lr" ? [d, 0] : [0, d]; // left to right: columns stay
         if(!free(el, dx, dy)) continue; shift(el, dx, dy); undo = () => shift(el, -dx, -dy);
       } else { const e = outer[Math.floor(rnd() * outer.length)], end = rnd() < .5 ? 0 : 1; flip(e, end); undo = () => flip(e, end); }
-      const v = routeScore(orthoRoute(list())).total;
+      const v = routeScore(orthoRoute(list())).total; tries++;
       if(v < best - 1e-6){ best = v; better = true; } else undo();
     }
     if(better){ draw(); showInfo(); }
