@@ -44,7 +44,7 @@ function strip(s){
   }
   return out;
 }
-let curFile = "", curRanges = []; // the file members() is reading, and where its functions are
+let curFile = "", curRanges = [], curStarts = []; // curStarts: where each line of the file begins // the file members() is reading, and where its functions are
 function dedent(t){
   const lines = t.split("\n"), ind = Math.min(...lines.slice(1).filter(l => l.trim()).map(l => l.match(/^\s*/)[0].length));
   return isFinite(ind) ? [lines[0], ...lines.slice(1).map(l => l.slice(ind))].join("\n") : t;
@@ -83,7 +83,8 @@ function members(body, raw, cls, base){
 function member(seg, raw, cls, at){
   const lead = seg.length - seg.trimStart().length; seg = seg.trim(); raw = raw.slice(lead, lead + seg.length); at += lead; let m;
   while((m = seg.match(/^\[[^\]]*\]\s*/))){ seg = seg.slice(m[0].length); raw = raw.slice(m[0].length); at += m[0].length; }
-  const code = {file:curFile, text:dedent(raw)};
+  let line = 1; for(let lo = 0, hi = curStarts.length - 1; lo <= hi;){ const mid = (lo + hi) >> 1; if(curStarts[mid] <= at){ line = mid + 1; lo = mid + 1; } else hi = mid - 1; }
+  const code = {file:curFile, text:dedent(raw), line}; // line: the file line it starts on
   let n = 0, cut = seg.length, kind = ";";
   for(let i = 0; i < seg.length; i++){
     const c = seg[i];
@@ -111,7 +112,7 @@ function analyse(files){
   const classes = {};
   const ranges = {};
   for(const [file, raw] of Object.entries(files)){
-    curFile = file; curRanges = ranges[file] = [];
+    curFile = file; curRanges = ranges[file] = []; curStarts = [0]; for(let i = 0; i < raw.length; i++) if(raw[i] === "\n") curStarts.push(i + 1);
     const s = strip(raw), re = /\b(?:class|struct)\s+(\w+)(?:\s*<[^>{]*>)?\s*(?::\s*([^{]+?))?\s*(?:where[^{]*)?\{/g; let m;
     while((m = re.exec(s))){
       const open = m.index + m[0].length - 1, end = closer(s, open), body = s.slice(open + 1, end);
@@ -228,6 +229,52 @@ function lineDiff(a, b){ // lines only in b, lines only in a
 }
 
 const old = analyse(readTree(OLD)), now = analyse(readTree(NEW));
+
+// steps inside a function: the titles in AI/Flow~/flow.json (Dungeon Flow's notes), found by their first line's text
+let flowNotes = [];
+for(const get of [() => fs.readFileSync("AI/Flow~/flow.json", "utf8"), () => git("show", "origin/dungeon-flow:AI/Flow~/flow.json")]){
+  try{ flowNotes = JSON.parse(get()).notes || []; break; }catch(e){}
+}
+const fileLines = {}, linesOf = f => fileLines[f] ||= (now.files[f] || "").split("\n");
+const placed = flowNotes.map(n => { // where the note's first line is now
+  const L = linesOf(n.f), want = n.line.trim(); let best = -1;
+  for(let i = 0; i < L.length; i++) if(L[i].trim() === want && (best < 0 || Math.abs(i + 1 - n.a) < Math.abs(best + 1 - n.a))) best = i;
+  return best < 0 ? null : {f:n.f, t:n.t, a:best + 1, b:best + 1 + (n.b - n.a)};
+}).filter(Boolean);
+const stepCache = {};
+function stepsOf(k){ // [{t, a, b}] in line order: the outermost notes inside the function, not the one that is the whole function
+  if(k in stepCache) return stepCache[k];
+  const c = now.nodes[k]?.code[0]; if(!c) return stepCache[k] = [];
+  const a0 = c.line, b0 = c.line + c.text.split("\n").length - 1;
+  const inside = placed.filter(n => n.f === c.file && n.a >= a0 && n.b <= b0 && !(n.a === a0 && n.b === b0) && n.a > a0 - 1);
+  const top = inside.filter(n => !inside.some(o => o !== n && o.a <= n.a && o.b >= n.b && (o.a < n.a || o.b > n.b)))
+    .sort((x, y) => x.a - y.a).filter((n, i, l) => i === 0 || n.a > l[i - 1].b); // no overlaps
+  if(top.length < 2) return stepCache[k] = [];
+  // lines no note covers that call one of our functions or were added: a step showing the code itself
+  const fns = new Set(Object.values(now.nodes).map(n => n.name)), added = new Set(addedLines(k)), lines = c.text.split("\n");
+  for(let i = 1; i < lines.length - 1; i++){
+    const L = c.line + i, code = strip(lines[i]).trim(); if(!code || code === "}" || top.some(n => L >= n.a && L <= n.b)) continue;
+    const calls = [...code.matchAll(/\b(\w+)\s*\(/g)].some(m => fns.has(m[1]));
+    if(calls || added.has(L)) top.push({t:"`" + (code.length > 34 ? code.slice(0, 33) + "…" : code), a:L, b:L});
+  }
+  return stepCache[k] = top.sort((x, y) => x.a - y.a);
+}
+function addedLines(k){ // file lines added or right after a removed line, in function k
+  const c = now.nodes[k]?.code[0]; if(!c || !old.nodes[k]) return c ? c.text.split("\n").map((_, i) => c.line + i) : [];
+  const out = []; let i = 0;
+  for(const l of diff(codeOf(old, k), codeOf(now, k))){ if(l[0] === "…") i += +l.slice(1); else if(l[0] === "-") out.push(c.line + i); else { if(l[0] === "+") out.push(c.line + i); i++; } }
+  return out;
+}
+const callLines = (k, target) => { // file lines in function k that call target
+  const c = now.nodes[k]?.code[0], name = target.split(".")[1], re = new RegExp(`\\b${name}\\b`); if(!c) return [];
+  return c.text.split("\n").map((l, i) => re.test(strip(l)) && i > 0 ? c.line + i : 0).filter(Boolean);
+};
+function stepMarks(k){ // which steps changed: lines added or removed inside them
+  const st = stepsOf(k), m = markOf(k); if(!st.length || !m) return st.map(() => "");
+  if(m === "+") return st.map(() => "+");
+  const hit = addedLines(k);
+  return st.map(s => hit.some(h => h >= s.a && h <= s.b) ? (s.a === s.b && s.t[0] === "`" && !old.nodes[k]?.code[0].text.includes(s.t.slice(1).replace(/…$/, "")) ? "+" : "~") : "");
+}
 const codeOf = (g, k) => g.nodes[k] ? g.nodes[k].code.map(c => c.text).join("\n\n") : "";
 const markOf = k => !old.nodes[k] ? "+" : !now.nodes[k] ? "-" : codeOf(old, k).replace(/\s+/g, "") !== codeOf(now, k).replace(/\s+/g, "") ? "~" : "";
 // lines: " x" same, "-x" only old, "+x" only new, "…n" n same lines left out
@@ -253,15 +300,24 @@ const addCode = k => { if(code[k]) return;
   code[k] = {f:g.nodes[k].code[0]?.file || "", m};
   if(m) code[k].d = diff(codeOf(old, k), codeOf(now, k)); else code[k].t = codeOf(now, k);
 };
+const STEP_FN = /^(Awake|Start|Update|FixedUpdate|LateUpdate|On(Trigger|Collision|Enable|Disable|Destroy).*)$/;
+const shown = k => STEP_FN.test(k.split(".")[1]) || !!markOf(k); // steps inside: Unity step functions and changed functions
+function fromStep(line){ // "A -> B" -> one line per step of A that calls B ("A#2 -> B")
+  const m = line.match(/^([+-] )?(\S+) -> (\S+)$/); if(!m) return [line];
+  const [, mk = "", a, b] = m, st = shown(a) ? stepsOf(a) : []; if(!st.length) return [line];
+  const at = callLines(a, b), idx = [...new Set(at.map(l => st.findIndex(s => l >= s.a && l <= s.b)).filter(i => i >= 0))];
+  return idx.length ? idx.map(i => `${mk}${a}#${i + 1} -> ${b}`) : [line];
+}
 function source(pattern, used, parts, degree){ // the bracket text the page draws
   const byClass = {}; for(const k of used) (byClass[k.split(".")[0]] ||= []).push(k);
   const info = c => now.classes[c] || old.classes[c];
-  const leaf = k => { const m = markOf(k); return m + k.split(".")[1] + (m === "~" ? ": " + lineDiff(codeOf(old, k), codeOf(now, k)) : ""); };
+  const leaf = k => { const m = markOf(k), st = shown(k) ? stepsOf(k) : [], sm = stepMarks(k);
+    return m + k.split(".")[1] + (m === "~" ? ": " + lineDiff(codeOf(old, k), codeOf(now, k)) : "") + (st.length ? "{" + st.map((s, i) => sm[i] + s.t).join("|") + "}" : ""); };
   const box = c => `${!old.classes[c] ? "+" : !now.classes[c] ? "-" : ""}${c}[${byClass[c].sort((a, b) => pattern.test(b.split(".")[1]) - pattern.test(a.split(".")[1]) || a.localeCompare(b)).map(leaf).join(", ")}]`;
   const order = Object.keys(byClass).sort((a, b) => (degree[b] || 0) - (degree[a] || 0) || a.localeCompare(b)); // busiest first = the center
   const folders = []; for(const c of order) if(!folders.includes(info(c).folder)) folders.push(info(c).folder);
   const boxes = folders.map(f => { const cs = order.filter(c => info(c).folder === f).map(box); return f ? `${f}/[\n  ${cs.join(",\n  ")}\n]` : cs.join("\n"); });
-  return boxes.join("\n") + "\n\n" + parts.join("\n\n");
+  return boxes.join("\n") + "\n\n" + parts.map(p => p.split("\n").flatMap(fromStep).join("\n")).join("\n\n");
 }
 const out = {}, every = {used:new Set(), parts:[], degree:{}};
 for(const [step, pattern, when] of STEPS){

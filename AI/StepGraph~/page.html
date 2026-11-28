@@ -57,6 +57,14 @@ button.name:hover{text-decoration:underline}
 .leaf{font:400 12px var(--mono);color:var(--fg);background:var(--leaf);border:1px solid var(--line);border-radius:3px;
   padding:4px 9px;text-align:left;cursor:pointer;white-space:nowrap}
 .leaf:hover{border-color:var(--fg)}
+.steps{display:flex;flex-direction:column;gap:4px;margin:6px 0 2px;padding-left:10px;border-left:1.5px solid var(--line)}
+.step{position:relative;display:block;font:400 11px/1.3 var(--sans);color:var(--fg);background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:2px 7px;white-space:normal;max-width:22ch;cursor:pointer}
+.step::before{content:"";position:absolute;left:-11px;top:50%;width:9px;border-top:1.5px solid var(--line)}
+.step.code{font:400 10.5px/1.3 var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.step.add{border-color:var(--add);background:color-mix(in srgb,var(--add) 14%,var(--surface));font-weight:600}
+.step.chg{border-color:var(--chg);background:color-mix(in srgb,var(--chg) 16%,var(--surface));font-weight:600}
+.graph.focus .step{opacity:.4} .graph.focus .step.me,.graph.focus .step.rel{opacity:1}
+.graph.focus .step.me{border-color:var(--fg);box-shadow:0 0 0 1px var(--fg)}
 .leaf .m{font-weight:600;margin-right:5px}
 .leaf .note{display:block;font:400 11.5px/1.35 var(--sans);white-space:normal;max-width:24ch;margin-top:1px}
 .leaf.add{border-color:var(--add);border-width:1.5px} .leaf.add .m,.leaf.add .note{color:var(--add)}
@@ -158,7 +166,7 @@ textarea{font:400 12.5px/1.55 var(--mono);color:var(--fg);background:var(--surfa
   <p class="when" id="when"></p>
   <div class="scroll" id="scroll"><div class="fit" id="fit"><div class="graph" id="graph"></div></div><div class="pop" id="pop" hidden></div></div>
   <ul class="legend">
-    <li>Box = class. Lowest box = a function this step reaches. Arrow = calls. A part = everything one step function reaches.</li>
+    <li>Box = class. Lowest box = a function this step reaches. Arrow = calls. A part = everything one step function reaches. Inside Unity step functions and changed functions: what they do, in order (titles from Dungeon Flow's notes); a call's arrow leaves from its step.</li>
     <li>Boxes sit next to what they share the most arrows with, arranged so the fewest lines cross. Lowest boxes inside a box are reordered for the same reason. The small grey word on a box is its group. Double-click a box title to put it at the center.</li>
         <li><span class="sw a"></span>+ added <span class="sw c"></span>~ changed <span class="sw d"></span>- removed</li>
     <li><span class="sw s"></span>AI as arrows: one short arrow per AI/ function. On a box's right: the function calls it. On its left: it calls the function.</li>
@@ -331,6 +339,7 @@ function parseBoxes(s){
     const flush = () => { if(name.trim()) out.push({...meta(name), kids:null}); name = ""; };
     while(i < s.length){
       const c = s[i++];
+      if(c === "{"){ const e = s.indexOf("}", i); name += s.slice(i - 1, e + 1); i = e + 1; continue; } // a function's steps
       if(c === "["){
         const n = name.trim(); name = "";
         const kids = list();
@@ -347,9 +356,10 @@ function parseBoxes(s){
 }
 // "~chase: note" -> {mark:"chg", name:"chase", note:"note"}
 const MARK = {"+":"add", "-":"del", "~":"chg"};
-function meta(raw){
+function meta(raw){ // "~Update: +1 -1{Check death|~Move, unless stunned}"
+  let steps = null; raw = raw.replace(/\{([^}]*)\}/, (_, x) => { steps = x.split("|").map(t => ({mark:MARK[t[0]] || "", t:MARK[t[0]] ? t.slice(1) : t})); return ""; });
   const m = raw.trim().match(/^([+\-~])?\s*([^:]*)(?::(.*))?$/);
-  return {mark: MARK[m[1]] || "", name: m[2].trim(), note: (m[3] || "").trim()};
+  return {mark: MARK[m[1]] || "", name: m[2].trim(), note: (m[3] || "").trim(), steps};
 }
 function parse(src){
   const boxLines = [], edges = [], parts = []; let part = "";
@@ -382,6 +392,16 @@ function leafEl(node, parent, inherited){
   if(node.note) el.append(span("note", node.note));
   const key = keyOf(node, parent);
   el.dataset.key = key; nodes[key] = el;
+  if(node.steps){ // what the function does, in order; a call's arrow leaves from its step
+    const list = document.createElement("span"); list.className = "steps";
+    node.steps.forEach((s, i) => {
+      const code = s.t[0] === "`", k = key + "#" + (i + 1), st = span("step " + s.mark + (code ? " code" : ""), code ? s.t.slice(1) : s.t); st.dataset.key = k; nodes[k] = st;
+      st.onmouseenter = ev => { ev.stopPropagation(); focusOn(k); };
+      st.onclick = ev => { ev.stopPropagation(); pinned = pinned === k ? null : k; focusOn(pinned); showCode(); showPop(); track(); };
+      list.append(st);
+    });
+    el.append(list);
+  }
   el.onmouseenter = () => focusOn(key);
   el.onmouseleave = () => focusOn(pinned || over);
   el.onfocus = () => focusOn(key);
@@ -429,8 +449,8 @@ function changed(g){
   for(const x of g.stubs || []) if(x.mark){ count++; set.add(x.leaf); }
   return {set, count};
 }
-function prune(n, parent, keep){
-  if(!n.kids) return keep.has(keyOf(n, parent)) ? n : null;
+function prune(n, parent, keep){ // a step key (Fn#2) keeps its function
+  if(!n.kids) return keep.has(keyOf(n, parent)) || [...keep].some(k => k.split("#")[0] === keyOf(n, parent)) ? n : null;
   if(keep.has(n.name)) return n;
   const kids = n.kids.map(c => prune(c, n.name, keep)).filter(Boolean);
   return kids.length ? {...n, kids} : null;
@@ -980,25 +1000,89 @@ function showCode(){ // under the map: every change in this view
 }
 function showPop(){ // over the map: the tapped function's code. Tap it again to close
   const pop = $("pop"), el = pinned && nodes[pinned]; pop.textContent = "";
-  const keys = el && el.classList.contains("leaf") && CODE[pinned] ? [pinned] : []; // a box title only lights up
+  const fn = pinned?.split("#")[0], keys = el && (el.classList.contains("leaf") || el.classList.contains("step")) && CODE[fn] ? [fn] : []; // a box title only lights up
   if(!keys.length){ pop.hidden = true; return; }
   const head = document.createElement("div"), x = document.createElement("button");
   head.className = "pophead"; x.type = "button"; x.textContent = "Close";
   x.onclick = () => { pinned = null; focusOn(null); showPop(); showCode(); };
-  head.append(span("", pinned), x); pop.append(head);
+  head.append(span("", pinned.includes("#") ? fn + ": " + nodes[pinned].textContent : pinned), x); pop.append(head);
   for(const k of keys) pop.append(codeItem(k, keys.length === 1 || !!CODE[k].m));
   pop.hidden = false; pop.scrollTop = 0;
 }
 
-function drawRoutes(svg, rect){ // exactly the arrows the layout scored
+// lines around boxes: a grid on the gaps between boxes, then the cheapest path for each line (Dijkstra).
+// Cost: length, +25 a turn, +60 crossing a line already drawn, +20 running on a lane another line uses (so they take the next lane)
+function orthoRoute(list){
+  const M = 10, LANES = [10, 17, 24];
+  const R = units.map(u => ({l:u.el.offsetLeft, t:u.el.offsetTop, r:u.el.offsetLeft + u.el.offsetWidth, b:u.el.offsetTop + u.el.offsetHeight, el:u.el}));
+  const xs = new Set(), ys = new Set();
+  for(const b of R){ for(const d of LANES){ xs.add(b.l - d); xs.add(b.r + d); ys.add(b.t - d); ys.add(b.b + d); } xs.add((b.l + b.r) / 2); ys.add((b.t + b.b) / 2); }
+  const ends = list.map(({e, r}) => { // leave the function sideways, then out of its own box
+    const sa = r.k1 >= r.x1 ? 1 : -1, sb = r.hs, A = nodes[e.from].closest(".unit"), B = nodes[e.to].closest(".unit");
+    const ax = sa > 0 ? A.offsetLeft + A.offsetWidth + M : A.offsetLeft - M, bx = sb > 0 ? B.offsetLeft + B.offsetWidth + M : B.offsetLeft - M;
+    xs.add(ax); xs.add(bx); ys.add(r.y1); ys.add(r.y2);
+    return {e, r, ax, bx, sa, sb};
+  });
+  const X = [...xs].sort((a, b) => a - b), Y = [...ys].sort((a, b) => a - b), nx = X.length, ny = Y.length;
+  const xi = new Map(X.map((v, i) => [v, i])), yi = new Map(Y.map((v, i) => [v, i]));
+  const free = new Uint8Array(nx * ny);
+  for(let i = 0; i < nx; i++) for(let j = 0; j < ny; j++){ const x = X[i], y = Y[j]; free[i * ny + j] = R.every(b => x <= b.l - 4 || x >= b.r + 4 || y <= b.t - 4 || y >= b.b + 4) ? 1 : 0; }
+  const useH = new Uint16Array(nx * ny), useV = new Uint16Array(nx * ny); // lines already through each grid point
+  const out = [];
+  ends.sort((p, q) => Math.abs(p.ax - p.bx) + Math.abs(p.r.y1 - p.r.y2) - Math.abs(q.ax - q.bx) - Math.abs(q.r.y1 - q.r.y2)); // short lines first
+  for(const p of ends){
+    const s = xi.get(p.ax) * ny + yi.get(p.r.y1), g = xi.get(p.bx) * ny + yi.get(p.r.y2);
+    // state = point * 2 + (0 moving sideways, 1 moving up/down)
+    const dist = new Float64Array(nx * ny * 2).fill(Infinity), prev = new Int32Array(nx * ny * 2).fill(-1), heap = [];
+    const push = (st, d) => { heap.push([d, st]); let i = heap.length - 1; while(i){ const pa = (i - 1) >> 1; if(heap[pa][0] <= d) break; [heap[pa], heap[i]] = [heap[i], heap[pa]]; i = pa; } };
+    const pop = () => { const top = heap[0], last = heap.pop(); if(heap.length){ heap[0] = last; let i = 0; for(;;){ const l = 2*i + 1, r = l + 1; let m = i;
+      if(l < heap.length && heap[l][0] < heap[m][0]) m = l; if(r < heap.length && heap[r][0] < heap[m][0]) m = r; if(m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m; } } return top; };
+    dist[s * 2] = 0; push(s * 2, 0);
+    let goal = -1;
+    while(heap.length){
+      const [d, st] = pop(); if(d > dist[st]) continue;
+      const pt = st >> 1, dir = st & 1; if(pt === g && dir === 0){ goal = st; break; }
+      const i = Math.floor(pt / ny), j = pt % ny;
+      for(const [di, dj, nd] of [[1, 0, 0], [-1, 0, 0], [0, 1, 1], [0, -1, 1]]){
+        const ii = i + di, jj = j + dj; if(ii < 0 || jj < 0 || ii >= nx || jj >= ny) continue;
+        const np = ii * ny + jj; if(!free[np] && np !== g) continue;
+        let c = Math.abs(X[ii] - X[i]) + Math.abs(Y[jj] - Y[j]) + (nd !== dir ? 25 : 0);
+        c += (nd === 0 ? useH[np] : useV[np]) * 20 + (nd === 0 ? useV[np] : useH[np]) * 60; // same lane / crossing
+        const ns = np * 2 + nd; if(d + c < dist[ns]){ dist[ns] = d + c; prev[ns] = st; push(ns, d + c); }
+      }
+    }
+    if(goal < 0){ out.push({p, pts:null}); continue; } // no way around: keep the curve
+    const path = []; for(let st = goal; st >= 0; st = prev[st]){ const pt = st >> 1; path.push(pt); const d2 = st & 1; (d2 ? useV : useH)[pt]++; }
+    path.reverse();
+    const pts = [[p.r.x1, p.r.y1], ...path.map(pt => [X[Math.floor(pt / ny)], Y[pt % ny]]), [p.r.x2, p.r.y2]];
+    out.push({p, pts:pts.filter((q, k) => k === 0 || k === pts.length - 1 || !((pts[k - 1][0] === q[0] && pts[k + 1][0] === q[0]) || (pts[k - 1][1] === q[1] && pts[k + 1][1] === q[1]))) });
+  }
+  return out;
+}
+function roundPath(pts, rad = 7){ // straight runs, rounded turns
+  let d = `M${pts[0][0]} ${pts[0][1]}`;
+  for(let k = 1; k < pts.length - 1; k++){
+    const [x0, y0] = pts[k - 1], [x1, y1] = pts[k], [x2, y2] = pts[k + 1];
+    const r = Math.min(rad, Math.hypot(x1 - x0, y1 - y0) / 2, Math.hypot(x2 - x1, y2 - y1) / 2);
+    const ax = x1 - Math.sign(x1 - x0) * r, ay = y1 - Math.sign(y1 - y0) * r, bx = x1 + Math.sign(x2 - x1) * r, by = y1 + Math.sign(y2 - y1) * r;
+    d += `L${ax} ${ay}Q${x1} ${y1} ${bx} ${by}`;
+  }
+  return d + `L${pts[pts.length - 1][0]} ${pts[pts.length - 1][1]}`;
+}
+function drawRoutes(svg, rect){ // the arrows the layout scored; lines between boxes go around boxes
+  const between = edges.filter(e => !e.route.inner).map(e => ({e, r:e.route}));
+  const ortho = new Map(orthoRoute(between).map(o => [o.p.e, o.pts]));
   for(const e of edges){
-    const r = e.route, p = document.createElementNS(NS, "path");
-    p.setAttribute("d", `M${r.x1} ${r.y1}C${r.k1} ${r.y1} ${r.k2} ${r.y2} ${r.x2} ${r.y2}M${r.x2 + r.hs*6} ${r.y2 - 3.5}L${r.x2} ${r.y2}L${r.x2 + r.hs*6} ${r.y2 + 3.5}`);
+    const r = e.route, pts = ortho.get(e), p = document.createElementNS(NS, "path");
+    const head = `M${r.x2 + r.hs*6} ${r.y2 - 3.5}L${r.x2} ${r.y2}L${r.x2 + r.hs*6} ${r.y2 + 3.5}`;
+    p.setAttribute("d", (pts ? roundPath(pts) : `M${r.x1} ${r.y1}C${r.k1} ${r.y1} ${r.k2} ${r.y2} ${r.x2} ${r.y2}`) + head);
     p.setAttribute("class", "wire " + (r.inner ? "inner " : "") + e.mark); p.dataset.from = e.from; p.dataset.to = e.to; svg.append(p);
-    drawn.push({ends:[e.from, e.to], inner:r.inner, pts:bez([r.x1, r.y1], [r.k1, r.y1], [r.k2, r.y2], [r.x2, r.y2])});
-    if(e.label && !r.inner){
+    drawn.push({ends:[e.from, e.to], inner:r.inner, pts:pts || bez([r.x1, r.y1], [r.k1, r.y1], [r.k2, r.y2], [r.x2, r.y2])});
+    if(e.label && !r.inner){ // on the line's longest run
+      let lx = (r.x1 + 3*r.k1 + 3*r.k2 + r.x2) / 8, ly = (r.y1 + r.y2) / 2 - 3;
+      if(pts){ let best = -1; for(let k = 1; k < pts.length; k++){ const L = Math.hypot(pts[k][0] - pts[k-1][0], pts[k][1] - pts[k-1][1]); if(L > best){ best = L; lx = (pts[k][0] + pts[k-1][0]) / 2; ly = (pts[k][1] + pts[k-1][1]) / 2 - 3; } } }
       const t = document.createElementNS(NS, "text");
-      t.setAttribute("x", (r.x1 + 3*r.k1 + 3*r.k2 + r.x2) / 8); t.setAttribute("y", (r.y1 + r.y2) / 2 - 3);
+      t.setAttribute("x", lx); t.setAttribute("y", ly);
       t.setAttribute("class", "wlabel " + e.mark); t.dataset.from = e.from; t.dataset.to = e.to; t.textContent = e.label; svg.append(t);
     }
   }
