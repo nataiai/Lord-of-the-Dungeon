@@ -371,7 +371,7 @@ function parse(src){
     if(line.trim().startsWith("//")) continue;
     if(line.trim().startsWith("#")){ part = line.trim().slice(1).trim(); if(part && !parts.includes(part)) parts.push(part); continue; }
     const m = line.match(/^\s*([+\-~])?(.*?)->(.*?)(?::(.*))?$/);
-    if(m && !edges.some(e => e.part === part && e.from === m[2].trim() && e.to === m[3].trim())) edges.push({mark:MARK[m[1]] || "", from:m[2].trim(), to:m[3].trim(), label:(m[4]||"").trim(), part});
+    if(m){ if(!edges.some(e => e.part === part && e.from === m[2].trim() && e.to === m[3].trim())) edges.push({mark:MARK[m[1]] || "", from:m[2].trim(), to:m[3].trim(), label:(m[4]||"").trim(), part}); } // a repeat is skipped, not read as a box
     else boxLines.push(line);
   }
   const seen = {}; // an arrow can sit in several parts: once in the whole graph, a marked one wins
@@ -803,6 +803,34 @@ function layout(){
       if(!moved) break;
     }
   }
+  // groups of boxes wired together (arrows between boxes): the biggest one is the map, the others are placed beside it
+  const comp = U.map((_, i) => i), findC = i => comp[i] === i ? i : (comp[i] = findC(comp[i]));
+  for(const e of edges){ const a = unitOf(e.from), b = unitOf(e.to); if(a != null && b != null) comp[findC(a)] = findC(b); }
+  const groups = {}; U.forEach((_, i) => (groups[findC(i)] ||= []).push(i));
+  const byBig = Object.values(groups).sort((a, b) => b.length - a.length || (b.includes(c) ? 1 : 0) - (a.includes(c) ? 1 : 0));
+  const mainSet = new Set(byBig[0]); layout.main = new Set(byBig[0].map(i => U[i].name));
+  function clusters(){
+    if(byBig.length < 2) return;
+    const bb = list => ({l:Math.min(...list.map(i => U[i].x - U[i].w / 2)), r:Math.max(...list.map(i => U[i].x + U[i].w / 2)), t:Math.min(...list.map(i => U[i].y - U[i].h / 2)), b:Math.max(...list.map(i => U[i].y + U[i].h / 2))});
+    // each smaller group keeps its own arrangement and goes on the edge of the map (right or below, never inside), where it adds the least area
+    const placed = byBig[0].map(i => ({l:U[i].x - U[i].w / 2, r:U[i].x + U[i].w / 2, t:U[i].y - U[i].h / 2, b:U[i].y + U[i].h / 2}));
+    const M = bb(byBig[0]);
+    for(const g of byBig.slice(1)){
+      const B = bb(g), w = B.r - B.l, h = B.b - B.t, all = () => ({l:Math.min(...placed.map(p => p.l)), r:Math.max(...placed.map(p => p.r)), t:Math.min(...placed.map(p => p.t)), b:Math.max(...placed.map(p => p.b))});
+      const A = all(), cands = [];
+      for(let y = M.t; y <= A.b + 1; y += 40) cands.push([Math.max(M.r, ...placed.filter(p => p.t < y + h + 40 && p.b > y - 40).map(p => p.r)) + 60, y]); // right edge
+      for(let x = M.l; x <= A.r + 1; x += 40) cands.push([x, Math.max(M.b, ...placed.filter(p => p.l < x + w + 40 && p.r > x - 40).map(p => p.b)) + 50]); // bottom edge
+      let best = null;
+      for(const [x, y] of cands){
+        if(placed.some(p => x < p.r + 40 && x + w > p.l - 40 && y < p.b + 40 && y + h > p.t - 40)) continue;
+        const area = (Math.max(A.r, x + w) - Math.min(A.l, x)) * (Math.max(A.b, y + h) - Math.min(A.t, y));
+        if(!best || area < best.area - 1) best = {x, y, area};
+      }
+      const {x, y} = best || {x:A.r + 60, y:M.t};
+      for(const i of g){ U[i].x += x - B.l; U[i].y += y - B.t; placed.push({l:U[i].x - U[i].w / 2, r:U[i].x + U[i].w / 2, t:U[i].y - U[i].h / 2, b:U[i].y + U[i].h / 2}); }
+    }
+    measure();
+  }
   let first0 = true; const frozen = !!layout.place; // placed from the stored layout: no tightening, no search
   function placeLeftToRight(){ // columns by call order (longest chain of calls from a box nothing calls), order in a column by its neighbours
     const out = U.map(() => new Set()), inn = U.map(() => new Set());
@@ -843,7 +871,8 @@ function layout(){
     load(keep); if(!layout.place) for(let k = 0; k < 40; k++) apart();
     // a phone is tall: turn a wide layout on its side
     const ext = k => { const h = k === "x" ? "w" : "h"; return Math.max(...U.map(u => u[k] + u[h]/2)) - Math.min(...U.map(u => u[k] - u[h]/2)); };
-    if(!lr && !frozen && $("scroll").clientWidth < 640 && ext("x") > ext("y")){ for(const u of U) [u.x, u.y] = [u.y, u.x]; for(let k = 0; k < 80; k++) apart(); measure(); }
+    // (no longer turned on its side on a phone: that made maps too tall)
+    clusters(); // the biggest group of wired boxes first; smaller groups and lone boxes go beside it
     if(!lr && !frozen) compact(first0 ? 1200 : 200); // no empty space for nothing
     // 5. inside a box, order the lowest boxes by where their arrows go (barycenter), so they don't cross on the way out. Kept only if it helps
     const orders = U.map(u => [...(u.el.querySelector(".kids")?.children || [])]), before = crossings();
@@ -1240,8 +1269,12 @@ function routeScore(res){
   for(const L of routeScore.lone || []) res.forEach((o, i) => { if(!segs[i] || o.p.e.from.split(".")[0] === L.name || o.p.e.to.split(".")[0] === L.name) return;
     const b = {l:L.el.offsetLeft, t:L.el.offsetTop, r:L.el.offsetLeft + L.el.offsetWidth, b:L.el.offsetTop + L.el.offsetHeight};
     if(segs[i].some(([p, q]) => segRect(p, q, b, -40))) near++; });
-  const area = layout.W * layout.H, labels = stubs.length ? stubPlan().bad : 0; // AI labels sitting on a box
-  return {cross, fail, near, bends, len, labels, total:cross * 100 + fail * 150 + labels * 80 + near * 60 + overlap * .5 + bends * (window.SW?.bend ?? 8) + len * (window.SW?.len ?? .1) + area / 8000}; // turns cost: straight lines win
+  let L = Infinity, T = Infinity, Rr = 0, B = 0; // the space the boxes really cover
+  for(const u of units){ L = Math.min(L, u.el.offsetLeft); T = Math.min(T, u.el.offsetTop); Rr = Math.max(Rr, u.el.offsetLeft + u.el.offsetWidth); B = Math.max(B, u.el.offsetTop + u.el.offsetHeight); }
+  const w = Math.max(1, Rr - L), h = Math.max(1, B - T), area = w * h, box = $("scroll"), frame = box.clientHeight / Math.max(1, box.clientWidth);
+  const tall = Math.max(0, h / w / frame - 1); // taller than the frame it is shown in
+  const labels = stubs.length ? stubPlan().bad : 0; // AI labels sitting on a box
+  return {cross, fail, near, bends, len, labels, tall, total:cross * 100 + fail * 150 + labels * 80 + near * 60 + tall * (window.SW?.tall ?? 400) + overlap * .5 + bends * (window.SW?.bend ?? 8) + len * (window.SW?.len ?? .1) + area / 8000}; // turns cost: straight lines win
 }
 // after the layout: move boxes and flip which side lines leave from, judged by the routed lines themselves. Stops when the map is touched
 function routeSearch(){
@@ -1279,7 +1312,12 @@ function routeSearch(){
     const until = performance.now() + 40; let better = false; shown ||= snapshot(); // where boxes are on screen now
     while(performance.now() < until && !(window.SW?.evals && tries >= window.SW.evals)){
       let undo;
-      if(rnd() < .2 && routeScore.lone.length){ // dock a one-neighbour box beside its neighbour, at the height of their first line
+      if(rnd() < .3){ // pull a box part of the way toward the boxes it is wired to: closes empty space, shortens lines
+        const mainU = units.filter(u => (!layout.main || layout.main.has(u.name)) && nb[u.name]?.size), u = mainU[Math.floor(rnd() * mainU.length)]; if(!u) continue;
+        const ns = [...nb[u.name]].map(n => units.find(v => v.name === n)?.el).filter(Boolean), cx = el => el.offsetLeft + el.offsetWidth / 2, cy = el => el.offsetTop + el.offsetHeight / 2;
+        const f = [.2, .4, .6][Math.floor(rnd() * 3)], dx = Math.round((ns.reduce((t, el) => t + cx(el), 0) / ns.length - cx(u.el)) * f), dy = flow === "lr" ? 0 : Math.round((ns.reduce((t, el) => t + cy(el), 0) / ns.length - cy(u.el)) * f);
+        if((!dx && !dy) || !free(u.el, dx, dy)) continue; shift(u.el, dx, dy); undo = () => shift(u.el, -dx, -dy);
+      } else if(rnd() < .2 && routeScore.lone.length){ // dock a one-neighbour box beside its neighbour, at the height of their first line
         const L = routeScore.lone[Math.floor(rnd() * routeScore.lone.length)], N = units.find(u => u.name === L.to)?.el; if(!N) continue;
         const e = edges.find(e => (e.from.split(".")[0] === L.name && e.to.split(".")[0] === L.to) || (e.to.split(".")[0] === L.name && e.from.split(".")[0] === L.to)); if(!e) continue;
         const mine = nodes[e.from.split(".")[0] === L.name ? e.from : e.to], theirs = nodes[e.from.split(".")[0] === L.name ? e.to : e.from];
@@ -1295,7 +1333,7 @@ function routeSearch(){
         const ya = ua.offsetTop + A.offsetTop + A.offsetHeight / 2, yb = ub.offsetTop + B.offsetTop + B.offsetHeight / 2, mv = rnd() < .5 ? ub : ua, dy = Math.round(mv === ub ? ya - yb : yb - ya);
         if(!dy || !free(mv, 0, dy)) continue; shift(mv, 0, dy); undo = () => shift(mv, 0, -dy);
       } else if(rnd() < .7 || !outer.length){
-        const el = units[Math.floor(rnd() * units.length)].el, d = [30, 60, 120][Math.floor(rnd() * 3)] * (rnd() < .5 ? -1 : 1), [dx, dy] = rnd() < .5 && flow !== "lr" ? [d, 0] : [0, d]; // left to right: columns stay
+        const mainU = units.filter(u => !layout.main || layout.main.has(u.name)), el = mainU[Math.floor(rnd() * mainU.length)].el, d = [30, 60, 120][Math.floor(rnd() * 3)] * (rnd() < .5 ? -1 : 1), [dx, dy] = rnd() < .5 && flow !== "lr" ? [d, 0] : [0, d]; // left to right: columns stay
         if(!free(el, dx, dy)) continue; shift(el, dx, dy); undo = () => shift(el, -dx, -dy);
       } else { const e = outer[Math.floor(rnd() * outer.length)], end = rnd() < .5 ? 0 : 1; flip(e, end); undo = () => flip(e, end); }
       const v = routeScore(orthoRoute(list())).total; tries++;
