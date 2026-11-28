@@ -1065,11 +1065,47 @@ function orthoRoute(list){
   ends.forEach((p, k) => { // once more, each line knowing all the others: rip it up and route it again
     if(!found[k]) return; mark(found[k], -1); const m = one(p) || found[k]; mark(m, 1); found[k] = m;
   });
-  return ends.map((p, k) => {
+  const res = ends.map((p, k) => {
     if(!found[k]) return {p, pts:null}; // no way around: keep the curve
     const pts = [[p.r.x1, p.r.y1], ...found[k].map(st => [X[Math.floor((st >> 1) / ny)], Y[(st >> 1) % ny]]), [p.r.x2, p.r.y2]];
     return {p, pts:pts.filter((q, i) => i === 0 || i === pts.length - 1 || !((pts[i - 1][0] === q[0] && pts[i + 1][0] === q[0]) || (pts[i - 1][1] === q[1] && pts[i + 1][1] === q[1])))};
   });
+  return straighten(res, R);
+}
+// straight first: a flat line where the two functions' rows overlap, else a free straight line; kept only if no box is in the way
+// and it crosses no more lines than the routed path did
+function straighten(res, R){
+  const abs = el => { const u = el.closest(".unit"); return {l:u.offsetLeft + (el === u ? 0 : el.offsetLeft), t:u.offsetTop + (el === u ? 0 : el.offsetTop), w:el.offsetWidth, h:el.offsetHeight}; };
+  const inner = [...graph.querySelectorAll(".leaf,.step")].map(el => { const a = abs(el); return {el, unit:el.closest(".unit"), l:a.l, t:a.t, r:a.l + a.w, b:a.t + a.h}; });
+  const clear = (p, q, e) => {
+    const A = nodes[e.from], B = nodes[e.to], ua = A.closest(".unit"), ub = B.closest(".unit");
+    for(const b of R) if(b.el !== ua && b.el !== ub && segRect(p, q, b, -6)) return false;
+    for(const b of inner) if((b.unit === ua || b.unit === ub) && b.el !== A && b.el !== B && !b.el.contains(A) && !b.el.contains(B) && segRect(p, q, b, 1)) return false;
+    return true;
+  };
+  const crossOf = (pts, k) => { let n = 0; res.forEach((o, j) => { if(j !== k && o.pts && pathsCross(pts, o.pts)) n++; }); return n; };
+  res.forEach((o, k) => {
+    const {e, r} = o.p, sa = r.k1 >= r.x1 ? 1 : -1, sb = r.hs, x1 = r.x1, x2 = r.x2;
+    const facing = (sa > 0 && sb < 0 && x2 > x1 + 20) || (sa < 0 && sb > 0 && x2 < x1 - 20); // leaves toward the other, comes in facing it
+    if(!facing) return;
+    const now = o.pts ? crossOf(o.pts, k) : 99, a = abs(nodes[e.from]), b = abs(nodes[e.to]);
+    const lo = Math.max(a.t + 5, b.t + 5), hi = Math.min(a.t + a.h - 5, b.t + b.h - 5);
+    const flat = lo <= hi ? [[x1, (lo + hi) / 2], [x2, (lo + hi) / 2]] : null, free = [[x1, r.y1], [x2, r.y2]];
+    for(const cand of [flat, free]){ if(!cand || !clear(cand[0], cand[1], e)) continue; const c = crossOf(cand, k); if(c === 0 || c < now){ o.pts = cand; o.straight = true; return; } }
+  });
+  return res;
+}
+const ccw2 = (a, b, c) => (c[1] - a[1]) * (b[0] - a[0]) - (b[1] - a[1]) * (c[0] - a[0]);
+function segCross(a, b, c, d){ // proper crossing, touching ends don't count
+  const d1 = ccw2(c, d, a), d2 = ccw2(c, d, b), d3 = ccw2(a, b, c), d4 = ccw2(a, b, d);
+  return ((d1 > 1e-6 && d2 < -1e-6) || (d1 < -1e-6 && d2 > 1e-6)) && ((d3 > 1e-6 && d4 < -1e-6) || (d3 < -1e-6 && d4 > 1e-6));
+}
+function pathsCross(P, Q){ for(let i = 1; i < P.length; i++) for(let j = 1; j < Q.length; j++) if(segCross(P[i - 1], P[i], Q[j - 1], Q[j])) return true; return false; }
+function segRect(p, q, b, m){ // does the segment p-q pass through box b (shrunk by m; a negative m grows it)?
+  const l = b.l + m, r = b.r - m, t = b.t + m, bt = b.b - m; if(l >= r || t >= bt) return false;
+  const inside = ([x, y]) => x > l && x < r && y > t && y < bt;
+  if(inside(p) || inside(q)) return true;
+  return segCross(p, q, [l, t], [r, t]) || segCross(p, q, [r, t], [r, bt]) || segCross(p, q, [r, bt], [l, bt]) || segCross(p, q, [l, bt], [l, t]);
 }
 // how clear the routed lines are (lower is better): crossings first, then lines running on top of each other, turns, length, space
 function routeScore(res){
@@ -1079,14 +1115,15 @@ function routeScore(res){
     for(let j = i + 1; j < segs.length; j++){ const B = segs[j]; if(!B) continue; let x = false;
       for(const [a, b] of A) for(const [c, d] of B){
         const ah = a[1] === b[1], ch = c[1] === d[1];
-        if(ah !== ch){ const [h1, h2, v1, v2] = ah ? [a, b, c, d] : [c, d, a, b];
+        if(segCross(a, b, c, d)) x = true; // any angle
+        else if(false){ const [h1, h2, v1, v2] = ah ? [a, b, c, d] : [c, d, a, b];
           const y = h1[1], x0 = v1[0]; if(x0 > Math.min(h1[0], h2[0]) + .5 && x0 < Math.max(h1[0], h2[0]) - .5 && y > Math.min(v1[1], v2[1]) + .5 && y < Math.max(v1[1], v2[1]) - .5) x = true; }
-        else if(ah && a[1] === c[1]) overlap += Math.max(0, Math.min(Math.max(a[0], b[0]), Math.max(c[0], d[0])) - Math.max(Math.min(a[0], b[0]), Math.min(c[0], d[0])));
-        else if(!ah && a[0] === c[0]) overlap += Math.max(0, Math.min(Math.max(a[1], b[1]), Math.max(c[1], d[1])) - Math.max(Math.min(a[1], b[1]), Math.min(c[1], d[1])));
+        else if(ah && ch && a[1] === c[1]) overlap += Math.max(0, Math.min(Math.max(a[0], b[0]), Math.max(c[0], d[0])) - Math.max(Math.min(a[0], b[0]), Math.min(c[0], d[0])));
+        else if(a[0] === b[0] && c[0] === d[0] && a[0] === c[0]) overlap += Math.max(0, Math.min(Math.max(a[1], b[1]), Math.max(c[1], d[1])) - Math.max(Math.min(a[1], b[1]), Math.min(c[1], d[1])));
       }
       if(x) cross++; } });
   const area = layout.W * layout.H;
-  return {cross, fail, total:cross * 100 + fail * 150 + overlap * .5 + bends * 3 + len * .02 + area / 8000};
+  return {cross, fail, total:cross * 100 + fail * 150 + overlap * .5 + bends * 8 + len * .02 + area / 8000}; // turns cost: straight lines win
 }
 // after the layout: move boxes and flip which side lines leave from, judged by the routed lines themselves. Stops when the map is touched
 function routeSearch(){
@@ -1120,7 +1157,11 @@ function routeSearch(){
     const until = performance.now() + 40; let better = false;
     while(performance.now() < until){
       let undo;
-      if(rnd() < .7 || !outer.length){
+      if(rnd() < .25 && outer.length){ // line two functions up at one height, so their line can go flat
+        const e = outer[Math.floor(rnd() * outer.length)], A = nodes[e.from], B = nodes[e.to], ua = A.closest(".unit"), ub = B.closest(".unit");
+        const ya = ua.offsetTop + A.offsetTop + A.offsetHeight / 2, yb = ub.offsetTop + B.offsetTop + B.offsetHeight / 2, mv = rnd() < .5 ? ub : ua, dy = Math.round(mv === ub ? ya - yb : yb - ya);
+        if(!dy || !free(mv, 0, dy)) continue; shift(mv, 0, dy); undo = () => shift(mv, 0, -dy);
+      } else if(rnd() < .7 || !outer.length){
         const el = units[Math.floor(rnd() * units.length)].el, d = [30, 60, 120][Math.floor(rnd() * 3)] * (rnd() < .5 ? -1 : 1), [dx, dy] = rnd() < .5 ? [d, 0] : [0, d];
         if(!free(el, dx, dy)) continue; shift(el, dx, dy); undo = () => shift(el, -dx, -dy);
       } else { const e = outer[Math.floor(rnd() * outer.length)], end = rnd() < .5 ? 0 : 1; flip(e, end); undo = () => flip(e, end); }
@@ -1132,7 +1173,7 @@ function routeSearch(){
   };
   layout.job = setTimeout(step, 15);
 }
-function roundPath(pts, rad = 7){ // straight runs, rounded turns
+function roundPath(pts, rad = 22){ // straight runs, wide rounded turns
   let d = `M${pts[0][0]} ${pts[0][1]}`;
   for(let k = 1; k < pts.length - 1; k++){
     const [x0, y0] = pts[k - 1], [x1, y1] = pts[k], [x2, y2] = pts[k + 1];
@@ -1147,7 +1188,11 @@ function drawRoutes(svg, rect){ // the arrows the layout scored; lines between b
   const ortho = new Map(orthoRoute(between).map(o => [o.p.e, o.pts]));
   for(const e of edges){
     const r = e.route, pts = ortho.get(e), p = document.createElementNS(NS, "path");
-    const head = `M${r.x2 + r.hs*6} ${r.y2 - 3.5}L${r.x2} ${r.y2}L${r.x2 + r.hs*6} ${r.y2 + 3.5}`;
+    let head = `M${r.x2 + r.hs*6} ${r.y2 - 3.5}L${r.x2} ${r.y2}L${r.x2 + r.hs*6} ${r.y2 + 3.5}`;
+    if(pts){ // the arrowhead points along the last bit of the line
+      const [x0, y0] = pts[pts.length - 2], [tx, ty] = pts[pts.length - 1], L = Math.hypot(tx - x0, ty - y0) || 1, ux = (tx - x0) / L, uy = (ty - y0) / L;
+      head = `M${tx - ux*7 - uy*3.5} ${ty - uy*7 + ux*3.5}L${tx} ${ty}L${tx - ux*7 + uy*3.5} ${ty - uy*7 - ux*3.5}`;
+    }
     p.setAttribute("d", (pts ? roundPath(pts) : `M${r.x1} ${r.y1}C${r.k1} ${r.y1} ${r.k2} ${r.y2} ${r.x2} ${r.y2}`) + head);
     p.setAttribute("class", "wire " + (r.inner ? "inner " : "") + e.mark); p.dataset.from = e.from; p.dataset.to = e.to; svg.append(p);
     drawn.push({ends:[e.from, e.to], inner:r.inner, pts:pts || bez([r.x1, r.y1], [r.k1, r.y1], [r.k2, r.y2], [r.x2, r.y2])});
