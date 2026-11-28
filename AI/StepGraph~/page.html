@@ -557,9 +557,9 @@ function sides(a, b){ // a, b: {l, r, y}
 function layout(){
   clearTimeout(layout.job); layout.stop = false;
   if(!units.length){ graph.style.cssText = ""; $("scroll").style.height = "80px"; scale = 1; layout.W = 0; return; }
-  const lab = {}; // AI labels beside each box: in on the left, out on the right
-  for(const x of stubs){ const u = nodes[x.leaf].closest(".unit").dataset.unit, side = x.dir === "in" ? "l" : "r", L = lab[u + side] ||= {n:0, w:0};
-    L.n++; L.w = Math.max(L.w, (x.ai.length * 6.2 + 56) * .5); } // half: the rest goes in the gap between boxes
+  const lab = {}; // AI labels beside each box, on whichever side has fewer lines: room on both sides
+  for(const x of stubs){ const u = nodes[x.leaf].closest(".unit").dataset.unit, w = (x.ai.length * 6.2 + 56) * .5; // half: the rest goes in the gap between boxes
+    for(const side of "lr"){ const L = lab[u + side] ||= {n:0, w:0}; L.n++; L.w = Math.max(L.w, w); } }
   const U = units.map(u => { const ew = u.el.offsetWidth, eh = u.el.offsetHeight, l = lab[u.name + "l"] || {n:0, w:0}, r = lab[u.name + "r"] || {n:0, w:0};
     const pt = Math.max(0, (Math.max(l.n, r.n) * 14 - eh) / 2);
     return {...u, ew, eh, pl:l.w, pt, w:ew + l.w + r.w, h:eh + 2 * pt, x:0, y:0}; }), n = U.length;
@@ -633,7 +633,10 @@ function layout(){
     const ends = [], slot = {};
     const C = E.map(pr => { const [a, b] = pr, A = at(a), B = at(b), {sa, sb} = pr.e.force || sides(A, B);
       const ea = {k:a.k, R:A, side:sa, other:B.y}, eb = {k:b.k, R:B, side:sb, other:A.y}; ends.push(ea, eb); return {a, b, ea, eb, e:pr.e}; });
-    for(const p of Sall){ const R = at(p), x = {k:p.k, R, side:p.dir === "in" ? "l" : "r", other:R.y}; ends.push(x); p.end = x; }
+    const busy = {}; for(const x of ends){ const i = unitKey[x.k]; busy[i + x.side] = (busy[i + x.side] || 0) + 1; }
+    for(const p of Sall){ // AI arrows: on the side of the box with fewer lines (tie: the outer side), out of the way of the boxes it is wired to
+      const l = busy[p.i + "l"] || 0, r = busy[p.i + "r"] || 0; p.side = l === r ? (U[p.i].x > 0 ? "r" : "l") : l < r ? "l" : "r";
+      const R = at(p), x = {k:p.k, R, side:p.side, other:R.y}; ends.push(x); p.end = x; }
     const arcEnds = Inner.map(pr => { const [a, b] = pr, side = arcSide(a.i, ends), A = at(a), B = at(b); // other mirrored: longer arcs start further out, so they nest
       const ea = {k:a.k, R:A, side, other:2*A.y - B.y}, eb = {k:b.k, R:B, side, other:2*B.y - A.y}; return {ea, eb, side, e:pr.e}; });
     for(const {ea, eb} of arcEnds) ends.push(ea, eb);
@@ -792,7 +795,7 @@ function layout(){
     const W = Math.max(...boxes.map(a => a.r)) + PAD - minX, Ht = Math.max(...boxes.map(a => a.b)) + PAD - minY;
     U.forEach((u, i) => { u.el.style.left = boxes[i].l + u.pl - minX + "px"; u.el.style.top = boxes[i].t + u.pt - minY + "px"; u.el.classList.toggle("center", i === c); });
     for(const r of curves()) r.e.route = {inner:r.inner, x1:r.x1 - minX, y1:r.y1 - minY, k1:r.k1 - minX, k2:r.k2 - minX, x2:r.x2 - minX, y2:r.y2 - minY, hs:r.hs};
-    Sall.forEach((p, i) => { stubs[i].route = {x:p.end.x - minX, y:p.end.y - minY}; });
+    Sall.forEach((p, i) => { stubs[i].route = {x:p.end.x - minX, y:p.end.y - minY}; stubs[i].side = p.side; });
     cur = best = cost(); // carry on from the best layout, polished: the order inside boxes changed, so score it again
     keep = save();
     layout.W = W; layout.H = Ht;
@@ -1105,6 +1108,12 @@ function routeSearch(){
     return units.every(u => u.el === el || r + 24 <= u.el.offsetLeft || l >= u.el.offsetLeft + u.el.offsetWidth + 24 || b + 24 <= u.el.offsetTop || t >= u.el.offsetTop + u.el.offsetHeight + 24); };
   let seed = 4242; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
   const outer = edges.filter(e => !e.route.inner);
+  for(const e of outer){ // a line leaves toward its target and comes in on the side facing where it came from; the search changes that only if it helps
+    const a = unitOfKey(e.from), b = unitOfKey(e.to), ca = a.offsetLeft + a.offsetWidth / 2, cb = b.offsetLeft + b.offsetWidth / 2, r = e.route;
+    const out = cb > ca + 20 ? 1 : cb < ca - 20 ? -1 : 1, inn = cb > ca + 20 ? -1 : cb < ca - 20 ? 1 : 1;
+    if((r.k1 >= r.x1 ? 1 : -1) !== out) flip(e, 0); if(r.hs !== inn) flip(e, 1);
+  }
+  draw(); showInfo();
   let best = routeScore(orthoRoute(list())).total; const t0 = performance.now();
   const step = () => {
     if(layout.stop || performance.now() - t0 > 8000 || !units.length) return;
@@ -1152,7 +1161,7 @@ function drawRoutes(svg, rect){ // the arrows the layout scored; lines between b
   }
   // AI arrows: from their spot on the function's edge to labels stacked 14px apart beside the box
   const bySide = {};
-  for(const x of stubs){ const u = nodes[x.leaf].closest(".unit"), side = x.dir === "in" ? "l" : "r"; (bySide[u.dataset.unit + side] ||= {u, side, list:[]}).list.push(x); }
+  for(const x of stubs){ const u = nodes[x.leaf].closest(".unit"), side = x.side || (x.dir === "in" ? "l" : "r"); (bySide[u.dataset.unit + side] ||= {u, side, list:[]}).list.push(x); }
   for(const {u, side, list} of Object.values(bySide)){
     list.sort((a, b) => a.route.y - b.route.y || a.ai.localeCompare(b.ai));
     let prev = -Infinity; const ly = new Map(); for(const x of list){ const y = Math.max(x.route.y, prev + 14); ly.set(x, y); prev = y; }
