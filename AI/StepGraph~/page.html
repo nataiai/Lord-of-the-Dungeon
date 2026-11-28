@@ -620,14 +620,15 @@ function layout(){
       list.forEach((x, i) => { x.y = x.R.y - x.R.h/2 + x.R.h * (i + 1) / (list.length + 1); x.x = x.side === "l" ? x.R.l : x.R.r; }); }
     return C.map(({a, b, ea, eb, e}) => {
       const x1 = ea.x, y1 = ea.y, x2 = eb.x, y2 = eb.y, da = ea.side === "l" ? -1 : 1, db = eb.side === "l" ? -1 : 1;
-      const k = Math.max(24, Math.min(110, Math.hypot(x2 - x1, y2 - y1) * .4)), pts = [];
+      const k = da === db ? Math.min(220, 22 + Math.abs(y2 - y1) * .14 + Math.abs(x2 - x1) * .5) // out and back on one side: longer ones bulge further, so they nest instead of overlapping
+        : Math.max(24, Math.min(110, Math.abs(x2 - x1) * .45 + Math.abs(y2 - y1) * .1)), pts = [];
       return route(a, b, e, false, x1, y1, x1 + da*k, x2 + db*k, x2, y2, db);
     }).concat(arcEnds.map(({ea, eb, side, e}) => { // calls inside a box, as drawn
       const s = side === "l" ? -1 : 1, d = (4 + Math.min(10, Math.abs(eb.y - ea.y) / 10)) * 1.6;
       return route({k:ea.k, i:-1}, {k:eb.k, i:-1}, e, true, ea.x, ea.y, ea.x + s*d, eb.x + s*d, eb.x, eb.y, s);
     }));
   }
-  function crossings(){ // pairs of arrows that cross, + .5 for an arrow through a box
+  function crossings(){ // pairs of arrows that cross, + 2 for an arrow through a box
     const S = curves(); let bad = 0;
     S.forEach((s, i) => {
       for(let j = i + 1; j < S.length; j++){
@@ -640,7 +641,7 @@ function layout(){
       if(!s.inner) U.forEach((u, k) => { if(k === s.a.i || k === s.b.i) return;
         const l = u.x - u.w/2 + u.pl, r = l + u.ew, t = u.y - u.h/2 + u.pt, b = t + u.eh;
         if(s.r < l || r < s.l || s.bt < t || b < s.t) return;
-        for(let p = 1; p < s.pts.length; p++) if(cross(s.pts[p - 1], s.pts[p], {x:l, y:t}, {x:r, y:b}) || cross(s.pts[p - 1], s.pts[p], {x:r, y:t}, {x:l, y:b})){ bad += .5; return; } });
+        for(let p = 1; p < s.pts.length; p++) if(cross(s.pts[p - 1], s.pts[p], {x:l, y:t}, {x:r, y:b}) || cross(s.pts[p - 1], s.pts[p], {x:r, y:t}, {x:l, y:b})){ bad += 2; return; } }); // through a box: worse than a crossing
     });
     return bad;
   }
@@ -711,6 +712,23 @@ function layout(){
       if(!better) break;
     }
   }
+  const near = U.map(() => []); for(const k in pull){ const [i, j] = k.split(",").map(Number); near[i].push(j); near[j].push(i); }
+  function compact(ms){ // pull each box toward the boxes it is wired to; keep a move only if it adds no crossing
+    const until = performance.now() + ms; let score = crossings();
+    for(let round = 0; round < 6 && performance.now() < until; round++){
+      let moved = false;
+      for(let i = 0; i < n && performance.now() < until; i++){
+        if(i === c) continue;
+        const nb = near[i], tx = nb.length ? nb.reduce((a, j) => a + U[j].x, 0) / nb.length : 0, ty = nb.length ? nb.reduce((a, j) => a + U[j].y, 0) / nb.length : 0;
+        for(const f of [.6, .3, .12]){
+          const was = save(); U[i].x += (tx - U[i].x) * f; U[i].y += (ty - U[i].y) * f;
+          for(let k = 0; k < 12; k++) apart();
+          const v = crossings(); if(v <= score + 1e-9){ score = v; moved = true; break; } load(was);
+        }
+      }
+      if(!moved) break;
+    }
+  }
   let first0 = true;
   function anneal(ms){ // returns true if it found a better layout
     const until = performance.now() + ms, was0 = best;
@@ -730,6 +748,7 @@ function layout(){
     // a phone is tall: turn a wide layout on its side
     const ext = k => { const h = k === "x" ? "w" : "h"; return Math.max(...U.map(u => u[k] + u[h]/2)) - Math.min(...U.map(u => u[k] - u[h]/2)); };
     if($("scroll").clientWidth < 640 && ext("x") > ext("y")){ for(const u of U) [u.x, u.y] = [u.y, u.x]; for(let k = 0; k < 80; k++) apart(); measure(); }
+    compact(first0 ? 1200 : 200); // no empty space for nothing
     // 5. inside a box, order the lowest boxes by where their arrows go (barycenter), so they don't cross on the way out. Kept only if it helps
     const orders = U.map(u => [...(u.el.querySelector(".kids")?.children || [])]), before = crossings();
     for(let round = 0; round < 3; round++){
