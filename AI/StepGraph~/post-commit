@@ -1,0 +1,6 @@
+#!/bin/sh
+# After each commit: AI/StepGraph~/graph.html, what the commit changed (open it in a browser).
+# Turn on once, from this folder's repo:  cp "AI/StepGraph~/post-commit" .git/hooks/ && chmod +x .git/hooks/post-commit
+command -v node >/dev/null 2>&1 || exit 0
+git rev-parse -q --verify HEAD~1 >/dev/null || exit 0
+node "AI/StepGraph~/gen.js" HEAD~1 HEAD > "AI/StepGraph~/graph.html" 2>/dev/null || true

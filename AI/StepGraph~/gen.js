@@ -300,12 +300,18 @@ for(const f of [...new Set([...Object.keys(old.files), ...Object.keys(now.files)
   if(a.replace(/\s+/g, "") !== b.replace(/\s+/g, "")) outside[f] = {m:!old.files[f] ? "+" : !now.files[f] ? "-" : "~", d:diff(a, b)};
 }
 
+// other files that changed (not code): name and lines, no diff. .meta files are Unity's
+const range = NEW === "WORK" ? [OLD] : [OLD, NEW], status = {};
+for(const l of git("diff", "--name-status", "--no-renames", ...range).split("\n").filter(Boolean)){ const [st, f] = l.split("\t"); status[f] = st; }
+const otherFiles = git("diff", "--numstat", "--no-renames", ...range).split("\n").filter(Boolean).map(l => l.split("\t"))
+  .filter(([, , f]) => !/\.(cs|meta)$/.test(f)).map(([a, d, f]) => ({f, st:status[f] || "M", add:a, del:d}));
+
 const subject = NEW === "WORK" ? "files on disk, not committed" : git("log", "-1", "--format=%s", NEW).trim();
 const name = r => r === "WORK" ? "working files" : git("rev-parse", "--short", r).trim();
 const esc = t => t.replace(/&/g, "&amp;").replace(/</g, "&lt;");
 let page = fs.readFileSync(path.join(__dirname, "page.html"), "utf8");
 const json = v => JSON.stringify(v).replace(/<\//g, "<\\/"); // no "</script>" inside the page's script
 page = page.replace(/const STEPS = \{[\s\S]*?\n\};\n/, () => "const STEPS = " + json(out) + ";\n")
-  .replace("const CODE = {}, CHANGED_FNS = [], OUTSIDE = {};", () => "const CODE = " + json(code) + ", CHANGED_FNS = " + json(changedFns) + ", OUTSIDE = " + json(outside) + ";")
+  .replace("const CODE = {}, CHANGED_FNS = [], OUTSIDE = {}, OTHER_FILES = [];", () => "const CODE = " + json(code) + ", CHANGED_FNS = " + json(changedFns) + ", OUTSIDE = " + json(outside) + ", OTHER_FILES = " + json(otherFiles) + ";")
   .replace(/<p class="commit">.*?<\/p>/, () => `<p class="commit"><b>${name(OLD)} → ${name(NEW)}</b> ${esc(subject)}</p>`);
 process.stdout.write(page);
