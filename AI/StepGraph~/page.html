@@ -841,7 +841,7 @@ function layout(){
   const more = () => {
     if(layout.stop) return;
     if(lr || from0 || t >= steps || performance.now() - started > 8000){ routeSearch(); return; } // then judge by the routed lines
-    if(anneal(40)){ finish(false); draw(); showInfo(); }
+    if(anneal(40)){ const before = snapshot(); finish(false); draw(); showInfo(); animateFrom(before); }
     layout.job = setTimeout(more, 30);
   };
   layout.job = setTimeout(more, 30);
@@ -854,7 +854,30 @@ function applyView(){
   if(want !== zoomedIn){ clearTimeout(applyView.t); applyView.t = setTimeout(() => { if((zoomedIn ? view.s >= .8 : view.s >= 1) !== zoomedIn){ zoomedIn = !zoomedIn; relayoutKeepingPlace(); } }, 300); }
 }
 // steps open or close: lay out again from where the boxes are, and keep the box in the middle of the screen where it was
+// animation: boxes glide from where they were (FLIP), new ones fade in, lines fade back once boxes settle
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function snapshot(){ return new Map(units.map(u => [u.name, u.el.getBoundingClientRect()])); }
+function animateFrom(before){
+  if(still || !before) return;
+  let moved = false;
+  for(const u of units){
+    const a = before.get(u.name), b = u.el.getBoundingClientRect();
+    if(!a){ u.el.animate([{opacity:0}, {opacity:1}], {duration:350, easing:"ease-out"}); continue; }
+    const dx = (a.left - b.left) / view.s, dy = (a.top - b.top) / view.s; if(Math.abs(dx) + Math.abs(dy) < 1) continue;
+    u.el.animate([{transform:`translate(${dx}px,${dy}px)`}, {transform:"none"}], {duration:420, easing:"cubic-bezier(.2,.7,.2,1)"}); moved = true;
+  }
+  const w = graph.querySelector("svg.wires"); if(moved && w) w.animate([{opacity:0}, {opacity:0, offset:.6}, {opacity:1}], {duration:600, easing:"ease-out"});
+}
+function animateView(to, ms = 280){ // zoom and move the map smoothly
+  if(still){ Object.assign(view, to); applyView(); return; }
+  const from = {...view}, t0 = performance.now(); cancelAnimationFrame(animateView.f);
+  const tick = now => { const k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+    view.s = from.s + (to.s - from.s) * e; view.x = from.x + (to.x - from.x) * e; view.y = from.y + (to.y - from.y) * e; applyView();
+    if(k < 1) animateView.f = requestAnimationFrame(tick); };
+  animateView.f = requestAnimationFrame(tick);
+}
 function relayoutKeepingPlace(){
+  const before = snapshot();
   const box = $("scroll"), cx = (box.clientWidth / 2 - view.x) / view.s, cy = (box.clientHeight / 2 - view.y) / view.s;
   let anchor = null, bestD = Infinity;
   for(const u of units){ const x = u.el.offsetLeft + u.el.offsetWidth / 2, y = u.el.offsetTop + u.el.offsetHeight / 2, d = Math.hypot(x - cx, y - cy); if(d < bestD){ bestD = d; anchor = {name:u.name, dx:x - cx, dy:y - cy}; } }
@@ -863,24 +886,26 @@ function relayoutKeepingPlace(){
   const x = u.el.offsetLeft + u.el.offsetWidth / 2 - anchor.dx, y = u.el.offsetTop + u.el.offsetHeight / 2 - anchor.dy;
   view.s = s; view.x = box.clientWidth / 2 - x * s; view.y = box.clientHeight / 2 - y * s; scale = s;
   graph.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.s})`;
+  animateFrom(before);
+  for(const st of graph.querySelectorAll(".steps")) if(!still) st.animate([{opacity:0, transform:"translateY(-4px)"}, {opacity:1, transform:"none"}], {duration:380, easing:"ease-out"});
 }
 function zoomAt(f, px, py){
   const s = Math.min(2.5, Math.max(.12, view.s * f));
   view.x = px - (px - view.x) * s / view.s; view.y = py - (py - view.y) * s / view.s; view.s = s; applyView();
 }
-function fitScale(){ // the whole graph; on a phone, start readable around the center box instead
+function fitScale(smooth){ // the whole graph; on a phone, start readable around the center box instead
   const W = layout.W, H = layout.H, box = $("scroll"); if(!W) return;
   const phone = innerWidth < 700, vw = box.clientWidth;
   const vh = Math.round(Math.min(innerHeight * (phone ? .62 : .78), Math.max(280, H * Math.min(1, vw / W) + 2)));
   box.style.height = vh + "px"; graph.style.width = W + "px"; graph.style.height = H + "px";
-  const all = Math.min(1, vw / W, vh / H), s = Math.max(all, phone ? .6 : .4);
+  const all = Math.min(1, vw / W, vh / H), s = Math.max(all, phone ? .6 : .4), from = {...view};
   view.s = s;
   if(s === all){ view.x = (vw - W*s) / 2; view.y = (vh - H*s) / 2; }
   else{
     const c = graph.querySelector(".unit.center") || graph.querySelector(".unit"), cx = c ? c.offsetLeft + c.offsetWidth/2 : W/2, cy = c ? c.offsetTop + c.offsetHeight/2 : H/2;
     view.x = vw/2 - cx*s; view.y = vh/2 - cy*s;
   }
-  applyView();
+  if(smooth){ const to = {...view}; Object.assign(view, from); animateView(to); } else applyView();
 }
 function centerOn(el){ // move the map so el sits in the middle
   const box = $("scroll"), u = el.closest(".unit") || el, cx = u.offsetLeft + (el === u ? u.offsetWidth/2 : el.offsetLeft + el.offsetWidth/2), cy = u.offsetTop + (el === u ? u.offsetHeight/2 : el.offsetTop + el.offsetHeight/2);
@@ -1205,10 +1230,10 @@ function routeSearch(){
     if((r.k1 >= r.x1 ? 1 : -1) !== out) flip(e, 0); if(r.hs !== inn) flip(e, 1);
   }
   draw(); showInfo();
-  let best = routeScore(orthoRoute(list())).total, tries = 0; const t0 = performance.now();
+  let best = routeScore(orthoRoute(list())).total, tries = 0, shown = null; const t0 = performance.now();
   const step = () => {
     if(layout.stop || (window.SW?.evals ? tries >= window.SW.evals : performance.now() - t0 > (window.SW?.ms ?? 8000)) || !units.length){ layout.job = null; return; } // tests: a fixed number of tries
-    const until = performance.now() + 40; let better = false;
+    const until = performance.now() + 40; let better = false; shown ||= snapshot(); // where boxes are on screen now
     while(performance.now() < until && !(window.SW?.evals && tries >= window.SW.evals)){
       let undo;
       if(rnd() < .2 && routeScore.lone.length){ // dock a one-neighbour box beside its neighbour, at the height of their first line
@@ -1233,7 +1258,7 @@ function routeSearch(){
       const v = routeScore(orthoRoute(list())).total; tries++;
       if(v < best - 1e-6){ best = v; better = true; } else undo();
     }
-    if(better){ draw(); showInfo(); }
+    if(better){ draw(); showInfo(); animateFrom(shown); shown = snapshot(); }
     layout.job = setTimeout(step, 15);
   };
   layout.job = setTimeout(step, 15);
@@ -1275,7 +1300,7 @@ function drawRoutes(svg, rect){ // the arrows the layout scored; lines between b
   for(const {u, side, list} of Object.values(bySide)){
     list.sort((a, b) => a.route.y - b.route.y || a.ai.localeCompare(b.ai));
     let prev = -Infinity; const ly = new Map(); for(const x of list){ const y = Math.max(x.route.y, prev + 14); ly.set(x, y); prev = y; }
-    const shift = list.reduce((t, x) => t + ly.get(x) - x.route.y, 0) / list.length, box = rect(u), s = side === "l" ? -1 : 1;
+    const shift = list.reduce((t, x) => t + ly.get(x) - x.route.y, 0) / list.length, box = {l:u.offsetLeft, r:u.offsetLeft + u.offsetWidth}, s = side === "l" ? -1 : 1;
     for(const x of list){
       const x1 = x.route.x, y1 = x.route.y, x2 = (side === "l" ? box.l : box.r) + s * 40, y2 = ly.get(x) - shift;
       const head = x.dir === "out" ? `M${x2 - 6*s} ${y2 - 3.5}L${x2} ${y2}L${x2 - 6*s} ${y2 + 3.5}` : `M${x1 + 6*s} ${y1 - 3.5}L${x1} ${y1}L${x1 + 6*s} ${y1 + 3.5}`;
@@ -1342,7 +1367,9 @@ function mode(){
 for(const b of $("ais").children) b.onclick = () => { ai = b.dataset.ai; mode(); counts(); partTabs(); render(); };
 for(const b of $("fold").children) b.onclick = () => { stepMode = b.dataset.f; mode(); relayoutKeepingPlace(); };
 for(const b of $("flow").children) b.onclick = () => { flow = b.dataset.l; layout.pos = null; mode(); render(); };
-for(const b of $("zoom").children) b.onclick = () => { const box = $("scroll"); b.dataset.z === "fit" ? fitScale() : zoomAt(b.dataset.z === "in" ? 1.3 : 1/1.3, box.clientWidth/2, box.clientHeight/2); };
+for(const b of $("zoom").children) b.onclick = () => { const box = $("scroll"), f = b.dataset.z === "in" ? 1.3 : 1/1.3, px = box.clientWidth/2, py = box.clientHeight/2;
+  if(b.dataset.z === "fit"){ fitScale(true); return; }
+  const s = Math.min(2.5, Math.max(.12, view.s * f)); animateView({s, x:px - (px - view.x) * s / view.s, y:py - (py - view.y) * s / view.s}); };
 addEventListener("keydown", e => { if(e.key === "Escape" && pinned){ pinned = null; focusOn(null); showPop(); showCode(); } });
 for(const b of $("modes").children) b.onclick = () => { only = !!b.dataset.only; mode(); render(); };
 source.oninput = () => { STEPS[current].src = source.value; counts(); partTabs(); render(); };
