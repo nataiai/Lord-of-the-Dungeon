@@ -40,9 +40,10 @@ header p{margin:0;color:var(--muted)}
 .commit b{color:var(--fg);font-weight:600}
 .empty{color:var(--muted);margin:0;padding:20px}
 
-.scroll{overflow-x:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px}
-.fit{margin:0 auto;overflow:hidden}
-.graph{position:relative;transform-origin:0 0}
+.scroll{position:relative;overflow:hidden;touch-action:none;cursor:grab;background:var(--surface);border:1px solid var(--border);border-radius:6px;user-select:none;-webkit-user-select:none}
+.scroll.dragging{cursor:grabbing}
+.fit{position:absolute;inset:0}
+.graph{position:absolute;left:0;top:0;transform-origin:0 0}
 .unit{position:absolute;z-index:1}
 .box.unit{background:var(--group);border-color:var(--line)}
 .box.unit.center{border-color:var(--fg);border-width:2px}
@@ -99,6 +100,12 @@ svg.wires{z-index:2;position:absolute;inset:0;width:100%;height:100%;pointer-eve
 .graph.focus .wlabel.hot{opacity:1}
 .graph.focus .wlabel.hot:not(.add):not(.chg):not(.del){fill:var(--fg)}
 
+.pop{position:absolute;right:8px;bottom:8px;z-index:5;width:min(560px,calc(100% - 16px));max-height:min(62%,460px);overflow:auto;cursor:auto;touch-action:pan-x pan-y;overscroll-behavior:contain;user-select:text;-webkit-user-select:text;background:var(--surface);border:1px solid var(--fg);border-radius:8px;box-shadow:0 8px 28px rgb(0 0 0 / .2)}
+.pop .fn{border:0;border-radius:0}
+.pop .fn+.fn{border-top:1px solid var(--border)}
+.pop .find{display:none}
+.pophead{position:sticky;top:0;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 8px 6px 12px;background:var(--surface);border-bottom:1px solid var(--border);font:600 12px var(--mono)}
+.pophead button{font:500 12px var(--mono);background:none;border:1px solid var(--border);border-radius:4px;padding:4px 10px;color:var(--fg);cursor:pointer}
 .code{display:flex;flex-direction:column;gap:8px;min-width:0}
 .code h2{font:600 14px var(--mono);margin:4px 0 0}
 .code h3{font:600 12px var(--mono);color:var(--muted);margin:8px 0 0}
@@ -144,17 +151,17 @@ textarea{font:400 12.5px/1.55 var(--mono);color:var(--fg);background:var(--surfa
     <div class="tabs" role="tablist" id="tabs"></div>
     <div class="tabs" id="modes"><button type="button" data-only="">Whole graph</button><button type="button" data-only="1">Changed only</button></div>
     <div class="tabs" id="ais"><button type="button" data-ai="in">AI drawn</button><button type="button" data-ai="edge">AI as arrows out</button><button type="button" data-ai="off">AI hidden</button></div>
-    <div class="tabs" id="zoom"><button type="button" data-z="fit">Fit</button><button type="button" data-z="1">100%</button></div>
+    <div class="tabs" id="zoom"><button type="button" data-z="out" aria-label="Zoom out">−</button><button type="button" data-z="fit">Fit</button><button type="button" data-z="in" aria-label="Zoom in">+</button></div>
   </div>
   <div class="tabs" id="parts" hidden></div>
   <p class="when" id="when"></p>
-  <div class="scroll" id="scroll"><div class="fit" id="fit"><div class="graph" id="graph"></div></div></div>
+  <div class="scroll" id="scroll"><div class="fit" id="fit"><div class="graph" id="graph"></div></div><div class="pop" id="pop" hidden></div></div>
   <ul class="legend">
     <li>Box = class. Lowest box = a function this step reaches. Arrow = calls. A part = everything one step function reaches.</li>
     <li>Boxes sit next to what they share the most arrows with, arranged so the fewest lines cross. Lowest boxes inside a box are reordered for the same reason. The small grey word on a box is its group. Double-click a box title to put it at the center.</li>
         <li><span class="sw a"></span>+ added <span class="sw c"></span>~ changed <span class="sw d"></span>- removed</li>
-    <li><span class="sw s"></span>AI arrows out: a short arrow off a box's edge names the AI/ class it calls (or is called from).</li>
-    <li>Tap a function to light up its arrows and see its code below. Tap a box title to light up the whole class.</li>
+    <li><span class="sw s"></span>AI as arrows: short arrows off a function's edge, one per AI/ function it calls (out) or is called from (in).</li>
+    <li>Drag to move the map, pinch or ctrl + wheel to zoom. Tap a function or a box title: its arrows light up and its code opens over the map. Tap again to close.</li>
   </ul>
   <p class="warn" id="warn"></p>
   <section class="code" id="code" aria-live="polite"></section>
@@ -167,7 +174,7 @@ textarea{font:400 12.5px/1.55 var(--mono);color:var(--fg);background:var(--surfa
 </div>
 
 <script>
-const CODE = {};
+const CODE = {}, CHANGED_FNS = [], OUTSIDE = {};
 const STEPS = {
 Awake: {when:"Once, before any Start.", src:
 `GameManager[singleton, find cameras, find or make UI, frame rate]
@@ -378,7 +385,7 @@ function leafEl(node, parent, inherited){
   el.onmouseleave = () => focusOn(pinned || over);
   el.onfocus = () => focusOn(key);
   el.onblur = () => focusOn(pinned || over);
-  el.onclick = () => { pinned = pinned === key ? null : key; focusOn(pinned); showCode(true); };
+  el.onclick = () => { pinned = pinned === key ? null : key; focusOn(pinned); showCode(); showPop(); };
   return el;
 }
 function build(node, parent, inherited, path){
@@ -390,7 +397,7 @@ function build(node, parent, inherited, path){
     const n = document.createElement("button"); n.className = "name"; n.type = "button"; n.textContent = name;
     if(node.edge){ el.classList.add("edge"); el.dataset.edge = 1; n.append(span("cnt", node.count)); }
     n.title = "Click: keep its arrows lit. Double-click: put at the center";
-    n.onclick = () => { pinned = pinned === name ? null : name; focusOn(pinned); };
+    n.onclick = () => { pinned = pinned === name ? null : name; focusOn(pinned); showCode(); showPop(); };
     n.ondblclick = () => { center = name; render(); };
     n.onfocus = () => focusOn(name); n.onblur = () => focusOn(pinned || over);
     el.onmouseenter = () => { over = name; focusOn(name); };
@@ -441,7 +448,7 @@ function connected(list){
   return Object.values(out);
 }
 // AI/ classes: drawn "in" the graph, or left out with a short arrow off the box edge ("edge"), or left out ("off")
-let ai = "edge", zoom = "fit", stubs = [], aiChanged = [];
+let ai = "edge", stubs = [], aiChanged = [];
 function aiView(g){
   const grp = g.boxes.find(b => b.kids && /^AI\/?$/i.test(b.name));
   if(ai === "in" || !grp) return {...g, stubs:[], stubsAll:[]};
@@ -452,7 +459,7 @@ function aiView(g){
       const a = names.has(cls(e.from)), b = names.has(cls(e.to));
       if(!a && !b){ keep.push(e); continue; }
       if(ai === "off" || (a && b)) continue;
-      const x = {part:e.part, leaf:a ? e.to : e.from, dir:a ? "in" : "out", ai:cls(a ? e.from : e.to), mark:e.mark}, k = x.part + ">" + x.leaf + x.dir + x.ai;
+      const x = {part:e.part, leaf:a ? e.to : e.from, dir:a ? "in" : "out", ai:a ? e.from : e.to, mark:e.mark}, k = x.part + ">" + x.leaf + x.dir + x.ai;
       if(!st[k] || (x.mark && !st[k].mark)) st[k] = x;
     }
     return {keep, st:Object.values(st)};
@@ -491,7 +498,7 @@ function render(){
   aiChanged = ai === "in" || !grp ? [] : grp.kids.flatMap(c => (c.kids || []).filter(l => l.mark || c.mark).map(l => c.name + "." + l.name));
   if(missing.length) notes.push("No box named: " + [...new Set(missing)].join(", "));
   $("warn").textContent = notes.join("\n");
-  layout(); draw(); showCode();
+  layout(); draw(); showCode(); showPop();
   $("info").textContent = layout.info ? "Layout: " + layout.info + " (counted on straight runs, an arrow through a box = 0.5)" : "";
 }
 
@@ -510,13 +517,13 @@ function sides(a, b){ // a, b: {l, r, y}
 // layout: 1 graph distances, 2 stress majorization, 3 fewest crossings, 4 no overlaps. The center box is pinned
 function layout(){
   const fit = $("fit");
-  if(!units.length){ graph.style.cssText = fit.style.cssText = ""; scale = 1; layout.W = 0; return; }
+  if(!units.length){ graph.style.cssText = ""; $("scroll").style.height = "80px"; scale = 1; layout.W = 0; return; }
   const U = units.map(u => ({...u, w:u.el.offsetWidth, h:u.el.offsetHeight, x:0, y:0})), n = U.length;
   const idx = {}; U.forEach((u, i) => idx[u.name] = i);
   const unitOf = k => idx[nodes[k]?.closest("[data-unit]")?.dataset.unit];
   const pull = {}, add = (i, j, w) => { if(i == null || j == null || i === j) return; const k = Math.min(i, j) + "," + Math.max(i, j); pull[k] = (pull[k] || 0) + w; };
   for(const e of edges) add(unitOf(e.from), unitOf(e.to), 1);          // one per arrow
-  const viaAI = {}; for(const x of stubs) (viaAI[x.ai] ||= new Set()).add(unitOf(x.leaf)); // same AI class: a weak pull
+  const viaAI = {}; for(const x of stubs) (viaAI[x.ai.split(".")[0]] ||= new Set()).add(unitOf(x.leaf)); // same AI class: a weak pull
   for(const set of Object.values(viaAI)){ const l = [...set]; for(let i = 0; i < l.length; i++) for(let j = i + 1; j < l.length; j++) add(l[i], l[j], 1); }
   for(let i = 0; i < n; i++) for(let j = i + 1; j < n; j++)           // same group: a weak pull
     if(U[i].path.length && U[i].path[0] === U[j].path[0]) add(i, j, U[i].path.join() === U[j].path.join() ? .5 : .25);
@@ -593,13 +600,13 @@ function layout(){
   const cost = () => stress() + CROSS * crossings(), CROSS = .8; // one crossing is worth this much stress
   const save = () => U.map(u => [u.x, u.y]), load = p => U.forEach((u, i) => { u.x = p[i][0]; u.y = p[i][1]; });
   let best = Infinity, keep;
-  const big = n > 24; // many boxes: a shorter search
+  const big = n > 24, huge = n > 36; // many boxes: a shorter search
   for(const turn of big ? [2.4, 3.9] : [2.4, 1, 3.9, 5.1]) for(const flip of [1, -1]){ // majorization finds a local best: try a few starts
     U.forEach((u, i) => { const a = Math.PI + i * turn, r = i === c ? 0 : D[c][i]; u.x = flip * r * Math.cos(a); u.y = r * Math.sin(a); });
     settle(150); const v = cost(); if(v < best){ best = v; keep = save(); }
   }
   load(keep);
-  for(let pass = 0; pass < (big ? 1 : 4); pass++){ // fewest crossings is NP-hard: local search, swap two boxes when the cost drops
+  for(let pass = 0; pass < (huge ? 0 : big ? 1 : 4); pass++){ // fewest crossings is NP-hard: local search, swap two boxes when the cost drops
     let better = false;
     for(let i = 0; i < n; i++) for(let j = i + 1; j < n; j++){
       if(i === c || j === c) continue;
@@ -634,18 +641,60 @@ function layout(){
   layout.info = `stress ${stress().toFixed(2)}, crossings ${crossings()}`;
 
   const boxes = U.map(u => ({l:u.x - u.w/2, t:u.y - u.h/2, r:u.x + u.w/2, b:u.y + u.h/2}));
-  const all = boxes, PAD = 30, PX = stubs.length ? 90 : 30; // room for the AI names
+  const all = boxes, PAD = 30, PX = stubs.length ? 160 : 30; // room for the AI names
   const minX = Math.min(...all.map(a => a.l)) - PX, minY = Math.min(...all.map(a => a.t)) - PAD;
   const W = Math.max(...all.map(a => a.r)) + PX - minX, Ht = Math.max(...all.map(a => a.b)) + PAD - minY;
   U.forEach((u, i) => { u.el.style.left = boxes[i].l - minX + "px"; u.el.style.top = boxes[i].t - minY + "px"; u.el.classList.toggle("center", i === c); });
   layout.W = W; layout.H = Ht; fitScale();
 }
-function fitScale(){ // Fit: the whole graph in the width. 100%: real size, scroll to move around
-  const W = layout.W, H = layout.H; if(!W) return;
-  scale = zoom === "fit" ? Math.max(innerWidth < 700 ? .55 : .3, Math.min(1, $("scroll").clientWidth / W)) : 1; // a phone keeps text readable and scrolls sideways
-  graph.style.cssText = `width:${W}px;height:${H}px;transform:scale(${scale})`;
-  $("fit").style.cssText = `width:${W*scale}px;height:${H*scale}px`;
+const view = {s:1, x:0, y:0}; // the map: screen = view.x + view.s * graph
+function applyView(){ scale = view.s; graph.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.s})`; }
+function zoomAt(f, px, py){
+  const s = Math.min(2.5, Math.max(.12, view.s * f));
+  view.x = px - (px - view.x) * s / view.s; view.y = py - (py - view.y) * s / view.s; view.s = s; applyView();
 }
+function fitScale(){ // the whole graph; on a phone, start readable around the center box instead
+  const W = layout.W, H = layout.H, box = $("scroll"); if(!W) return;
+  const phone = innerWidth < 700, vw = box.clientWidth;
+  const vh = Math.round(Math.min(innerHeight * (phone ? .62 : .78), Math.max(280, H * Math.min(1, vw / W) + 2)));
+  box.style.height = vh + "px"; graph.style.width = W + "px"; graph.style.height = H + "px";
+  const all = Math.min(1, vw / W, vh / H), s = Math.max(all, phone ? .6 : .4);
+  view.s = s;
+  if(s === all){ view.x = (vw - W*s) / 2; view.y = (vh - H*s) / 2; }
+  else{
+    const c = graph.querySelector(".unit.center") || graph.querySelector(".unit"), cx = c ? c.offsetLeft + c.offsetWidth/2 : W/2, cy = c ? c.offsetTop + c.offsetHeight/2 : H/2;
+    view.x = vw/2 - cx*s; view.y = vh/2 - cy*s;
+  }
+  applyView();
+}
+function centerOn(el){ // move the map so el sits in the middle
+  const box = $("scroll"), u = el.closest(".unit") || el, cx = u.offsetLeft + (el === u ? u.offsetWidth/2 : el.offsetLeft + el.offsetWidth/2), cy = u.offsetTop + (el === u ? u.offsetHeight/2 : el.offsetTop + el.offsetHeight/2);
+  view.x = box.clientWidth/2 - cx*view.s; view.y = box.clientHeight/3 - cy*view.s; applyView();
+}
+(() => { // drag to move, two fingers to zoom, ctrl + wheel (or a trackpad pinch) to zoom
+  const box = $("scroll"), pts = new Map(); let moved = false;
+  box.addEventListener("pointerdown", e => { if(e.target.closest(".pop")) return; if(!pts.size) moved = false; pts.set(e.pointerId, {x:e.clientX, y:e.clientY}); });
+  box.addEventListener("pointermove", e => {
+    const p = pts.get(e.pointerId); if(!p) return;
+    const dx = e.clientX - p.x, dy = e.clientY - p.y;
+    if(pts.size === 1){
+      if(!moved && Math.hypot(dx, dy) < 6) return;
+      if(!moved){ moved = true; box.setPointerCapture(e.pointerId); box.classList.add("dragging"); }
+      view.x += dx; view.y += dy; applyView();
+    }else{
+      const o = [...pts.entries()].find(([id]) => id !== e.pointerId)[1], r = box.getBoundingClientRect();
+      const before = Math.hypot(p.x - o.x, p.y - o.y), after = Math.hypot(e.clientX - o.x, e.clientY - o.y);
+      view.x += dx/2; view.y += dy/2;
+      if(before > 0) zoomAt(after / before, (e.clientX + o.x)/2 - r.left, (e.clientY + o.y)/2 - r.top); else applyView();
+      moved = true;
+    }
+    p.x = e.clientX; p.y = e.clientY;
+  });
+  const up = e => { pts.delete(e.pointerId); if(!pts.size) box.classList.remove("dragging"); };
+  box.addEventListener("pointerup", up); box.addEventListener("pointercancel", up);
+  box.addEventListener("click", e => { if(moved && !e.target.closest(".pop")){ e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+  box.addEventListener("wheel", e => { if(!e.ctrlKey) return; e.preventDefault(); const r = box.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * .01), e.clientX - r.left, e.clientY - r.top); }, {passive:false});
+})();
 function draw(){
   graph.querySelector("svg")?.remove();
   const svg = document.createElementNS(NS, "svg"); svg.setAttribute("class", "wires");
@@ -660,14 +709,14 @@ function draw(){
     (slots[e.from + sa] ||= []).push(A); (slots[e.to + sb] ||= []).push(B);
     return {e, A, B};
   });
-  const groups = {}, half = graph.offsetWidth / 2; // AI arrows: one short arrow per function and direction, off the side facing out
+  const groups = {}, half = graph.offsetWidth / 2; // AI arrows: a fan of short arrows, one per AI function, off the side with more room
   for(const x of stubs){
-    const k = x.leaf + x.dir, gr = groups[k] ||= {leaf:x.leaf, dir:x.dir, names:[], mark:""};
-    if(!gr.names.includes(x.ai)) gr.names.push(x.ai); if(x.mark) gr.mark = x.mark;
+    const gr = groups[x.leaf + x.dir] ||= {leaf:x.leaf, dir:x.dir, list:[]}, had = gr.list.find(y => y.ai === x.ai);
+    if(!had) gr.list.push({ai:x.ai, mark:x.mark}); else if(x.mark) had.mark = x.mark;
   }
   const others = units.map(u => ({el:u.el, ...rect(u.el)}));
-  const room = (r, side) => { // free space beside a function, up to the next box or the graph's edge
-    const y = r.t + r.h/2, home = nodes[r.key].closest(".unit");
+  const room = (r, side, y) => { // free space beside a function at height y, up to the next box or the graph's edge
+    const home = nodes[r.key].closest(".unit");
     let free = side === "r" ? graph.offsetWidth - r.r : r.l;
     for(const o of others) if(o.el !== home && o.t < y + 10 && o.t + o.h > y - 10){
       if(side === "r" && o.l >= r.r - 1) free = Math.min(free, o.l - r.r);
@@ -676,8 +725,9 @@ function draw(){
     return free;
   };
   const stubEnds = Object.values(groups).map(gr => {
-    const r = {...rect(nodes[gr.leaf]), key:gr.leaf}, fr = room(r, "r"), fl = room(r, "l"), side = fr === fl ? ((r.l + r.r) / 2 < half ? "l" : "r") : fr > fl ? "r" : "l";
-    const P = {r, side, other:r.t + r.h/2, free:Math.max(fr, fl)};
+    gr.list.sort((a, b) => a.ai.localeCompare(b.ai));
+    const r = {...rect(nodes[gr.leaf]), key:gr.leaf}, y = r.t + r.h/2, fr = room(r, "r", y), fl = room(r, "l", y);
+    const side = fr === fl ? ((r.l + r.r) / 2 < half ? "l" : "r") : fr > fl ? "r" : "l", P = {r, side, other:y};
     (slots[gr.leaf + side] ||= []).push(P); return {gr, P};
   });
   for(const list of Object.values(slots)){
@@ -701,28 +751,30 @@ function draw(){
     }
   }
   for(const {gr, P} of stubEnds){
-    const s = P.side === "l" ? -1 : 1, x1 = P.x, x2 = P.x + s * 30, y = P.y;
-    const head = gr.dir === "out" ? `M${x2 - 6*s} ${y - 3.5}L${x2} ${y}L${x2 - 6*s} ${y + 3.5}` : `M${x1 + 6*s} ${y - 3.5}L${x1} ${y}L${x1 + 6*s} ${y + 3.5}`;
-    const p = document.createElementNS(NS, "path"), t = document.createElementNS(NS, "text");
-    p.setAttribute("d", `M${x1} ${y}L${x2} ${y}` + head); p.setAttribute("class", "wire stub " + gr.mark);
-    t.setAttribute("x", x2 + s * 4); t.setAttribute("y", y + 3.5); t.setAttribute("class", `wlabel stubl ${P.side} ${gr.mark}`);
-    const full = (gr.dir === "in" ? "from " : "") + gr.names.join(", "), fits = Math.max(4, Math.floor((P.free - 44) / 6.2));
-    t.textContent = full.length > fits ? full.slice(0, fits - 1) + "…" : full;
-    const tip = document.createElementNS(NS, "title"); tip.textContent = full; t.append(tip);
-    for(const el of [p, t]){ el.dataset.from = el.dataset.to = gr.leaf; svg.append(el); }
+    const s = P.side === "l" ? -1 : 1, n = gr.list.length;
+    gr.list.forEach((x, i) => {
+      const x1 = P.x, y1 = P.y, x2 = x1 + s * 42, y2 = y1 + (i - (n - 1) / 2) * 15;
+      const head = gr.dir === "out" ? `M${x2 - 6*s} ${y2 - 3.5}L${x2} ${y2}L${x2 - 6*s} ${y2 + 3.5}` : `M${x1 + 6*s} ${y1 - 3.5}L${x1} ${y1}L${x1 + 6*s} ${y1 + 3.5}`;
+      const p = document.createElementNS(NS, "path"), t = document.createElementNS(NS, "text"), tip = document.createElementNS(NS, "title");
+      p.setAttribute("d", `M${x1} ${y1}C${x1 + s*22} ${y1} ${x2 - s*18} ${y2} ${x2} ${y2}` + head); p.setAttribute("class", "wire stub " + x.mark);
+      t.setAttribute("x", x2 + s * 4); t.setAttribute("y", y2 + 3.5); t.setAttribute("class", `wlabel stubl ${P.side} ${x.mark}`);
+      const full = (gr.dir === "in" ? "from " : "") + x.ai, fits = Math.max(4, Math.floor((room(P.r, P.side, y2) - 50) / 6.2));
+      t.textContent = full.length > fits ? full.slice(0, fits - 1) + "…" : full; tip.textContent = full; t.append(tip);
+      for(const el of [p, t]){ el.dataset.from = el.dataset.to = gr.leaf; svg.append(el); }
+    });
   }
   graph.append(svg);
   focusOn(pinned);
 }
 
 // code of the changed functions in this view; a tapped function that did not change goes first
-function codeItem(key, open){
-  const c = CODE[key], d = document.createElement("details"), sm = document.createElement("summary"), pre = document.createElement("pre");
+function codeItem(key, open, c = CODE[key]){
+  const d = document.createElement("details"), sm = document.createElement("summary"), pre = document.createElement("pre");
   d.className = "fn"; d.dataset.key = key; d.open = open;
   sm.append(span("fm " + ({"+":"add", "-":"del", "~":"chg"}[c.m] || ""), c.m || "·"), span("fk", key), span("ff", c.f));
   if(nodes[key]){
     const b = document.createElement("button"); b.type = "button"; b.className = "find"; b.textContent = "Show in graph";
-    b.onclick = ev => { ev.preventDefault(); pinned = key; focusOn(key); $("scroll").scrollIntoView({behavior:"smooth", block:"start"}); };
+    b.onclick = ev => { ev.preventDefault(); pinned = key; focusOn(key); showPop(); centerOn(nodes[key]); $("scroll").scrollIntoView({behavior:"smooth", block:"start"}); };
     sm.append(b);
   }
   pre.className = "diff";
@@ -732,19 +784,36 @@ function codeItem(key, open){
   }
   d.append(sm, pre); return d;
 }
-function showCode(jump){
+function section(box, title, keys, open, get){
+  if(!keys.length) return;
+  const h = document.createElement("h3"); h.textContent = `${title} (${keys.length})`; box.append(h);
+  for(const k of keys) box.append(get ? get(k) : codeItem(k, open));
+}
+function showCode(){ // under the map: every change in this view
   const box = $("code"); box.textContent = "";
   const keys = [...new Set([...graph.querySelectorAll(".leaf.add,.leaf.chg,.leaf.del")].map(l => l.dataset.key))].filter(k => CODE[k]).sort();
   const h = document.createElement("h2"); h.textContent = keys.length ? `What changed here (${keys.length})` : "Nothing changed in this view"; box.append(h);
-  if(pinned && CODE[pinned] && !keys.includes(pinned)) box.append(codeItem(pinned, true));
-  for(const k of keys) box.append(codeItem(k, k === pinned || (CODE[k].d || []).length <= 40));
+  for(const k of keys) box.append(codeItem(k, (CODE[k].d || []).length <= 40));
   const hid = aiChanged.filter(k => CODE[k]);
-  if(hid.length){
-    const h3 = document.createElement("h3"); h3.textContent = `Also changed in AI/, not drawn (${hid.length})`; box.append(h3);
-    for(const k of hid) box.append(codeItem(k, false));
+  section(box, "Also changed in AI/, not drawn", hid, false);
+  if(current === "All steps" && !part){ // the whole commit: also what no Unity step reaches, and what is outside functions
+    const seen = new Set([...keys, ...hid]);
+    section(box, "Changed, not reached from a Unity step", CHANGED_FNS.filter(k => !seen.has(k)), false);
+    section(box, "Changed outside functions (usings, fields, enums...)", Object.keys(OUTSIDE), false, f => codeItem(f, false, {...OUTSIDE[f], f:"outside functions"}));
   }
-  const it = jump && pinned && [...box.querySelectorAll(".fn")].find(f => f.dataset.key === pinned);
-  if(it){ it.open = true; it.classList.add("pick"); if(innerWidth < 800) it.scrollIntoView({behavior:"smooth", block:"start"}); }
+  const it = pinned && [...box.querySelectorAll(".fn")].find(f => f.dataset.key === pinned);
+  if(it){ it.open = true; it.classList.add("pick"); }
+}
+function showPop(){ // over the map: the tapped function's code, or a tapped class's functions. Tap again to close
+  const pop = $("pop"), el = pinned && nodes[pinned]; pop.textContent = "";
+  const keys = !el ? [] : el.classList.contains("box") ? [...el.querySelectorAll(".leaf")].map(l => l.dataset.key).filter(k => CODE[k]).sort((a, b) => !!CODE[b].m - !!CODE[a].m) : CODE[pinned] ? [pinned] : [];
+  if(!keys.length){ pop.hidden = true; return; }
+  const head = document.createElement("div"), x = document.createElement("button");
+  head.className = "pophead"; x.type = "button"; x.textContent = "Close";
+  x.onclick = () => { pinned = null; focusOn(null); showPop(); showCode(); };
+  head.append(span("", pinned), x); pop.append(head);
+  for(const k of keys) pop.append(codeItem(k, keys.length === 1 || !!CODE[k].m));
+  pop.hidden = false; pop.scrollTop = 0;
 }
 
 // key: a lowest box, or a class box (then all of its lowest boxes count)
@@ -768,7 +837,7 @@ function show(step){
   $("when").textContent = STEPS[step].when;
   source.value = STEPS[step].src;
   const g = parse(STEPS[step].src); // too dense to read whole: open on the part with the most changes
-  if(g.all.length > 60) part = g.parts.map(name => [changed(onlyPart(g, name)).count, name]).sort((a, b) => b[0] - a[0])[0]?.[1] || "";
+  if(g.all.length > 60 && step !== "All steps") part = g.parts.map(name => [changed(onlyPart(g, name)).count, name]).sort((a, b) => b[0] - a[0])[0]?.[1] || "";
   partTabs(); render();
 }
 for(const step of Object.keys(STEPS)){
@@ -796,10 +865,10 @@ function counts(){ // changes per step, on its tab
 function mode(){
   for(const b of $("modes").children) b.setAttribute("aria-selected", !!b.dataset.only === only);
   for(const b of $("ais").children) b.setAttribute("aria-selected", b.dataset.ai === ai);
-  for(const b of $("zoom").children) b.setAttribute("aria-selected", b.dataset.z === zoom);
 }
 for(const b of $("ais").children) b.onclick = () => { ai = b.dataset.ai; mode(); counts(); partTabs(); render(); };
-for(const b of $("zoom").children) b.onclick = () => { zoom = b.dataset.z; mode(); fitScale(); };
+for(const b of $("zoom").children) b.onclick = () => { const box = $("scroll"); b.dataset.z === "fit" ? fitScale() : zoomAt(b.dataset.z === "in" ? 1.3 : 1/1.3, box.clientWidth/2, box.clientHeight/2); };
+addEventListener("keydown", e => { if(e.key === "Escape" && pinned){ pinned = null; focusOn(null); showPop(); showCode(); } });
 for(const b of $("modes").children) b.onclick = () => { only = !!b.dataset.only; mode(); render(); };
 source.oninput = () => { STEPS[current].src = source.value; counts(); partTabs(); render(); };
 counts(); mode();

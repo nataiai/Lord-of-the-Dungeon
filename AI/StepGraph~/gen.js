@@ -44,7 +44,7 @@ function strip(s){
   }
   return out;
 }
-let curFile = ""; // the file members() is reading
+let curFile = "", curRanges = []; // the file members() is reading, and where its functions are
 function dedent(t){
   const lines = t.split("\n"), ind = Math.min(...lines.slice(1).filter(l => l.trim()).map(l => l.match(/^\s*/)[0].length));
   return isFinite(ind) ? [lines[0], ...lines.slice(1).map(l => l.slice(ind))].join("\n") : t;
@@ -70,19 +70,19 @@ function elem(t){ // List<X>, X[] -> X
   const m = t.match(/^[\w.]+<(.*)>$/); return m ? topLevel(m[1], ",").pop().trim() : t;
 }
 
-function members(body, raw, cls){
+function members(body, raw, cls, base){
   let n = 0, start = 0;
   for(let i = 0; i < body.length; i++){
     const c = body[i];
     if("({[".includes(c)) n++;
     else if(")]".includes(c)) n--;
-    else if(c === "}"){ if(--n === 0 && !/^\s*[;=,.)]/.test(body.slice(i + 1))){ member(body.slice(start, i + 1), raw.slice(start, i + 1), cls); start = i + 1; } }
-    else if(c === ";" && n === 0){ member(body.slice(start, i + 1), raw.slice(start, i + 1), cls); start = i + 1; }
+    else if(c === "}"){ if(--n === 0 && !/^\s*[;=,.)]/.test(body.slice(i + 1))){ member(body.slice(start, i + 1), raw.slice(start, i + 1), cls, base + start); start = i + 1; } }
+    else if(c === ";" && n === 0){ member(body.slice(start, i + 1), raw.slice(start, i + 1), cls, base + start); start = i + 1; }
   }
 }
-function member(seg, raw, cls){
-  const lead = seg.length - seg.trimStart().length; seg = seg.trim(); raw = raw.slice(lead, lead + seg.length); let m;
-  while((m = seg.match(/^\[[^\]]*\]\s*/))){ seg = seg.slice(m[0].length); raw = raw.slice(m[0].length); }
+function member(seg, raw, cls, at){
+  const lead = seg.length - seg.trimStart().length; seg = seg.trim(); raw = raw.slice(lead, lead + seg.length); at += lead; let m;
+  while((m = seg.match(/^\[[^\]]*\]\s*/))){ seg = seg.slice(m[0].length); raw = raw.slice(m[0].length); at += m[0].length; }
   const code = {file:curFile, text:dedent(raw)};
   let n = 0, cut = seg.length, kind = ";";
   for(let i = 0; i < seg.length; i++){
@@ -98,9 +98,9 @@ function member(seg, raw, cls){
     if(!ret || call[2] === cls.name || /^(public|private|protected|internal|static)$/.test(ret)) return; // constructor
     const meth = cls.methods[call[2]] ||= {ret, bodies:[], params:{}, code:[]};
     for(const p of topLevel(call[3], ",")){ const t = p.split("=")[0].match(TYPE); if(t) meth.params[t[2]] = t[1]; }
-    meth.bodies.push(rest); meth.code.push(code); return;
+    meth.bodies.push(rest); meth.code.push(code); curRanges.push([at, at + seg.length, raw.slice(0, cut).trim()]); return;
   }
-  if(kind === "{" || kind === "=>"){ const t = head.match(TYPE); if(t) cls.props[t[2]] = {type:t[1], body:rest, code:[code]}; return; }
+  if(kind === "{" || kind === "=>"){ const t = head.match(TYPE); if(t){ cls.props[t[2]] = {type:t[1], body:rest, code:[code]}; curRanges.push([at, at + seg.length, raw.slice(0, cut).trim()]); } return; }
   const parts = topLevel(seg.replace(/;$/, ""), ","), first = parts[0].split(/=(?!=)/)[0].match(TYPE);
   if(!first) return;
   cls.fields[first[2]] = first[1];
@@ -109,14 +109,15 @@ function member(seg, raw, cls){
 
 function analyse(files){
   const classes = {};
+  const ranges = {};
   for(const [file, raw] of Object.entries(files)){
-    curFile = file;
+    curFile = file; curRanges = ranges[file] = [];
     const s = strip(raw), re = /\b(?:class|struct)\s+(\w+)(?:\s*<[^>{]*>)?\s*(?::\s*([^{]+?))?\s*(?:where[^{]*)?\{/g; let m;
     while((m = re.exec(s))){
       const open = m.index + m[0].length - 1, end = closer(s, open), body = s.slice(open + 1, end);
       const cls = classes[m[1]] ||= {name:m[1], file, folder:path.dirname(file).replace(/^\.$/, ""), bases:[], fields:{}, props:{}, methods:{}};
       if(m[2]) cls.bases.push(...topLevel(m[2], ",").map(b => plain(b.trim())));
-      members(body, raw.slice(open + 1, end), cls);
+      members(body, raw.slice(open + 1, end), cls, open + 1);
     }
   }
   const base = c => classes[c]?.bases.find(b => classes[b]);
@@ -210,7 +211,7 @@ function analyse(files){
   const dull = new Set(Object.keys(nodes).filter(k => classes[nodes[k].cls].props[nodes[k].name] && !classes[nodes[k].cls].methods[nodes[k].name] && !edges[k].size));
   for(const k of dull){ delete nodes[k]; delete edges[k]; }
   for(const k in edges) for(const t of dull) edges[k].delete(t);
-  return {classes, nodes, edges};
+  return {classes, nodes, edges, ranges, files};
 }
 
 function reach(g, root){ // every call that can follow from root
@@ -237,8 +238,8 @@ function diff(a, b){
   const out = []; let i = 0, j = 0;
   while(i < n || j < m){
     if(i < n && j < m && eq(A[i], B[j])){ out.push(" " + B[j]); i++; j++; }
-    else if(j < m && (i >= n || L[i][j + 1] >= L[i + 1][j])) out.push("+" + B[j++]);
-    else out.push("-" + A[i++]);
+    else if(i < n && (j >= m || L[i + 1][j] >= L[i][j + 1])) out.push("-" + A[i++]); // old line first
+    else out.push("+" + B[j++]);
   }
   const near = out.map((l, k) => k === 0 || out.slice(Math.max(0, k - 2), k + 3).some(x => x[0] !== " ")); // 2 lines around a change, and the first
   const res = []; let skip = 0;
@@ -247,11 +248,26 @@ function diff(a, b){
   return res;
 }
 const code = {}; // what the page shows when a function is tapped
-const out = {};
+const addCode = k => { if(code[k]) return;
+  const m = markOf(k), g = now.nodes[k] ? now : old;
+  code[k] = {f:g.nodes[k].code[0]?.file || "", m};
+  if(m) code[k].d = diff(codeOf(old, k), codeOf(now, k)); else code[k].t = codeOf(now, k);
+};
+function source(pattern, used, parts, degree){ // the bracket text the page draws
+  const byClass = {}; for(const k of used) (byClass[k.split(".")[0]] ||= []).push(k);
+  const info = c => now.classes[c] || old.classes[c];
+  const leaf = k => { const m = markOf(k); return m + k.split(".")[1] + (m === "~" ? ": " + lineDiff(codeOf(old, k), codeOf(now, k)) : ""); };
+  const box = c => `${!old.classes[c] ? "+" : !now.classes[c] ? "-" : ""}${c}[${byClass[c].sort((a, b) => pattern.test(b.split(".")[1]) - pattern.test(a.split(".")[1]) || a.localeCompare(b)).map(leaf).join(", ")}]`;
+  const order = Object.keys(byClass).sort((a, b) => (degree[b] || 0) - (degree[a] || 0) || a.localeCompare(b)); // busiest first = the center
+  const folders = []; for(const c of order) if(!folders.includes(info(c).folder)) folders.push(info(c).folder);
+  const boxes = folders.map(f => { const cs = order.filter(c => info(c).folder === f).map(box); return f ? `${f}/[\n  ${cs.join(",\n  ")}\n]` : cs.join("\n"); });
+  return boxes.join("\n") + "\n\n" + parts.join("\n\n");
+}
+const out = {}, every = {used:new Set(), parts:[], degree:{}};
 for(const [step, pattern, when] of STEPS){
   const roots = [...new Set([...Object.keys(now.nodes), ...Object.keys(old.nodes)])].filter(k => pattern.test(k.split(".")[1])).sort();
   const perClass = {}; for(const r of roots) perClass[r.split(".")[0]] = (perClass[r.split(".")[0]] || 0) + 1;
-  const parts = [], used = new Set(), degree = {};
+  const parts = [], used = new Set(), degree = {}, stage = new Set();
   for(const r of roots){
     const a = old.nodes[r] ? reach(old, r) : [], b = now.nodes[r] ? reach(now, r) : [], lines = [];
     for(const e of b) lines.push((a.includes(e) ? "" : "+ ") + e);
@@ -260,21 +276,28 @@ for(const [step, pattern, when] of STEPS){
     if(!lines.length) continue;
     for(const e of [...a, ...b]) for(const k of e.split(" -> ")){ used.add(k); degree[k.split(".")[0]] = (degree[k.split(".")[0]] || 0) + 1; }
     parts.push(`# ${perClass[r.split(".")[0]] > 1 ? r : r.split(".")[0]}\n${lines.join("\n")}`);
+    for(const l of lines) stage.add(l);
   }
   if(!used.size) continue;
-  for(const k of used) if(!code[k]){
-    const m = markOf(k), g = now.nodes[k] ? now : old;
-    code[k] = {f:g.nodes[k].code[0]?.file || "", m};
-    if(m) code[k].d = diff(codeOf(old, k), codeOf(now, k)); else code[k].t = codeOf(now, k);
-  }
-  const byClass = {}; for(const k of used) (byClass[k.split(".")[0]] ||= []).push(k);
-  const info = c => now.classes[c] || old.classes[c];
-  const leaf = k => { const m = markOf(k); return m + k.split(".")[1] + (m === "~" ? ": " + lineDiff(codeOf(old, k), codeOf(now, k)) : ""); };
-  const box = c => `${!old.classes[c] ? "+" : !now.classes[c] ? "-" : ""}${c}[${byClass[c].sort((a, b) => pattern.test(b.split(".")[1]) - pattern.test(a.split(".")[1]) || a.localeCompare(b)).map(leaf).join(", ")}]`;
-  const order = Object.keys(byClass).sort((a, b) => (degree[b] || 0) - (degree[a] || 0) || a.localeCompare(b)); // busiest first = the center
-  const folders = []; for(const c of order) if(!folders.includes(info(c).folder)) folders.push(info(c).folder);
-  const boxes = folders.map(f => { const cs = order.filter(c => info(c).folder === f).map(box); return f ? `${f}/[\n  ${cs.join(",\n  ")}\n]` : cs.join("\n"); });
-  out[step] = {when, src:boxes.join("\n") + "\n\n" + parts.join("\n\n")};
+  for(const k of used){ addCode(k); every.used.add(k); }
+  for(const c in degree) every.degree[c] = (every.degree[c] || 0) + degree[c];
+  if(stage.size) every.parts.push(`# ${step}\n${[...stage].join("\n")}`);
+  out[step] = {when, src:source(pattern, used, parts, degree)};
+}
+out["All steps"] = {when:"Every Unity step in one graph. The parts are the steps.", src:source(/^(Awake|Start|Update|FixedUpdate|LateUpdate|On(Trigger|Collision|Enable|Disable|Destroy).*)$/, every.used, every.parts, every.degree)};
+
+// every changed function, reached by a step or not
+const changedFns = [...new Set([...Object.keys(now.nodes), ...Object.keys(old.nodes)])].filter(k => markOf(k)).sort();
+for(const k of changedFns) addCode(k);
+// what changed outside functions: usings, fields, enums, attributes... Each function is folded to its first line
+const fold = (g, f) => { const t = g.files[f]; if(t == null) return "";
+  let o = "", i = 0; for(const [a, b, head] of [...g.ranges[f]].sort((x, y) => x[0] - y[0])) if(a >= i){ o += t.slice(i, a) + head + " ⋯"; i = b; }
+  return o + t.slice(i); };
+const outside = {};
+for(const f of [...new Set([...Object.keys(old.files), ...Object.keys(now.files)])].sort()){
+  if(old.files[f] === now.files[f]) continue;
+  const a = fold(old, f), b = fold(now, f);
+  if(a.replace(/\s+/g, "") !== b.replace(/\s+/g, "")) outside[f] = {m:!old.files[f] ? "+" : !now.files[f] ? "-" : "~", d:diff(a, b)};
 }
 
 const subject = NEW === "WORK" ? "files on disk, not committed" : git("log", "-1", "--format=%s", NEW).trim();
@@ -283,6 +306,6 @@ const esc = t => t.replace(/&/g, "&amp;").replace(/</g, "&lt;");
 let page = fs.readFileSync(path.join(__dirname, "page.html"), "utf8");
 const json = v => JSON.stringify(v).replace(/<\//g, "<\\/"); // no "</script>" inside the page's script
 page = page.replace(/const STEPS = \{[\s\S]*?\n\};\n/, () => "const STEPS = " + json(out) + ";\n")
-  .replace("const CODE = {};", () => "const CODE = " + json(code) + ";")
+  .replace("const CODE = {}, CHANGED_FNS = [], OUTSIDE = {};", () => "const CODE = " + json(code) + ", CHANGED_FNS = " + json(changedFns) + ", OUTSIDE = " + json(outside) + ";")
   .replace(/<p class="commit">.*?<\/p>/, () => `<p class="commit"><b>${name(OLD)} → ${name(NEW)}</b> ${esc(subject)}</p>`);
 process.stdout.write(page);
